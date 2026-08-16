@@ -1,0 +1,109 @@
+name: Monthly encrypted production backup
+
+on:
+  schedule:
+    - cron: "15 2 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: monthly-production-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      SUPABASE_URL: ${{ secrets.PROD_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.PROD_SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_DB_URL: ${{ secrets.PROD_SUPABASE_DB_URL }}
+      BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
+      REQUIRED_STORAGE_BUCKETS: product-images
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate required secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY SUPABASE_DB_URL BACKUP_ENCRYPTION_PASSPHRASE; do
+            if [ -z "${!name:-}" ]; then
+              echo "Required secret is not configured: ${name}" >&2
+              exit 1
+            fi
+          done
+
+      - name: Install PostgreSQL client
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+
+      - name: Export database
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p backup/database backup/storage
+          pg_dump "$SUPABASE_DB_URL" --format=custom --no-owner --no-acl --file=backup/database/production.dump
+          pg_restore --list backup/database/production.dump > backup/database/restore-list.txt
+          test -s backup/database/restore-list.txt
+
+      - name: Export Storage objects
+        id: storage
+        continue-on-error: true
+        run: node scripts/backup-storage.mjs backup/storage
+
+      - name: Write backup metadata
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p backup
+          printf 'created_utc=%s\ncommit=%s\nrun_id=%s\nstorage_result=%s\n' \
+            "$(date -u +%FT%TZ)" "$GITHUB_SHA" "$GITHUB_RUN_ID" "${{ steps.storage.outcome }}" \
+            > backup/BACKUP-METADATA.txt
+
+      - name: Encrypt archive and remove plaintext
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -d backup
+          tar -czf production-backup.tar.gz backup
+          gpg --batch --yes --pinentry-mode loopback --cipher-algo AES256 \
+            --passphrase "$BACKUP_ENCRYPTION_PASSPHRASE" \
+            --symmetric --output "production-backup-${GITHUB_RUN_ID}.tar.gz.gpg" production-backup.tar.gz
+          sha256sum "production-backup-${GITHUB_RUN_ID}.tar.gz.gpg" > "production-backup-${GITHUB_RUN_ID}.sha256"
+          rm -rf backup production-backup.tar.gz
+
+      - name: Upload encrypted backup
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-backup-${{ github.run_id }}
+          path: |
+            production-backup-${{ github.run_id }}.tar.gz.gpg
+            production-backup-${{ github.run_id }}.sha256
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Fail if Storage backup was incomplete
+        if: steps.storage.outcome != 'success'
+        shell: bash
+        run: |
+          echo "Storage export failed or a required bucket was missing." >&2
+          exit 1
+
+      - name: Open failure issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh issue create \
+            --title "Production backup failed — run ${GITHUB_RUN_ID}" \
+            --body "The monthly production backup workflow failed. Review the private Actions log and rerun only after fixing the cause: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"

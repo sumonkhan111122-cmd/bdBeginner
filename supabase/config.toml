@@ -1,0 +1,31 @@
+project_id = "ldmpxupslnfgzmmtpyat"
+
+[functions.manual-payment]
+verify_jwt = false
+
+[functions.bkash-payment-initiate]
+verify_jwt = false
+
+[functions.bkash-payment-callback]
+verify_jwt = false
+
+[functions.order-notification]
+verify_jwt = false
+
+[functions.external-downloads]
+verify_jwt = false
+
+[functions.secure-fulfillment]
+verify_jwt = false
+
+[functions.download-invoice]
+verify_jwt = true
+
+[functions.email-preview]
+verify_jwt = true
+
+[functions.weadown-import]
+verify_jwt = true
+
+[functions.demo-product-download]
+verify_jwt = false
