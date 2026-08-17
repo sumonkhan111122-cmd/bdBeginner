@@ -43,7 +43,7 @@ export async function serve(req: Request) {
     const { action, orderId, orderNumber, accessToken, orderItemId, linkId } = body;
 
     if (!["list", "open"].includes(action)) {
-      return new Response(JSON.stringify({ error: "Invalid action" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "Invalid action" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     let orderData = null;
@@ -60,11 +60,11 @@ export async function serve(req: Request) {
         .single();
 
       if (orderError || !order) {
-        return new Response(JSON.stringify({ error: "Order not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ error: "Order not found" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       if (order.access_token !== accessToken) {
-        return new Response(JSON.stringify({ error: "Unauthorized access" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ error: "Unauthorized access" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
       
       orderData = order;
@@ -80,21 +80,21 @@ export async function serve(req: Request) {
         .single();
 
       if (orderError || !order) {
-        return new Response(JSON.stringify({ error: "Order not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ error: "Order not found" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       if (order.user_id !== userId) {
-        return new Response(JSON.stringify({ error: "Unauthorized access" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ error: "Unauthorized access" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       orderData = order;
     } else {
-      return new Response(JSON.stringify({ error: "Authentication required" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "Authentication required" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Verify payment status
     if (orderData.payment_status !== "paid") {
-      return new Response(JSON.stringify({ error: "Payment required" }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "Payment required" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Gather digital products in the order
@@ -104,7 +104,7 @@ export async function serve(req: Request) {
       .map((item) => item.product_id);
 
     if (digitalProductIds.length === 0) {
-      return new Response(JSON.stringify({ error: "No digital downloads in this order" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "No digital downloads in this order" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     if (action === "list") {
@@ -126,18 +126,18 @@ export async function serve(req: Request) {
 
     if (action === "open") {
       if (!orderItemId || !linkId) {
-        return new Response(JSON.stringify({ error: "Missing parameters" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ error: "Missing parameters" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       // Check that the order item belongs to this order
       const orderItem = orderItems.find((item) => item.id === orderItemId);
       if (!orderItem) {
-        return new Response(JSON.stringify({ error: "Invalid order item" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ error: "Invalid order item" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       // Check that the product is a digital download
       if (orderItem.delivery_type !== "digital_download") {
-        return new Response(JSON.stringify({ error: "Not a digital download product" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ error: "Not a digital download product" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       // Check that the requested link belongs to the requested product and is active
@@ -150,27 +150,27 @@ export async function serve(req: Request) {
         .single();
 
       if (linkError || !link) {
-        return new Response(JSON.stringify({ error: "Link not found or unauthorized" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ error: "Link not found or unauthorized" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       // Validate URL safety server-side
       try {
         const urlObj = new URL(link.download_url);
         if (urlObj.protocol !== "https:") {
-          return new Response(JSON.stringify({ error: "Insecure download link" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          return new Response(JSON.stringify({ error: "Insecure download link" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
       } catch {
-        return new Response(JSON.stringify({ error: "Invalid download link format" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ error: "Invalid download link format" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       return new Response(JSON.stringify({ success: true, url: link.download_url }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
   } catch (error: unknown) {
-    console.error(`[EXTERNAL_DOWNLOADS] errorClass=${error instanceof Error ? error.constructor.name : "UnknownError"}`);
+    console.error(`[EXTERNAL_DOWNLOADS] errorClass=${error instanceof Error ? error.constructor.name : "UnknownError"} message=${error instanceof Error ? error.message : String(error)}`);
     return new Response(
-      JSON.stringify({ error: "internal_server_error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: error instanceof Error ? error.message : "internal_server_error" }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 }
