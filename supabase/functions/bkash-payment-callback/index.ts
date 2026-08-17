@@ -109,12 +109,16 @@ async function handler(req: Request): Promise<Response> {
     }
 
     const oldMetadata = transaction.metadata && typeof transaction.metadata === "object" ? transaction.metadata as JsonRecord : {};
-    const transactionUpdate = await markTransactionSucceeded(admin, transaction.id, { ...oldMetadata, trx_id: result.trxID, verified_at: new Date().toISOString() });
+    const transactionUpdate = await markTransactionSucceeded(
+      admin,
+      transaction.id,
+      { ...oldMetadata, trx_id: result.trxID, verified_at: new Date().toISOString() }
+    );
     if (transactionUpdate.error || !transactionUpdate.data) return redirect(siteUrl, { order_number: orderNumber, status: "error", message: "transaction_update_failed" });
 
     const { data: paidOrder, error: orderUpdateError } = await admin
       .from("orders")
-      .update({ payment_status: "paid", payment_method: "bkash", payment_reference: result.trxID, updated_at: new Date().toISOString() })
+      .update({ payment_status: "paid", payment_method: "bkash", updated_at: new Date().toISOString() })
       .eq("id", order.id)
       .eq("payment_status", "pending")
       .neq("order_status", "cancelled")

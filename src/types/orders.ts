@@ -10,7 +10,7 @@ export type PaymentTransactionRow = {
   provider: PaymentProvider;
   provider_transaction_id?: string | null;
   amount: number;
-  currency: string;
+  currency_code: string;
   status: 'pending' | 'succeeded' | 'completed' | 'failed' | 'refunded';
   metadata?: Record<string, unknown> | null;
   reviewed_by?: string | null;

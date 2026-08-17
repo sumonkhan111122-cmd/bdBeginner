@@ -9,6 +9,23 @@ import {
 
 const json = (body: JsonRecord, status = 200) => Response.json(body, { status, headers: corsHeaders });
 
+type DatabaseError = { code?: unknown; message?: unknown; details?: unknown; hint?: unknown };
+
+function safeLogField(value: unknown): string {
+  if (typeof value !== "string" || !value.trim()) return "none";
+  return value
+    .replace(/[\r\n\t]+/g, " ")
+    .replace(/\([^)]*\)=\([^)]*\)/g, "[value redacted]")
+    .replace(/(authorization|password|secret|token|otp|pin)\s*[:=]\s*[^\s,;]+/gi, "$1=[redacted]")
+    .slice(0, 300);
+}
+
+function logDatabaseError(stage: string, error: DatabaseError | null) {
+  console.error(
+    `[BKASH] stage=${stage} code=${safeLogField(error?.code)} message=${safeLogField(error?.message)} details=${safeLogField(error?.details)} hint=${safeLogField(error?.hint)}`,
+  );
+}
+
 function missingServerConfiguration(): string | null {
   const required = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "SITE_URL"];
   return required.find((name) => !Deno.env.get(name)) ?? missingBkashConfiguration();
@@ -134,7 +151,7 @@ async function handler(req: Request): Promise<Response> {
       provider: "bkash",
       provider_transaction_id: createResponse.paymentID,
       amount: order.total,
-      currency: order.currency_code,
+      currency_code: order.currency_code,
       status: "pending",
       metadata: {
         invoice_number: order.order_number,
@@ -143,7 +160,7 @@ async function handler(req: Request): Promise<Response> {
       },
     }).select("id").single();
     if (transactionError || !transaction) {
-      console.error(`[BKASH] stage=CREATE_PAYMENT local_record_failed code=${transactionError?.code ?? "unknown"}`);
+      logDatabaseError("CREATE_PAYMENT_RECORD", transactionError);
       return json({ error: "payment_record_failed", message: "The bKash payment could not be recorded." }, 500);
     }
 
@@ -156,6 +173,7 @@ async function handler(req: Request): Promise<Response> {
       .select("id")
       .maybeSingle();
     if (orderUpdateError || !pendingOrder) {
+      if (orderUpdateError) logDatabaseError("ORDER_PENDING_UPDATE", orderUpdateError);
       await admin.from("payment_transactions").update({ status: "failed", updated_at: new Date().toISOString() }).eq("id", transaction.id).eq("status", "pending");
       return json({ error: "order_update_failed", message: "The order is no longer eligible for this payment." }, orderUpdateError ? 500 : 409);
     }

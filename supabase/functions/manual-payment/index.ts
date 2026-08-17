@@ -16,15 +16,36 @@ const rejectionReasons = {
 } as const;
 
 type ManualMethod = typeof manualMethods[number];
-type RejectionReasonCode = keyof typeof rejectionReasons;
+type RejectionReasonCode = Exclude<keyof typeof rejectionReasons, "request_resubmission">;
 type JsonRecord = Record<string, unknown>;
+type DatabaseError = {
+  code?: unknown;
+  message?: unknown;
+  details?: unknown;
+  hint?: unknown;
+};
 
 const json = (body: JsonRecord, status = 200) => Response.json(body, {
   status,
   headers: corsHeaders,
 });
 
-const messageFrom = (error: unknown) => error instanceof Error ? error.message : "Unknown error";
+function safeLogField(value: unknown): string {
+  if (typeof value !== "string" || !value.trim()) return "none";
+  return value
+    .replace(/[\r\n\t]+/g, " ")
+    .replace(/\([^)]*\)=\([^)]*\)/g, "[value redacted]")
+    .replace(/(authorization|password|secret|token|otp|pin)\s*[:=]\s*[^\s,;]+/gi, "$1=[redacted]")
+    .slice(0, 300);
+}
+
+function logDatabaseError(stage: string, error: DatabaseError | null) {
+  console.error(
+    `[MANUAL_PAYMENT] stage=${stage} code=${safeLogField(error?.code)} message=${safeLogField(error?.message)} details=${safeLogField(error?.details)} hint=${safeLogField(error?.hint)}`,
+  );
+}
+
+const messageFrom = (error: unknown) => safeLogField(error instanceof Error ? error.message : "Unknown error");
 
 function requiredEnvironment(names: string[]): { values?: Record<string, string>; response?: Response } {
   const values: Record<string, string> = {};
@@ -104,20 +125,9 @@ async function notify(
 }
 
 async function updateSuccessfulTransaction(admin: SupabaseClient, id: string, metadata: JsonRecord, reviewedBy: string) {
-  const preferred = await admin.from("payment_transactions").update({ 
+  return admin.from("payment_transactions").update({ 
     status: "succeeded", 
     metadata, 
-    reviewed_by: reviewedBy,
-    reviewed_at: new Date().toISOString(),
-    review_reason_code: null,
-    review_reason_text: null,
-    updated_at: new Date().toISOString() 
-  }).eq("id", id).eq("status", "pending").select("id").maybeSingle();
-  if (!preferred.error) return preferred;
-  // Existing projects may use the older `completed` check value. Preserve compatibility safely.
-  return admin.from("payment_transactions").update({ 
-    status: "completed", 
-    metadata,
     reviewed_by: reviewedBy,
     reviewed_at: new Date().toISOString(),
     review_reason_code: null,
@@ -154,7 +164,7 @@ async function handler(req: Request): Promise<Response> {
       if (action === "status") {
         const { data, error } = await admin
           .from("payment_transactions")
-          .select("status,metadata")
+          .select("status,metadata,review_reason_text")
           .eq("order_id", order.id)
           .in("provider", manualMethods)
           .order("created_at", { ascending: false })
@@ -164,8 +174,12 @@ async function handler(req: Request): Promise<Response> {
         if (!data) return json({ success: true, status: "none", rejectionReason: null });
         const metadata = data.metadata && typeof data.metadata === "object" ? data.metadata as JsonRecord : {};
         const normalizedStatus = data.status === "completed" || data.status === "succeeded" ? "succeeded" : data.status === "failed" ? "failed" : "pending";
-        // Also support fetching reason from new DB columns (via casting data if possible, though select list needs update)
-        return json({ success: true, status: normalizedStatus, rejectionReason: typeof metadata.rejection_reason === "string" ? metadata.rejection_reason : null });
+        const rejectionReason = typeof data.review_reason_text === "string"
+          ? data.review_reason_text
+          : typeof metadata.rejection_reason === "string"
+            ? metadata.rejection_reason
+            : null;
+        return json({ success: true, status: normalizedStatus, rejectionReason });
       }
 
       const methodValue = body.method ?? body.provider;
@@ -178,10 +192,17 @@ async function handler(req: Request): Promise<Response> {
       if (orderStatus === "cancelled" || paymentStatus === "paid" || paymentStatus === "refunded") return json({ error: "payment_not_allowed", message: "This order is not eligible for manual payment." }, 409);
 
       const { data: setting, error: settingError } = await admin.from("payment_method_settings").select("method,enabled").eq("method", method).maybeSingle();
-      if (settingError || !setting?.enabled) return json({ error: "method_unavailable", message: "This payment method is currently unavailable." }, 409);
+      if (settingError) {
+        logDatabaseError("METHOD_LOOKUP", settingError);
+        return json({ error: "method_lookup_failed", message: "The payment method could not be checked." }, 500);
+      }
+      if (!setting?.enabled) return json({ error: "method_unavailable", message: "This payment method is currently unavailable." }, 409);
 
       const { data: existing, error: existingError } = await admin.from("payment_transactions").select("id,order_id,status").eq("provider_transaction_id", transactionId).limit(1).maybeSingle();
-      if (existingError) return json({ error: "transaction_lookup_failed", message: "The transaction ID could not be checked." }, 500);
+      if (existingError) {
+        logDatabaseError("DUPLICATE_LOOKUP", existingError);
+        return json({ error: "transaction_lookup_failed", message: "The transaction ID could not be checked." }, 500);
+      }
       if (existing) {
         if (existing.order_id === order.id && existing.status === "pending") return json({ success: true, status: "pending", message: "Payment submitted for verification" });
         return json({ error: "duplicate_transaction", message: "This transaction ID has already been submitted." }, 409);
@@ -203,12 +224,15 @@ async function handler(req: Request): Promise<Response> {
         provider: method,
         provider_transaction_id: transactionId,
         amount: order.total,
-        currency: order.currency_code,
+        currency_code: order.currency_code,
         status: "pending",
         metadata: { submitted_at: new Date().toISOString() },
       }).select("id").single();
       if (insertError || !transaction) {
-        console.error(`[MANUAL_PAYMENT] submit_insert_failed code=${insertError?.code ?? "unknown"}`);
+        logDatabaseError("SUBMIT_INSERT", insertError);
+        if (insertError?.code === "23505") {
+          return json({ error: "duplicate_transaction", message: "This transaction ID has already been submitted." }, 409);
+        }
         return json({ error: "payment_record_failed", message: "The payment submission could not be recorded." }, 500);
       }
 
@@ -221,6 +245,7 @@ async function handler(req: Request): Promise<Response> {
         .select("id")
         .maybeSingle();
       if (orderUpdateError || !pendingOrder) {
+        if (orderUpdateError) logDatabaseError("ORDER_PENDING_UPDATE", orderUpdateError);
         await admin.from("payment_transactions").update({ status: "failed", metadata: { submitted_at: new Date().toISOString(), system_error: "order_status_update_failed" } }).eq("id", transaction.id);
         return json({ error: "order_update_failed", message: "The order is no longer eligible for this payment submission." }, orderUpdateError ? 500 : 409);
       }
@@ -247,16 +272,21 @@ async function handler(req: Request): Promise<Response> {
 
       if (action === "approve") {
         const transactionUpdate = await updateSuccessfulTransaction(admin, transaction.id, currentMetadata, adminAuth.userId!);
-        if (transactionUpdate.error || !transactionUpdate.data) return json({ error: "concurrent_update", message: "This payment has already been reviewed." }, 409);
+        if (transactionUpdate.error) {
+          logDatabaseError("APPROVE_TRANSACTION", transactionUpdate.error);
+          return json({ error: "payment_update_failed", message: "The payment review could not be saved." }, 500);
+        }
+        if (!transactionUpdate.data) return json({ error: "concurrent_update", message: "This payment has already been reviewed." }, 409);
         const { data: paidOrder, error: orderUpdateError } = await admin
           .from("orders")
-          .update({ payment_status: "paid", payment_method: transaction.provider, payment_reference: transaction.provider_transaction_id, updated_at: new Date().toISOString() })
+          .update({ payment_status: "paid", payment_method: transaction.provider, updated_at: new Date().toISOString() })
           .eq("id", order.id)
           .in("payment_status", ["pending", "unpaid"])
           .neq("order_status", "cancelled")
           .select("id")
           .maybeSingle();
         if (orderUpdateError || !paidOrder) {
+          if (orderUpdateError) logDatabaseError("APPROVE_ORDER", orderUpdateError);
           await admin.from("payment_transactions").update({ status: "pending", reviewed_by: null, reviewed_at: null }).eq("id", transaction.id);
           return json({ error: "order_update_failed", message: "The order is no longer eligible to be marked paid." }, orderUpdateError ? 500 : 409);
         }
@@ -268,19 +298,25 @@ async function handler(req: Request): Promise<Response> {
       let reasonText = "";
       
       if (action === "request_resubmission") {
-        reasonCode = "request_resubmission";
-        reasonText = typeof body.reasonText === "string" ? body.reasonText.trim() : rejectionReasons["request_resubmission"];
+        // Production's existing check constraint has no `request_resubmission` value.
+        // Store the compatible `other` code while preserving the action and customer-safe reason.
+        reasonCode = "other";
+        reasonText = typeof body.reasonText === "string" && body.reasonText.trim()
+          ? body.reasonText.trim().slice(0, 500)
+          : rejectionReasons.request_resubmission;
       } else {
-        reasonCode = typeof body.reasonCode === "string" && body.reasonCode in rejectionReasons ? body.reasonCode as RejectionReasonCode : null;
-        reasonText = typeof body.reasonText === "string" ? body.reasonText.trim() : "";
+        reasonCode = typeof body.reasonCode === "string" && body.reasonCode !== "request_resubmission" && body.reasonCode in rejectionReasons
+          ? body.reasonCode as RejectionReasonCode
+          : null;
+        reasonText = typeof body.reasonText === "string" ? body.reasonText.trim().slice(0, 500) : "";
       }
 
-      if (!reasonCode || ((reasonCode === "other" || action === "request_resubmission") && !reasonText)) return json({ error: "rejection_reason_required", message: "A valid rejection reason is required." }, 400);
-      const customerReason = (reasonCode === "other" || action === "request_resubmission") ? reasonText : rejectionReasons[reasonCode];
+      if (!reasonCode || (action === "reject" && reasonCode === "other" && !reasonText)) return json({ error: "rejection_reason_required", message: "A valid rejection reason is required." }, 400);
+      const customerReason = reasonCode === "other" ? reasonText : rejectionReasons[reasonCode];
       
       const { data: rejected, error: rejectError } = await admin.from("payment_transactions").update({ 
         status: "failed", 
-        metadata: { ...currentMetadata, rejection_reason: customerReason },
+        metadata: { ...currentMetadata, rejection_reason: customerReason, review_action: action },
         reviewed_by: adminAuth.userId,
         reviewed_at: new Date().toISOString(),
         review_reason_code: reasonCode,
@@ -288,7 +324,11 @@ async function handler(req: Request): Promise<Response> {
         updated_at: new Date().toISOString() 
       }).eq("id", transaction.id).eq("status", "pending").select("id").maybeSingle();
       
-      if (rejectError || !rejected) return json({ error: "concurrent_update", message: "This payment has already been reviewed." }, 409);
+      if (rejectError) {
+        logDatabaseError("REJECT_TRANSACTION", rejectError);
+        return json({ error: "payment_update_failed", message: "The payment review could not be saved." }, 500);
+      }
+      if (!rejected) return json({ error: "concurrent_update", message: "This payment has already been reviewed." }, 409);
       const { data: unpaidOrder, error: orderUpdateError } = await admin
         .from("orders")
         .update({ payment_status: "unpaid", updated_at: new Date().toISOString() })
@@ -298,6 +338,7 @@ async function handler(req: Request): Promise<Response> {
         .select("id")
         .maybeSingle();
       if (orderUpdateError || !unpaidOrder) {
+        if (orderUpdateError) logDatabaseError("REJECT_ORDER", orderUpdateError);
         await admin.from("payment_transactions").update({ status: "pending", reviewed_by: null, reviewed_at: null, review_reason_code: null, review_reason_text: null }).eq("id", transaction.id);
         return json({ error: "order_update_failed", message: "The order payment status could not be reset safely." }, orderUpdateError ? 500 : 409);
       }

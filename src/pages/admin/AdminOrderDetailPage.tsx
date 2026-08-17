@@ -81,7 +81,7 @@ function AdminOrderContent({ detail, onReload }: { detail: OrderWithDetails; onR
 
   const submitReview = async () => {
     if (!reviewingTxn || !reviewAction) return;
-    if ((reviewAction === 'reject' || reviewAction === 'request_resubmission') && (!reasonCode || (reasonCode === 'other' && !reasonText))) {
+    if (reviewAction === 'reject' && (!reasonCode || (reasonCode === 'other' && !reasonText.trim()))) {
       setReviewError('Please provide a specific rejection reason.');
       return;
     }
@@ -91,7 +91,7 @@ function AdminOrderContent({ detail, onReload }: { detail: OrderWithDetails; onR
       await reviewManualPayment({
         action: reviewAction,
         transactionId: reviewingTxn,
-        reasonCode: reviewAction === 'approve' ? undefined : reasonCode || undefined,
+        reasonCode: reviewAction === 'reject' ? reasonCode || undefined : undefined,
         reasonText: (reasonCode === 'other' || reviewAction === 'request_resubmission') ? reasonText : undefined,
       });
       setMessage(`Payment ${reviewAction === 'approve' ? 'approved' : 'rejected'} successfully.`);
