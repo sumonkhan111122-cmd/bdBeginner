@@ -394,10 +394,16 @@ export async function deleteAdminOrders(orderIds: string[]): Promise<void> {
   await sb.from('order_items').delete().in('order_id', orderIds).catch(() => {});
   await sb.from('payment_transactions').delete().in('order_id', orderIds).catch(() => {});
   await sb.from('order_email_log').delete().in('order_id', orderIds).catch(() => {});
+  await sb.from('order_status_history').delete().in('order_id', orderIds).catch(() => {});
+  await sb.from('coupon_redemptions').delete().in('order_id', orderIds).catch(() => {});
+  await sb.from('product_reviews').delete().in('order_id', orderIds).catch(() => {});
   
   const { error } = await sb
     .from('orders')
     .delete()
     .in('id', orderIds);
-  if (error) throw error;
+  if (error) {
+    console.error('Supabase delete error:', error);
+    throw new Error(`Failed to delete orders: ${error.message || error.details || JSON.stringify(error)}`);
+  }
 }
