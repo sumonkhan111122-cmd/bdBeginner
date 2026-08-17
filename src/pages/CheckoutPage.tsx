@@ -203,10 +203,12 @@ export function CheckoutPage() {
       });
 
       // Notifications stay non-blocking for checkout, while each request now reports failures to the console.
-      void triggerOrderNotification('order_created_customer', result.order_number, result.access_token)
-        .catch((notificationError) => console.error('Customer order notification failed', notificationError));
-      void triggerOrderNotification('order_created_admin', result.order_number, result.access_token)
-        .catch((notificationError) => console.error('Admin order notification failed', notificationError));
+      if (paymentMethod !== 'manual') {
+        void triggerOrderNotification('order_created_customer', result.order_number, result.access_token)
+          .catch((notificationError) => console.error('Customer order notification failed', notificationError));
+        void triggerOrderNotification('order_created_admin', result.order_number, result.access_token)
+          .catch((notificationError) => console.error('Admin order notification failed', notificationError));
+      }
 
       sessionStorage.setItem(orderReceiptStorageKey(result.order_number), result.access_token);
 

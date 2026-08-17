@@ -32,7 +32,7 @@ function ReceiptView({ receipt, signedIn, guestToken }: { receipt: OrderWithDeta
   const searchParams = new URLSearchParams(location.search);
   const intent = searchParams.get('intent');
 
-  const [showManualPayment, setShowManualPayment] = useState(intent === 'manual');
+  const [showManualPayment, setShowManualPayment] = useState(intent === 'manual' && order.payment_status === 'unpaid');
 
   useEffect(() => {
     if (intent === 'bkash_failed') {
@@ -112,11 +112,21 @@ function ReceiptView({ receipt, signedIn, guestToken }: { receipt: OrderWithDeta
         <div className="mx-auto max-w-4xl">
           <div className="text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-success-50 text-success-600"><CheckCircle2 size={32} /></div>
-            <h1 className="mt-5 font-display text-2xl font-bold text-ink-900 sm:text-3xl">Thank you—order received</h1>
             {order.payment_status === 'paid' ? (
-              <p className="mt-2 text-sm text-ink-500">Your payment was successful.</p>
+              <>
+                <h1 className="mt-5 font-display text-2xl font-bold text-ink-900 sm:text-3xl">Thank you—order received</h1>
+                <p className="mt-2 text-sm text-ink-500">Your payment was successful.</p>
+              </>
+            ) : order.payment_status === 'pending' ? (
+              <>
+                <h1 className="mt-5 font-display text-2xl font-bold text-ink-900 sm:text-3xl">Order Submitted</h1>
+                <p className="mt-2 text-sm text-ink-500">Payment verification pending.</p>
+              </>
             ) : (
-              <p className="mt-2 text-sm text-ink-500">Your order has been recorded. Complete payment below.</p>
+              <>
+                <h1 className="mt-5 font-display text-2xl font-bold text-ink-900 sm:text-3xl">Complete Your Payment</h1>
+                <p className="mt-2 text-sm text-ink-500">Your order has been recorded. Complete payment below.</p>
+              </>
             )}
           </div>
 
@@ -275,8 +285,9 @@ function ReceiptView({ receipt, signedIn, guestToken }: { receipt: OrderWithDeta
             accessToken={guestToken}
             onSuccess={() => {
               setShowManualPayment(false);
-              // Simply reload to fetch updated receipt (which should be pending)
-              window.location.reload();
+              const url = new URL(window.location.href);
+              url.searchParams.delete('intent');
+              window.location.replace(url.toString());
             }}
           />
 
