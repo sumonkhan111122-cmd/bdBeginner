@@ -387,7 +387,15 @@ export async function updateAdminOrderStatus(
 
 export async function deleteAdminOrders(orderIds: string[]): Promise<void> {
   if (orderIds.length === 0) return;
-  const { error } = await getSupabase()
+  const sb = getSupabase();
+
+  // Try to safely delete from dependent tables first to handle missing ON DELETE CASCADE
+  // We swallow errors here so that if a table doesn't exist or RLS blocks it, we still try to delete the order
+  await sb.from('order_items').delete().in('order_id', orderIds).catch(() => {});
+  await sb.from('payment_transactions').delete().in('order_id', orderIds).catch(() => {});
+  await sb.from('order_email_log').delete().in('order_id', orderIds).catch(() => {});
+  
+  const { error } = await sb
     .from('orders')
     .delete()
     .in('id', orderIds);
