@@ -18,7 +18,7 @@ type CartContextValue = {
   /** Local subtotal (display fallback before server pricing arrives) */
   total: number;
   isOpen: boolean;
-  addItem: (product: Product, quantity?: number) => void;
+  addItem: (product: Product, quantity?: number, openCart?: boolean) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -189,7 +189,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // ── Cart operations ──
-  const addItem = useCallback((product: Product, quantity = 1) => {
+  const addItem = useCallback((product: Product, quantity = 1, shouldOpenCart = true) => {
     setItems((prev) => {
       const existing = prev.find((item) => item.productId === product.id);
       if (existing) {
@@ -201,7 +201,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, createCartItem(product, quantity)];
     });
-    setIsOpen(true);
+    if (shouldOpenCart) {
+      setIsOpen(true);
+    }
   }, []);
 
   const removeItem = useCallback((productId: string) => {

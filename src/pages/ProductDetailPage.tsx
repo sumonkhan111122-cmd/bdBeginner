@@ -251,7 +251,7 @@ function ProductDetailPage() {
   };
 
   const handleBuyNow = () => {
-    if (!inCart) addItem(product);
+    if (!inCart) addItem(product, 1, false);
     navigate('/checkout');
   };
 
