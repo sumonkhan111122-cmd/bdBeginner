@@ -164,8 +164,14 @@ export function AdminCouponEditorPage() {
       if (!isEdit) {
         navigate(`/admin/discounts/coupons/${couponId}/edit`, { replace: true });
       }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save coupon.');
+    } catch (e: any) {
+      console.error('[COUPON_SAVE_ERROR]', e);
+      // Supabase errors often have a code, details, or hint
+      const message = e?.message || e?.error_description || 'Failed to save coupon.';
+      const details = e?.details ? `\nDetails: ${e.details}` : '';
+      const hint = e?.hint ? `\nHint: ${e.hint}` : '';
+      const code = e?.code ? `\nCode: ${e.code}` : '';
+      setError(`${message}${details}${hint}${code}`);
     } finally {
       setSaving(false);
     }
