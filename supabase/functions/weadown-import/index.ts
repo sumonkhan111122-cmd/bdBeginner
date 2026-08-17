@@ -444,6 +444,16 @@ Deno.serve(async (req) => {
       return jsonResponse({ items, count: items.length, source: SITEMAP_URL });
     }
 
+    if (action === "preview_urls") {
+      const sourceUrls = Array.isArray(body.sourceUrls)
+        ? body.sourceUrls.filter((value): value is string => typeof value === "string")
+        : [];
+      if (sourceUrls.length === 0) return jsonResponse({ error: "A source URL is required" }, 400);
+      const products = await loadSelectedProducts(sourceUrls);
+      const items = await buildPreview(supabase, products);
+      return jsonResponse({ items, count: items.length, source: SOURCE_ORIGIN });
+    }
+
     if (action === "import") {
       const sourceUrls = Array.isArray(body.sourceUrls)
         ? body.sourceUrls.filter((value): value is string => typeof value === "string")
@@ -488,4 +498,3 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: message }, status);
   }
 });
-

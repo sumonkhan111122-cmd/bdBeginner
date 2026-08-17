@@ -37,13 +37,45 @@ export type ProductImportResult = {
 
 async function invokeImporter<T>(body: Record<string, unknown>): Promise<T> {
   const { data, error } = await getSupabase().functions.invoke('weadown-import', { body });
-  if (error) throw error;
+  if (error) {
+    const response = (error as Error & { context?: Response }).context;
+    if (response?.status === 404 || /Failed to send a request|Failed to fetch/i.test(error.message)) {
+      throw new Error('Importer service is not deployed yet. Deploy the weadown-import Edge Function, then try again.');
+    }
+    if (response) {
+      try {
+        const payload = await response.clone().json() as {
+          error?: unknown;
+          errors?: Array<{ message?: unknown }>;
+        };
+        if (typeof payload.error === 'string' && payload.error) {
+          throw new Error(payload.error);
+        }
+        if (Array.isArray(payload.errors) && payload.errors.length > 0) {
+          const messages = payload.errors
+            .slice(0, 3)
+            .map((item) => typeof item.message === 'string' ? item.message : 'Import failed')
+            .join(' · ');
+          throw new Error(`Import failed: ${messages}`);
+        }
+      } catch (parseError) {
+        if (parseError instanceof Error && parseError.message !== 'Unexpected end of JSON input') {
+          throw parseError;
+        }
+      }
+    }
+    throw error;
+  }
   if (data?.error) throw new Error(String(data.error));
   return data as T;
 }
 
 export async function previewLatestSourceProducts(limit = 50): Promise<ProductImportPreview> {
   return invokeImporter<ProductImportPreview>({ action: 'preview', limit });
+}
+
+export async function previewSourceProduct(sourceUrl: string): Promise<ProductImportPreview> {
+  return invokeImporter<ProductImportPreview>({ action: 'preview_urls', sourceUrls: [sourceUrl] });
 }
 
 export async function importSourceProducts(input: {

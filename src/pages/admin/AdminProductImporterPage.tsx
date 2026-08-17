@@ -14,6 +14,7 @@ import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
 import {
   importSourceProducts,
   previewLatestSourceProducts,
+  previewSourceProduct,
   type ProductImportPreviewItem,
   type ProductImportResult,
 } from '@/services/productImporter';
@@ -43,6 +44,7 @@ function formatSourceDate(value: string | null): string {
 export function AdminProductImporterPage() {
   const [items, setItems] = useState<ProductImportPreviewItem[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [sourceUrl, setSourceUrl] = useState('');
   const [price, setPrice] = useState(DEFAULT_PRICE);
   const [overwritePrice, setOverwritePrice] = useState(false);
   const [previewing, setPreviewing] = useState(false);
@@ -70,6 +72,24 @@ export function AdminProductImporterPage() {
     } catch (err) {
       console.error('Source preview failed', err);
       setError(err instanceof Error ? err.message : 'Could not load the source preview.');
+    } finally {
+      setPreviewing(false);
+    }
+  };
+
+  const loadSourceUrl = async () => {
+    const url = sourceUrl.trim();
+    if (!url) return;
+    setPreviewing(true);
+    setError(null);
+    setResult(null);
+    try {
+      const preview = await previewSourceProduct(url);
+      setItems(preview.items);
+      setSelected(new Set(preview.items.map((item) => item.sourceUrl)));
+    } catch (err) {
+      console.error('Source URL preview failed', err);
+      setError(err instanceof Error ? err.message : 'Could not load this source product.');
     } finally {
       setPreviewing(false);
     }
@@ -131,11 +151,11 @@ export function AdminProductImporterPage() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <div className="flex items-center gap-2 text-sm font-semibold text-brand-600">
-            <FlaskConical size={17} /> Research tool
+            <FlaskConical size={17} /> Source catalog
           </div>
           <h1 className="mt-2 font-display text-2xl font-bold text-ink-900">Product Importer</h1>
           <p className="mt-1 max-w-2xl text-sm leading-6 text-ink-500">
-            Preview the latest 50 source products, create draft catalog records, and apply later metadata updates.
+            Import the latest posts or paste an individual source product URL whenever you need it.
           </p>
         </div>
         <button
@@ -149,11 +169,26 @@ export function AdminProductImporterPage() {
         </button>
       </div>
 
-      <div className="mt-6 rounded-2xl border border-info-200 bg-info-50 p-4 text-sm leading-6 text-info-800">
-        <p className="font-semibold">Safe test mode</p>
-        <p className="mt-1">
-          Imports are saved as drafts with source metadata and image references. The customer download is a generated text manifest, so checkout and entitlement can be tested without copying a third-party package.
-        </p>
+      <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-ink-100 bg-white p-4 shadow-soft sm:flex-row">
+        <input
+          type="url"
+          value={sourceUrl}
+          onChange={(event) => setSourceUrl(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') void loadSourceUrl();
+          }}
+          placeholder="https://weadown.com/res/product-slug/"
+          className="h-10 min-w-0 flex-1 rounded-xl border border-ink-200 px-3 text-sm text-ink-800 placeholder:text-ink-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+        />
+        <button
+          type="button"
+          onClick={loadSourceUrl}
+          disabled={previewing || importing || !sourceUrl.trim()}
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-ink-200 px-4 text-sm font-semibold text-ink-700 transition-colors hover:bg-ink-50 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {previewing ? <Loader2 size={16} className="animate-spin" /> : <ExternalLink size={16} />}
+          Preview URL
+        </button>
       </div>
 
       {error && (
@@ -170,7 +205,14 @@ export function AdminProductImporterPage() {
             <p className="font-semibold">
               Import complete: {result.created} created, {result.updated} updated.
             </p>
-            {result.errors.length > 0 && <p className="mt-1">{result.errors.length} item(s) need another attempt.</p>}
+            {result.errors.length > 0 && (
+              <>
+                <p className="mt-1">{result.errors.length} item(s) need another attempt.</p>
+                <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs">
+                  {result.errors.slice(0, 3).map((item) => <li key={item.sourceUrl}>{item.message}</li>)}
+                </ul>
+              </>
+            )}
             <Link to="/admin/products" className="mt-1 inline-flex font-semibold underline underline-offset-2">
               Review product drafts
             </Link>
