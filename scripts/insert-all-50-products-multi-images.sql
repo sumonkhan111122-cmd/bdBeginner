@@ -159,21 +159,21 @@ BEGIN
     version = '4.1',
     status = 'published',
     updated_at = now()
-  WHERE id = '1a54b4cf-d841-4560-91c6-a6fc7e04df7a';
+  WHERE id = 'eea2f9f8-a367-40c4-90b9-66cfd2bf1cd1';
 
-  DELETE FROM public.product_images WHERE product_id = '1a54b4cf-d841-4560-91c6-a6fc7e04df7a';
+  DELETE FROM public.product_images WHERE product_id = 'eea2f9f8-a367-40c4-90b9-66cfd2bf1cd1';
   INSERT INTO public.product_images (product_id, image_url, alt_text, sort_order) VALUES
-  ('1a54b4cf-d841-4560-91c6-a6fc7e04df7a', 'https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&w=1200&q=80', 'Creator Design Asset & Iconography Bundle - Cover', 0),
-  ('1a54b4cf-d841-4560-91c6-a6fc7e04df7a', 'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=1200&q=80', 'Creator Design Asset & Iconography Bundle - Overview', 1),
-  ('1a54b4cf-d841-4560-91c6-a6fc7e04df7a', 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80', 'Creator Design Asset & Iconography Bundle - Details', 2);
+  ('eea2f9f8-a367-40c4-90b9-66cfd2bf1cd1', 'https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&w=1200&q=80', 'Creator Design Asset & Iconography Bundle - Cover', 0),
+  ('eea2f9f8-a367-40c4-90b9-66cfd2bf1cd1', 'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=1200&q=80', 'Creator Design Asset & Iconography Bundle - Overview', 1),
+  ('eea2f9f8-a367-40c4-90b9-66cfd2bf1cd1', 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80', 'Creator Design Asset & Iconography Bundle - Details', 2);
 
-  DELETE FROM public.product_features WHERE product_id = '1a54b4cf-d841-4560-91c6-a6fc7e04df7a';
+  DELETE FROM public.product_features WHERE product_id = 'eea2f9f8-a367-40c4-90b9-66cfd2bf1cd1';
   INSERT INTO public.product_features (product_id, feature, sort_order) VALUES
-  ('1a54b4cf-d841-4560-91c6-a6fc7e04df7a', 'Verified, authentic digital package and documentation', 1),
-  ('1a54b4cf-d841-4560-91c6-a6fc7e04df7a', 'Instant digital delivery upon confirmed payment', 2),
-  ('1a54b4cf-d841-4560-91c6-a6fc7e04df7a', 'Production-ready resources tested for efficiency', 3),
-  ('1a54b4cf-d841-4560-91c6-a6fc7e04df7a', 'Comprehensive setup & configuration guide included', 4),
-  ('1a54b4cf-d841-4560-91c6-a6fc7e04df7a', 'Dedicated priority technical support from bdBeginner', 5);
+  ('eea2f9f8-a367-40c4-90b9-66cfd2bf1cd1', 'Verified, authentic digital package and documentation', 1),
+  ('eea2f9f8-a367-40c4-90b9-66cfd2bf1cd1', 'Instant digital delivery upon confirmed payment', 2),
+  ('eea2f9f8-a367-40c4-90b9-66cfd2bf1cd1', 'Production-ready resources tested for efficiency', 3),
+  ('eea2f9f8-a367-40c4-90b9-66cfd2bf1cd1', 'Comprehensive setup & configuration guide included', 4),
+  ('eea2f9f8-a367-40c4-90b9-66cfd2bf1cd1', 'Dedicated priority technical support from bdBeginner', 5);
 
   -- Existing Product 7: Digital Developer Tools Access Pass
   UPDATE public.products SET
@@ -186,21 +186,21 @@ BEGIN
     version = 'Annual Access',
     status = 'published',
     updated_at = now()
-  WHERE id = '8a30a7d7-f0bb-4c81-a6aa-42587508731f';
+  WHERE id = '6aef5702-2f16-4352-b5bb-5525834d7a4c';
 
-  DELETE FROM public.product_images WHERE product_id = '8a30a7d7-f0bb-4c81-a6aa-42587508731f';
+  DELETE FROM public.product_images WHERE product_id = '6aef5702-2f16-4352-b5bb-5525834d7a4c';
   INSERT INTO public.product_images (product_id, image_url, alt_text, sort_order) VALUES
-  ('8a30a7d7-f0bb-4c81-a6aa-42587508731f', 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80', 'Digital Developer Tools Access Pass - Cover', 0),
-  ('8a30a7d7-f0bb-4c81-a6aa-42587508731f', 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80', 'Digital Developer Tools Access Pass - Overview', 1),
-  ('8a30a7d7-f0bb-4c81-a6aa-42587508731f', 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80', 'Digital Developer Tools Access Pass - Details', 2);
+  ('6aef5702-2f16-4352-b5bb-5525834d7a4c', 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80', 'Digital Developer Tools Access Pass - Cover', 0),
+  ('6aef5702-2f16-4352-b5bb-5525834d7a4c', 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80', 'Digital Developer Tools Access Pass - Overview', 1),
+  ('6aef5702-2f16-4352-b5bb-5525834d7a4c', 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80', 'Digital Developer Tools Access Pass - Details', 2);
 
-  DELETE FROM public.product_features WHERE product_id = '8a30a7d7-f0bb-4c81-a6aa-42587508731f';
+  DELETE FROM public.product_features WHERE product_id = '6aef5702-2f16-4352-b5bb-5525834d7a4c';
   INSERT INTO public.product_features (product_id, feature, sort_order) VALUES
-  ('8a30a7d7-f0bb-4c81-a6aa-42587508731f', 'Verified, authentic digital package and documentation', 1),
-  ('8a30a7d7-f0bb-4c81-a6aa-42587508731f', 'Instant digital delivery upon confirmed payment', 2),
-  ('8a30a7d7-f0bb-4c81-a6aa-42587508731f', 'Production-ready resources tested for efficiency', 3),
-  ('8a30a7d7-f0bb-4c81-a6aa-42587508731f', 'Comprehensive setup & configuration guide included', 4),
-  ('8a30a7d7-f0bb-4c81-a6aa-42587508731f', 'Dedicated priority technical support from bdBeginner', 5);
+  ('6aef5702-2f16-4352-b5bb-5525834d7a4c', 'Verified, authentic digital package and documentation', 1),
+  ('6aef5702-2f16-4352-b5bb-5525834d7a4c', 'Instant digital delivery upon confirmed payment', 2),
+  ('6aef5702-2f16-4352-b5bb-5525834d7a4c', 'Production-ready resources tested for efficiency', 3),
+  ('6aef5702-2f16-4352-b5bb-5525834d7a4c', 'Comprehensive setup & configuration guide included', 4),
+  ('6aef5702-2f16-4352-b5bb-5525834d7a4c', 'Dedicated priority technical support from bdBeginner', 5);
 
   -- Existing Product 8: WordPress Website Setup & Performance Service
   UPDATE public.products SET
@@ -213,21 +213,21 @@ BEGIN
     version = 'Service',
     status = 'published',
     updated_at = now()
-  WHERE id = '018b3e8c-8511-4ebc-8806-03c0352ef23a';
+  WHERE id = '780d97b3-fe13-4341-b203-3c38d016e51d';
 
-  DELETE FROM public.product_images WHERE product_id = '018b3e8c-8511-4ebc-8806-03c0352ef23a';
+  DELETE FROM public.product_images WHERE product_id = '780d97b3-fe13-4341-b203-3c38d016e51d';
   INSERT INTO public.product_images (product_id, image_url, alt_text, sort_order) VALUES
-  ('018b3e8c-8511-4ebc-8806-03c0352ef23a', 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80', 'WordPress Website Setup & Performance Service - Cover', 0),
-  ('018b3e8c-8511-4ebc-8806-03c0352ef23a', 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80', 'WordPress Website Setup & Performance Service - Overview', 1),
-  ('018b3e8c-8511-4ebc-8806-03c0352ef23a', 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80', 'WordPress Website Setup & Performance Service - Details', 2);
+  ('780d97b3-fe13-4341-b203-3c38d016e51d', 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80', 'WordPress Website Setup & Performance Service - Cover', 0),
+  ('780d97b3-fe13-4341-b203-3c38d016e51d', 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80', 'WordPress Website Setup & Performance Service - Overview', 1),
+  ('780d97b3-fe13-4341-b203-3c38d016e51d', 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80', 'WordPress Website Setup & Performance Service - Details', 2);
 
-  DELETE FROM public.product_features WHERE product_id = '018b3e8c-8511-4ebc-8806-03c0352ef23a';
+  DELETE FROM public.product_features WHERE product_id = '780d97b3-fe13-4341-b203-3c38d016e51d';
   INSERT INTO public.product_features (product_id, feature, sort_order) VALUES
-  ('018b3e8c-8511-4ebc-8806-03c0352ef23a', 'Verified, authentic digital package and documentation', 1),
-  ('018b3e8c-8511-4ebc-8806-03c0352ef23a', 'Instant digital delivery upon confirmed payment', 2),
-  ('018b3e8c-8511-4ebc-8806-03c0352ef23a', 'Production-ready resources tested for efficiency', 3),
-  ('018b3e8c-8511-4ebc-8806-03c0352ef23a', 'Comprehensive setup & configuration guide included', 4),
-  ('018b3e8c-8511-4ebc-8806-03c0352ef23a', 'Dedicated priority technical support from bdBeginner', 5);
+  ('780d97b3-fe13-4341-b203-3c38d016e51d', 'Verified, authentic digital package and documentation', 1),
+  ('780d97b3-fe13-4341-b203-3c38d016e51d', 'Instant digital delivery upon confirmed payment', 2),
+  ('780d97b3-fe13-4341-b203-3c38d016e51d', 'Production-ready resources tested for efficiency', 3),
+  ('780d97b3-fe13-4341-b203-3c38d016e51d', 'Comprehensive setup & configuration guide included', 4),
+  ('780d97b3-fe13-4341-b203-3c38d016e51d', 'Dedicated priority technical support from bdBeginner', 5);
 
   -- Theme 1: Salient 18.4.1 - Creative Multipurpose & WooCommerce Theme
   INSERT INTO public.products (

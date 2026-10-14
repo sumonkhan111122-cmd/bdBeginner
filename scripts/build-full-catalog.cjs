@@ -105,7 +105,7 @@ const existingDbProducts = [
     ]
   },
   {
-    id: '1a54b4cf-d841-4560-91c6-a6fc7e04df7a',
+    id: 'eea2f9f8-a367-40c4-90b9-66cfd2bf1cd1',
     name: 'Creator Design Asset & Iconography Bundle',
     slug: 'creator-design-asset-bundle',
     category_id: CATEGORIES.digitalResources,
@@ -122,7 +122,7 @@ const existingDbProducts = [
     ]
   },
   {
-    id: '8a30a7d7-f0bb-4c81-a6aa-42587508731f',
+    id: '6aef5702-2f16-4352-b5bb-5525834d7a4c',
     name: 'Digital Developer Tools Access Pass',
     slug: 'digital-subscription-access',
     category_id: CATEGORIES.software,
@@ -139,7 +139,7 @@ const existingDbProducts = [
     ]
   },
   {
-    id: '018b3e8c-8511-4ebc-8806-03c0352ef23a',
+    id: '780d97b3-fe13-4341-b203-3c38d016e51d',
     name: 'WordPress Website Setup & Performance Service',
     slug: 'wordpress-website-setup-service',
     category_id: CATEGORIES.webServices,
