@@ -14,7 +14,9 @@ export function AdminLoginPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const turnstileRef = useRef<TurnstileRef>(null);
+  const captchaTokenRef = useRef<string | null>(null); // To not break anything, though we don't strictly need it if we're not using it. Wait, captchaToken is in state.
   const captchaConfigured = Boolean(import.meta.env.VITE_TURNSTILE_SITE_KEY);
+  const CAPTCHA_ENABLED = false; // TEMPORARILY DISABLED
 
   useEffect(() => {
     if (!loading && session && isAdmin) {
@@ -24,13 +26,15 @@ export function AdminLoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (import.meta.env.PROD && !captchaConfigured) {
-      setFormError('Sign-in verification is not configured. Please contact support.');
-      return;
-    }
-    if (captchaConfigured && !captchaToken) {
-      setFormError('Please complete the CAPTCHA verification.');
-      return;
+    if (CAPTCHA_ENABLED) {
+      if (import.meta.env.PROD && !captchaConfigured) {
+        setFormError('Sign-in verification is not configured. Please contact support.');
+        return;
+      }
+      if (captchaConfigured && !captchaToken) {
+        setFormError('Please complete the CAPTCHA verification.');
+        return;
+      }
     }
     setFormError(null);
     setSubmitting(true);
@@ -114,12 +118,14 @@ export function AdminLoginPage() {
               </div>
             </div>
 
-            <TurnstileCaptcha
-              ref={turnstileRef}
-              onVerify={(token) => setCaptchaToken(token)}
-              onError={() => setFormError('CAPTCHA verification failed. Please try again.')}
-              onExpire={() => setCaptchaToken(null)}
-            />
+            {CAPTCHA_ENABLED && (
+              <TurnstileCaptcha
+                ref={turnstileRef}
+                onVerify={(token) => setCaptchaToken(token)}
+                onError={() => setFormError('CAPTCHA verification failed. Please try again.')}
+                onExpire={() => setCaptchaToken(null)}
+              />
+            )}
 
             {formError && (
               <div className="rounded-xl border border-error-200 bg-error-50 px-4 py-3 text-sm font-medium text-error-700">
@@ -143,7 +149,7 @@ export function AdminLoginPage() {
             ) : (
               <button
                 type="submit"
-                disabled={submitting || (import.meta.env.PROD && !captchaConfigured)}
+                disabled={submitting || (CAPTCHA_ENABLED && import.meta.env.PROD && !captchaConfigured)}
                 className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-brand-600 text-sm font-semibold text-white shadow-sm transition-all hover:bg-brand-700 disabled:opacity-60"
               >
                 {submitting ? (

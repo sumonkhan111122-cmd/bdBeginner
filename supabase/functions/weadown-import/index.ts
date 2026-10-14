@@ -40,6 +40,25 @@ function jsonResponse(body: Record<string, unknown>, status = 200): Response {
   });
 }
 
+// Supabase/PostgREST errors are plain objects rather than Error instances.
+// Keep their useful fields so the admin UI can show the actual import failure.
+function formatError(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string" && error.trim()) return error;
+  if (error && typeof error === "object") {
+    const record = error as Record<string, unknown>;
+    const parts = [record.message, record.details, record.hint, record.code]
+      .filter((value): value is string => typeof value === "string" && value.trim().length > 0);
+    if (parts.length > 0) return parts.join(" — ");
+    try {
+      return JSON.stringify(error);
+    } catch {
+      // Fall through to the generic message for non-serializable values.
+    }
+  }
+  return "Import failed";
+}
+
 function decodeHtml(value: string): string {
   const named: Record<string, string> = {
     amp: "&",
@@ -333,7 +352,6 @@ async function importOne(
         sku: null,
         price,
         compare_at_price: null,
-        icon: "Package",
         product_type: "digital_download",
         delivery_type: "digital_download",
         status: "draft",
@@ -477,7 +495,7 @@ Deno.serve(async (req) => {
         } catch (error) {
           errors.push({
             sourceUrl: product.sourceUrl,
-            message: error instanceof Error ? error.message : "Import failed",
+            message: formatError(error),
           });
         }
       }
@@ -492,7 +510,7 @@ Deno.serve(async (req) => {
 
     return jsonResponse({ error: "unsupported_action" }, 400);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Internal server error";
+    const message = formatError(error);
     const status = /Authentication|required|Administrator/.test(message) ? 403 : 500;
     console.error(`[WEADOWN_IMPORT] ${message}`);
     return jsonResponse({ error: message }, status);

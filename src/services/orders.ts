@@ -102,12 +102,28 @@ export async function validateCheckoutCart(items: CartItem[]): Promise<{
 }> {
   if (items.length === 0) return { available: [], unavailable: [] };
   const ids = [...new Set(items.map((item) => item.productId))];
-  const { data, error } = await getSupabase()
-    .from('products')
-    .select('id,name,slug,price,thumbnail_url,delivery_type,status')
-    .in('id', ids)
-    .eq('status', 'published');
-  if (error) throw error;
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const validUuidIds = ids.filter((id) => uuidRegex.test(id));
+  
+  let data: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    price: number;
+    thumbnail_url: string | null;
+    delivery_type: string;
+    status: string;
+  }> = [];
+
+  if (validUuidIds.length > 0) {
+    const { data: rows, error } = await getSupabase()
+      .from('products')
+      .select('id,name,slug,price,thumbnail_url,delivery_type,status')
+      .in('id', validUuidIds)
+      .eq('status', 'published');
+    if (error) throw error;
+    data = rows ?? [];
+  }
   const available = (data ?? []).map((row) => ({
     id: String(row.id),
     name: String(row.name),

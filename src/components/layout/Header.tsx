@@ -20,10 +20,17 @@ import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { useDiscovery } from '@/context/DiscoveryContext';
 import { safeHttpUrl } from '@/lib/urls';
 
-const navLinks = [
+interface NavLinkItem {
+  label: string;
+  to: string;
+  external?: boolean;
+}
+
+const navLinks: NavLinkItem[] = [
   { label: 'Products', to: '/products' },
   { label: 'Services', to: '/services' },
   { label: 'WordPress', to: '/wordpress' },
+  { label: 'Playflix Tool', to: 'https://www.bdbeginner.com/playflix', external: true },
   { label: 'Resources', to: '/resources' },
   { label: 'Deals', to: '/deals' },
 ];
@@ -105,21 +112,31 @@ export function Header() {
 
           {/* Desktop nav */}
           <nav className="hidden items-center gap-1 lg:flex" aria-label="Main navigation">
-            {navLinks.map((link) => (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                className={({ isActive }) =>
-                  `rounded-lg px-3.5 py-2 text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'text-brand-700 bg-brand-50'
-                      : 'text-ink-600 hover:text-ink-900 hover:bg-ink-50'
-                  }`
-                }
-              >
-                {link.label}
-              </NavLink>
-            ))}
+            {navLinks.map((link) =>
+              link.external ? (
+                <a
+                  key={link.to}
+                  href={link.to}
+                  className="rounded-lg px-3.5 py-2 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-50 hover:text-ink-900"
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  className={({ isActive }) =>
+                    `rounded-lg px-3.5 py-2 text-sm font-medium transition-colors ${
+                      isActive
+                        ? 'text-brand-700 bg-brand-50'
+                        : 'text-ink-600 hover:text-ink-900 hover:bg-ink-50'
+                    }`
+                  }
+                >
+                  {link.label}
+                </NavLink>
+              )
+            )}
           </nav>
 
           {/* Desktop actions */}
@@ -278,22 +295,34 @@ export function Header() {
 
               {/* Nav links */}
               <nav className="flex flex-col gap-1" aria-label="Mobile navigation">
-                {navLinks.map((link) => (
-                  <NavLink
-                    key={link.to}
-                    to={link.to}
-                    className={({ isActive }) =>
-                      `flex items-center justify-between rounded-xl px-4 py-3.5 text-base font-medium transition-colors ${
-                        isActive
-                          ? 'bg-brand-50 text-brand-700'
-                          : 'text-ink-700 hover:bg-ink-50'
-                      }`
-                    }
-                  >
-                    {link.label}
-                    <ChevronRight size={18} className="text-ink-300" />
-                  </NavLink>
-                ))}
+                {navLinks.map((link) =>
+                  link.external ? (
+                    <a
+                      key={link.to}
+                      href={link.to}
+                      className="flex items-center justify-between rounded-xl px-4 py-3.5 text-base font-medium text-ink-700 transition-colors hover:bg-ink-50"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      {link.label}
+                      <ChevronRight size={18} className="text-ink-300" />
+                    </a>
+                  ) : (
+                    <NavLink
+                      key={link.to}
+                      to={link.to}
+                      className={({ isActive }) =>
+                        `flex items-center justify-between rounded-xl px-4 py-3.5 text-base font-medium transition-colors ${
+                          isActive
+                            ? 'bg-brand-50 text-brand-700'
+                            : 'text-ink-700 hover:bg-ink-50'
+                        }`
+                      }
+                    >
+                      {link.label}
+                      <ChevronRight size={18} className="text-ink-300" />
+                    </NavLink>
+                  )
+                )}
               </nav>
 
               <div className="my-5 h-px bg-ink-100" />

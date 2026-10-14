@@ -1,5 +1,6 @@
 import { getSupabase } from '@/lib/supabase';
 import type { Product, ProductFaqItem, ProductImage, ProductType, DeliveryType, Category } from '@/types';
+import { allCatalogProducts } from '@/data/catalogProducts';
 import type {
   CategoryRow,
   ProductFeatureRow,
@@ -89,6 +90,8 @@ function mapProduct(record: ProductRecord, relations: Partial<ProductRelations> 
     }
   }
 
+  const staticData = allCatalogProducts.find((p) => p.slug === record.slug || p.id === record.id);
+
   const productImages: ProductImage[] = images.map((image) => ({
     id: image.id,
     url: image.image_url,
@@ -99,44 +102,68 @@ function mapProduct(record: ProductRecord, relations: Partial<ProductRelations> 
     answer: faq.answer,
   }));
   const accent = accentByCategory[categorySlug] ?? 'brand';
-  const descriptor = record.short_description ?? record.description ?? '';
+  const descriptor = record.short_description ?? record.description ?? staticData?.shortDescription ?? '';
+
+  const effectiveImages = productImages.length > 1
+    ? productImages
+    : (staticData?.images && staticData.images.length > 1)
+      ? staticData.images
+      : productImages.length > 0
+        ? productImages
+        : record.thumbnail_url
+          ? [{ id: `${record.id}-thumbnail`, url: record.thumbnail_url, alt: record.name }]
+          : staticData?.thumbnail
+            ? [{ id: `${record.id}-thumbnail`, url: staticData.thumbnail, alt: record.name }]
+            : [];
+
+  const effectiveFeatures = features.length > 0
+    ? features.map((item) => item.feature)
+    : (staticData?.features ?? []);
+
+  const effectiveWhatsIncluded = includes.length > 0
+    ? includes.map((item) => item.item)
+    : (staticData?.whatsIncluded ?? []);
+
+  const effectiveFaqs = productFaq.length > 0
+    ? productFaq
+    : (staticData?.faq ?? []);
+
+  const effectiveThumbnail = record.thumbnail_url || staticData?.thumbnail || effectiveImages[0]?.url || '';
+  const effectiveDescription = (record.description && record.description.length > 60)
+    ? record.description
+    : (staticData?.description || record.short_description || staticData?.shortDescription || '');
 
   return {
     id: record.id,
     name: record.name,
     slug: record.slug,
-    shortDescription: record.short_description ?? '',
-    description: record.description ?? record.short_description ?? '',
-    category: category?.name ?? 'Digital Resources',
+    shortDescription: record.short_description || staticData?.shortDescription || '',
+    description: effectiveDescription,
+    category: category?.name ?? staticData?.category ?? 'Digital Resources',
     price: Number(record.price),
-    compareAtPrice: record.compare_at_price === null ? undefined : Number(record.compare_at_price),
-    previousPrice: record.compare_at_price === null ? undefined : Number(record.compare_at_price),
-    featured: record.featured,
-    newProduct: record.new_product,
-    badge: record.featured ? 'featured' : record.new_product ? 'new' : undefined,
-    icon: iconByCategory[categorySlug] ?? 'Package',
+    compareAtPrice: record.compare_at_price === null ? (staticData?.compareAtPrice ?? undefined) : Number(record.compare_at_price),
+    previousPrice: record.compare_at_price === null ? (staticData?.previousPrice ?? undefined) : Number(record.compare_at_price),
+    featured: record.featured || !!staticData?.featured,
+    newProduct: record.new_product || !!staticData?.newProduct,
+    badge: record.featured ? 'featured' : record.new_product ? 'new' : staticData?.badge,
+    icon: iconByCategory[categorySlug] ?? staticData?.icon ?? 'Package',
     accent,
     descriptor,
-    thumbnail: record.thumbnail_url ?? '',
-    images:
-      productImages.length > 0
-        ? productImages
-        : record.thumbnail_url
-          ? [{ id: `${record.id}-thumbnail`, url: record.thumbnail_url, alt: record.name }]
-          : [],
+    thumbnail: effectiveThumbnail,
+    images: effectiveImages,
     deliveryType: toDeliveryType(record.delivery_type),
     productType: toProductType(record.product_type),
-    compatibility: record.compatibility ?? undefined,
-    requirements: record.requirements ?? undefined,
-    version: record.version ?? undefined,
-    supportPeriod: record.support_period ?? undefined,
-    updatePolicy: record.update_policy ?? undefined,
-    deliveryDescription: record.delivery_description ?? '',
-    features: features.map((item) => item.feature),
-    whatsIncluded: includes.map((item) => item.item),
-    faq: productFaq,
-    seoTitle: record.seo_title ?? undefined,
-    seoDescription: record.seo_description ?? undefined,
+    compatibility: record.compatibility ?? staticData?.compatibility,
+    requirements: record.requirements ?? staticData?.requirements,
+    version: record.version ?? staticData?.version,
+    supportPeriod: record.support_period ?? staticData?.supportPeriod,
+    updatePolicy: record.update_policy ?? staticData?.updatePolicy,
+    deliveryDescription: record.delivery_description || staticData?.deliveryDescription || '',
+    features: effectiveFeatures,
+    whatsIncluded: effectiveWhatsIncluded,
+    faq: effectiveFaqs,
+    seoTitle: record.seo_title ?? staticData?.seoTitle,
+    seoDescription: record.seo_description ?? staticData?.seoDescription,
     reviewStats,
   };
 }
@@ -172,22 +199,18 @@ export async function getPublishedProducts(): Promise<Product[]> {
     .order('created_at', { ascending: false });
   if (error) throw error;
   const records = (data ?? []) as unknown as ProductRecord[];
-  return records.map((record) => mapProduct(record));
+  const dbProducts = records.map((record) => mapProduct(record));
+
+  // Merge in allCatalogProducts if not already present in database
+  const existingSlugs = new Set(dbProducts.map((p) => p.slug));
+  const missingCatalog = allCatalogProducts.filter((t) => !existingSlugs.has(t.slug));
+
+  return [...dbProducts, ...missingCatalog];
 }
 
 export async function getFeaturedProductsFromCatalog(limit = 8): Promise<Product[]> {
-  const sb = getSupabase();
-  const { data, error } = await sb
-    .from('products')
-    .select(productSelect)
-    .eq('status', 'published')
-    .eq('featured', true)
-    .order('sort_order')
-    .order('created_at', { ascending: false })
-    .limit(limit);
-  if (error) throw error;
-  const records = (data ?? []) as unknown as ProductRecord[];
-  return records.map((record) => mapProduct(record));
+  const allProducts = await getPublishedProducts();
+  return allProducts.filter((p) => p.featured).slice(0, limit);
 }
 
 export async function getProductBySlugFromCatalog(slug: string): Promise<Product | null> {
@@ -199,43 +222,37 @@ export async function getProductBySlugFromCatalog(slug: string): Promise<Product
     .eq('status', 'published')
     .maybeSingle();
   if (error) throw error;
-  if (!data) return null;
 
-  const record = data as unknown as ProductRecord;
-  const [images, features, includes, faqs] = await Promise.all([
-    sb.from('product_images').select('*').eq('product_id', record.id).order('sort_order'),
-    sb.from('product_features').select('*').eq('product_id', record.id).order('sort_order'),
-    sb.from('product_includes').select('*').eq('product_id', record.id).order('sort_order'),
-    sb.from('product_faqs').select('*').eq('product_id', record.id).order('sort_order'),
-  ]);
-  const relationResults = [images, features, includes, faqs];
-  const relationError = relationResults.find((result) => result.error)?.error;
-  if (relationError) throw relationError;
+  if (data) {
+    const record = data as unknown as ProductRecord;
+    const [images, features, includes, faqs] = await Promise.all([
+      sb.from('product_images').select('*').eq('product_id', record.id).order('sort_order'),
+      sb.from('product_features').select('*').eq('product_id', record.id).order('sort_order'),
+      sb.from('product_includes').select('*').eq('product_id', record.id).order('sort_order'),
+      sb.from('product_faqs').select('*').eq('product_id', record.id).order('sort_order'),
+    ]);
+    const relationResults = [images, features, includes, faqs];
+    const relationError = relationResults.find((result) => result.error)?.error;
+    if (relationError) throw relationError;
 
-  return mapProduct(record, {
-    images: (images.data ?? []) as ProductImageRow[],
-    features: (features.data ?? []) as ProductFeatureRow[],
-    includes: (includes.data ?? []) as ProductIncludeRow[],
-    faqs: (faqs.data ?? []) as ProductFaqRow[],
-  });
+    return mapProduct(record, {
+      images: (images.data ?? []) as ProductImageRow[],
+      features: (features.data ?? []) as ProductFeatureRow[],
+      includes: (includes.data ?? []) as ProductIncludeRow[],
+      faqs: (faqs.data ?? []) as ProductFaqRow[],
+    });
+  }
+
+  // Fallback to allCatalogProducts
+  const fallback = allCatalogProducts.find((t) => t.slug === slug);
+  return fallback ?? null;
 }
 
 export async function getRelatedProductsFromCatalog(product: Product, limit = 4): Promise<Product[]> {
-  const sb = getSupabase();
-  const { data, error } = await sb
-    .from('products')
-    .select(productSelect)
-    .eq('status', 'published')
-    .neq('id', product.id)
-    .order('sort_order')
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  const records = (data ?? []) as unknown as ProductRecord[];
-  const related = records
-    .map((record) => mapProduct(record))
-    .filter((candidate) => candidate.category === product.category)
+  const allProducts = await getPublishedProducts();
+  return allProducts
+    .filter((candidate) => candidate.id !== product.id && candidate.category === product.category)
     .slice(0, limit);
-  return related;
 }
 
 export function categoriesToType(cats: CatalogCategory[]): Category[] {

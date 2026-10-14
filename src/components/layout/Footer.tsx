@@ -15,6 +15,7 @@ const footerGroups = [
     links: [
       { label: 'All Products', to: '/products' },
       { label: 'WordPress', to: '/wordpress' },
+      { label: 'Playflix Tool', to: 'https://www.bdbeginner.com/playflix' },
       { label: 'Digital Resources', to: '/resources' },
       { label: 'Deals', to: '/deals' },
       { label: 'Categories', to: '/categories' },
@@ -113,16 +114,28 @@ export function Footer() {
                 {group.title}
               </h3>
               <ul className="mt-4 space-y-2.5">
-                {group.links.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      to={link.to}
-                      className="text-sm text-ink-500 transition-colors hover:text-ink-900 link-underline"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
+                {group.links.map((link) => {
+                  const isExternal = link.to.startsWith('http');
+                  return (
+                    <li key={link.label}>
+                      {isExternal ? (
+                        <a
+                          href={link.to}
+                          className="text-sm text-ink-500 transition-colors hover:text-ink-900 link-underline"
+                        >
+                          {link.label}
+                        </a>
+                      ) : (
+                        <Link
+                          to={link.to}
+                          className="text-sm text-ink-500 transition-colors hover:text-ink-900 link-underline"
+                        >
+                          {link.label}
+                        </Link>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}

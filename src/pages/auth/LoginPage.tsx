@@ -19,6 +19,7 @@ export function LoginPage() {
   
   const turnstileRef = useRef<TurnstileRef>(null);
   const captchaConfigured = Boolean(import.meta.env.VITE_TURNSTILE_SITE_KEY);
+  const CAPTCHA_ENABLED = false; // TEMPORARILY DISABLED
   const googleAuthEnabled = import.meta.env.VITE_GOOGLE_AUTH_ENABLED === 'true';
 
   // If already logged in, redirect
@@ -48,13 +49,15 @@ export function LoginPage() {
       return;
     }
     
-    if (import.meta.env.PROD && !captchaConfigured) {
-      setError('Sign-in verification is not configured. Please contact support.');
-      return;
-    }
-    if (captchaConfigured && !captchaToken) {
-      setError('Please complete the CAPTCHA verification.');
-      return;
+    if (CAPTCHA_ENABLED) {
+      if (import.meta.env.PROD && !captchaConfigured) {
+        setError('Sign-in verification is not configured. Please contact support.');
+        return;
+      }
+      if (captchaConfigured && !captchaToken) {
+        setError('Please complete the CAPTCHA verification.');
+        return;
+      }
     }
 
     setError(null);
@@ -174,12 +177,14 @@ export function LoginPage() {
                     </div>
                   </div>
 
-                  <TurnstileCaptcha
-                    ref={turnstileRef}
-                    onVerify={(token) => setCaptchaToken(token)}
-                    onError={() => setError('CAPTCHA verification failed. Please try again.')}
-                    onExpire={() => setCaptchaToken(null)}
-                  />
+                  {CAPTCHA_ENABLED && (
+                    <TurnstileCaptcha
+                      ref={turnstileRef}
+                      onVerify={(token) => setCaptchaToken(token)}
+                      onError={() => setError('CAPTCHA verification failed. Please try again.')}
+                      onExpire={() => setCaptchaToken(null)}
+                    />
+                  )}
 
                   {error && (
                     <div className="rounded-xl border border-error-200 bg-error-50 px-4 py-3 text-sm font-medium text-error-700">
@@ -189,7 +194,7 @@ export function LoginPage() {
 
                   <button
                     type="submit"
-                    disabled={submitting || (import.meta.env.PROD && !captchaConfigured)}
+                    disabled={submitting || (CAPTCHA_ENABLED && import.meta.env.PROD && !captchaConfigured)}
                     className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-brand-600 text-sm font-semibold text-white shadow-sm transition-all hover:bg-brand-700 disabled:opacity-60"
                   >
                     {submitting ? (

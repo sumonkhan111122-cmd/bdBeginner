@@ -85,6 +85,13 @@ function ScrollToTop() {
   return null;
 }
 
+function PlayflixRedirect() {
+  useEffect(() => {
+    window.location.href = 'https://www.bdbeginner.com/playflix';
+  }, []);
+  return null;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -113,17 +120,8 @@ export default function App() {
             />
           }
         />
-        <Route
-          path="/wordpress"
-          element={
-            <PlaceholderPage
-              title="WordPress Products"
-              description="Browse our complete collection of WordPress themes, plugins, and templates — all in one place."
-              backLink="/"
-              backLabel="Back to Home"
-            />
-          }
-        />
+        <Route path="/wordpress" element={<ProductsPage initialCategory="WordPress" />} />
+        <Route path="/playflix" element={<PlayflixRedirect />} />
         <Route
           path="/resources"
           element={

@@ -39,7 +39,11 @@ const SORT_LABELS: Record<SortOption, string> = {
   'price-desc': 'Price: High to Low',
 };
 
-export function ProductsPage() {
+type ProductsPageProps = {
+  initialCategory?: string;
+};
+
+export function ProductsPage({ initialCategory }: ProductsPageProps = {}) {
   const formatPrice = useCurrencyFormatter();
   const { data: products, loading, error, retry } = usePublishedProducts();
   const priceRangeLabels = [
@@ -53,7 +57,9 @@ export function ProductsPage() {
     [products],
   );
   const [search, setSearch] = useState('');
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+    initialCategory ? [initialCategory] : [],
+  );
   const [selectedTypes, setSelectedTypes] = useState<DeliveryType[]>([]);
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<number[]>([]);
   const [sort, setSort] = useState<SortOption>('featured');
