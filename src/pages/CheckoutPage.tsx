@@ -222,18 +222,18 @@ export function CheckoutPage() {
       if (paymentMethod === 'bkash') {
         try {
           const bkashUrl = await initiateBkashPayment(result.order_number, result.access_token);
-          clearCart(); // Safe to clear cart now
+          // Do NOT clear cart here! Keep customer cart intact until bKash payment succeeds.
           window.location.assign(bkashUrl);
           return; // Don't redirect locally
         } catch {
-          clearCart(); // Safe to clear cart because order exists
-          // Navigate to success page with intent bkash_failed so it shows the message
+          // Do NOT clear cart! Keep cart intact if payment initiation fails.
+          // Navigate to success page with intent bkash_failed so it shows the retry options
           navigate(`/order/success/${encodeURIComponent(result.order_number)}?intent=bkash_failed`, { replace: true });
           return;
         }
       }
 
-      clearCart();
+      // Do NOT clear cart here! Keep cart intact until manual payment is submitted/verified.
       // Navigate to success page with intent manual so it automatically opens manual payment modal
       navigate(`/order/success/${encodeURIComponent(result.order_number)}?intent=manual`, { replace: true });
     } catch (error) {

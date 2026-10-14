@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { AlertCircle, Check, CheckCircle2, Copy, QrCode, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useCart } from '@/context/CartContext';
 import { useOrderAmountFormatter } from '@/hooks/useOrderAmountFormatter';
 import { submitManualPayment } from '@/services/payment';
 import {
@@ -87,6 +88,8 @@ export function ManualPaymentModal({
     }
   };
 
+  const { clearCart } = useCart();
+
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!selectedMethod || !selected) {
@@ -107,6 +110,7 @@ export function ManualPaymentModal({
         transactionId: transactionId.trim(),
         accessToken,
       });
+      clearCart();
       onSuccess();
     } catch (submissionError: unknown) {
       setError(

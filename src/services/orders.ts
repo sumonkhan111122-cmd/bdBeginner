@@ -405,14 +405,25 @@ export async function deleteAdminOrders(orderIds: string[]): Promise<void> {
   if (orderIds.length === 0) return;
   const sb = getSupabase();
 
-  // Try to safely delete from dependent tables first to handle missing ON DELETE CASCADE
-  // We swallow errors here so that if a table doesn't exist or RLS blocks it, we still try to delete the order
-  await sb.from('order_items').delete().in('order_id', orderIds).catch(() => {});
+  // Try RPC first for clean atomic deletion with cascading under admin security definer
+  const { error: rpcError } = await sb.rpc('admin_delete_orders', {
+    p_order_ids: orderIds,
+  });
+
+  if (!rpcError) {
+    return;
+  }
+
+  console.warn('admin_delete_orders RPC error, trying direct deletion fallback:', rpcError);
+
+  // Fallback to direct deletion
+  await sb.from('order_item_fulfillments').delete().in('order_id', orderIds).catch(() => {});
   await sb.from('payment_transactions').delete().in('order_id', orderIds).catch(() => {});
   await sb.from('order_email_log').delete().in('order_id', orderIds).catch(() => {});
   await sb.from('order_status_history').delete().in('order_id', orderIds).catch(() => {});
+  await sb.from('order_items').delete().in('order_id', orderIds).catch(() => {});
   await sb.from('coupon_redemptions').delete().in('order_id', orderIds).catch(() => {});
-  await sb.from('product_reviews').delete().in('order_id', orderIds).catch(() => {});
+  await sb.from('product_reviews').update({ verified_order_id: null }).in('verified_order_id', orderIds).catch(() => {});
   
   const { error } = await sb
     .from('orders')

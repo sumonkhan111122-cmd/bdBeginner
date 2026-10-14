@@ -13,12 +13,20 @@ import { getManualPaymentState, initiateBkashPayment, type ManualPaymentState } 
 import { fetchPublicPaymentSettings, getEnabledManualMethods } from '@/services/paymentSettings';
 import { listOrderDownloadsAuth, listOrderDownloadsGuest, openDownloadLinkAuth, openDownloadLinkGuest, type DownloadLinkMetadata } from '@/services/downloads';
 import { ManualPaymentModal } from '@/components/checkout/ManualPaymentModal';
+import { useCart } from '@/context/CartContext';
 import type { OrderWithDetails } from '@/types/orders';
 import type { PaymentMethodSetting } from '@/types/settings';
 
 function ReceiptView({ receipt, signedIn, guestToken }: { receipt: OrderWithDetails; signedIn: boolean; guestToken?: string }) {
   const { order, items } = receipt;
+  const { clearCart } = useCart();
   const formatAmount = useOrderAmountFormatter(order.currency_code);
+
+  useEffect(() => {
+    if (order.payment_status === 'paid') {
+      clearCart();
+    }
+  }, [order.payment_status, clearCart]);
 
   const [downloads, setDownloads] = useState<DownloadLinkMetadata[]>([]);
   const [downloadsLoading, setDownloadsLoading] = useState(true);

@@ -3,10 +3,12 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle2, XCircle, AlertCircle, RefreshCcw } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/Button';
+import { useCart } from '@/context/CartContext';
 
 export function PaymentResultPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { clearCart } = useCart();
   const status = searchParams.get('status');
   const orderNumber = searchParams.get('order_number');
   const message = searchParams.get('message');
@@ -18,6 +20,13 @@ export function PaymentResultPage() {
       navigate('/', { replace: true });
     }
   }, [status, navigate]);
+
+  // Clear cart only when payment is actually successful
+  useEffect(() => {
+    if (status === 'success') {
+      clearCart();
+    }
+  }, [status, clearCart]);
 
   if (!status) return null;
 

@@ -105,15 +105,36 @@ export function AdminOrdersPage() {
   };
 
   const handleDeleteSelected = async () => {
-    if (!window.confirm('Are you sure you want to delete the selected orders? This cannot be undone.')) return;
+    if (!window.confirm(`Are you sure you want to delete the ${selectedIds.size} selected order(s)? This cannot be undone.`)) return;
     setDeleting(true);
+    setError(null);
     try {
       await deleteAdminOrders(Array.from(selectedIds));
       setSelectedIds(new Set());
       await loadOrders();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Failed to delete orders:', err);
-      setError('Failed to delete orders.');
+      setError(err instanceof Error ? err.message : 'Failed to delete orders.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteSingle = async (orderId: string, orderNumber: string) => {
+    if (!window.confirm(`Are you sure you want to delete order ${orderNumber}? This cannot be undone.`)) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      await deleteAdminOrders([orderId]);
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(orderId);
+        return next;
+      });
+      await loadOrders();
+    } catch (err: unknown) {
+      console.error('Failed to delete order:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete order.');
     } finally {
       setDeleting(false);
     }
@@ -163,7 +184,7 @@ export function AdminOrdersPage() {
           <th className="px-5 py-3">Payment</th>
           <th className="px-5 py-3">Fulfillment</th>
           <th className="px-5 py-3 text-right">Action</th>
-        </tr></thead><tbody className="divide-y divide-ink-50">{paginatedOrders.map((order) => <tr key={order.id} className="hover:bg-ink-50/50 group cursor-pointer" onClick={() => navigate(`/admin/orders/${order.id}`)}><td className="px-5 py-4" onClick={(e) => e.stopPropagation()}><input type="checkbox" className="h-4 w-4 rounded border-ink-300 text-brand-600 focus:ring-brand-600" checked={selectedIds.has(order.id)} onChange={(e) => handleSelectOrder(order.id, e.target.checked)} /></td><td className="px-5 py-4 font-semibold text-ink-900 hover:text-brand-600">{order.order_number}</td><td className="px-5 py-4 text-ink-700">{order.customer_name}</td><td className="px-5 py-4 text-ink-500">{order.customer_email}</td><td className="px-5 py-4 whitespace-nowrap text-ink-500">{formatOrderDate(order.created_at)}</td><td className="px-5 py-4 text-ink-600">{getOrderItemCount(order)}</td><td className="px-5 py-4 font-semibold text-ink-800"><span>{formatAmount(order)}</span>{Number(order.discount_total || 0) > 0 && <span className="ml-1.5 inline-flex rounded-full bg-success-50 px-1.5 py-0.5 text-[10px] font-bold text-success-700">Disc</span>}</td><td className="px-5 py-4 text-ink-500 uppercase text-xs font-bold tracking-wider">{order.payment_method || 'none'}</td><td className="px-5 py-4"><OrderStatusBadge value={getOrderStatus(order)} /></td><td className="px-5 py-4"><OrderStatusBadge value={order.payment_status} /></td><td className="px-5 py-4"><OrderStatusBadge value={order.fulfillment_status} /></td><td className="px-5 py-4 text-right"><Link to={`/admin/orders/${order.id}`} className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-ink-200 px-3 font-semibold text-ink-700 hover:bg-ink-50" onClick={(e) => e.stopPropagation()}><Eye size={14} /> View</Link></td></tr>)}</tbody></table>
+        </tr></thead><tbody className="divide-y divide-ink-50">{paginatedOrders.map((order) => <tr key={order.id} className="hover:bg-ink-50/50 group cursor-pointer" onClick={() => navigate(`/admin/orders/${order.id}`)}><td className="px-5 py-4" onClick={(e) => e.stopPropagation()}><input type="checkbox" className="h-4 w-4 rounded border-ink-300 text-brand-600 focus:ring-brand-600" checked={selectedIds.has(order.id)} onChange={(e) => handleSelectOrder(order.id, e.target.checked)} /></td><td className="px-5 py-4 font-semibold text-ink-900 hover:text-brand-600">{order.order_number}</td><td className="px-5 py-4 text-ink-700">{order.customer_name}</td><td className="px-5 py-4 text-ink-500">{order.customer_email}</td><td className="px-5 py-4 whitespace-nowrap text-ink-500">{formatOrderDate(order.created_at)}</td><td className="px-5 py-4 text-ink-600">{getOrderItemCount(order)}</td><td className="px-5 py-4 font-semibold text-ink-800"><span>{formatAmount(order)}</span>{Number(order.discount_total || 0) > 0 && <span className="ml-1.5 inline-flex rounded-full bg-success-50 px-1.5 py-0.5 text-[10px] font-bold text-success-700">Disc</span>}</td><td className="px-5 py-4 text-ink-500 uppercase text-xs font-bold tracking-wider">{order.payment_method || 'none'}</td><td className="px-5 py-4"><OrderStatusBadge value={getOrderStatus(order)} /></td><td className="px-5 py-4"><OrderStatusBadge value={order.payment_status} /></td><td className="px-5 py-4"><OrderStatusBadge value={order.fulfillment_status} /></td><td className="px-5 py-4 text-right" onClick={(e) => e.stopPropagation()}><div className="inline-flex items-center justify-end gap-1.5"><Link to={`/admin/orders/${order.id}`} className="inline-flex h-8 items-center gap-1 rounded-lg border border-ink-200 px-2.5 text-xs font-semibold text-ink-700 hover:bg-ink-50"><Eye size={13} /> View</Link><button type="button" onClick={() => handleDeleteSingle(order.id, order.order_number)} disabled={deleting} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-ink-200 text-ink-400 hover:border-error-200 hover:bg-error-50 hover:text-error-600 disabled:opacity-50" title={`Delete order ${order.order_number}`}><Trash2 size={13} /></button></div></td></tr>)}</tbody></table>
         <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
         </div>}
       </div>

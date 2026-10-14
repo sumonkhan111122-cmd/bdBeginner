@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState, Fragment } from 'react';
-import { AlertCircle, ArrowLeft, CheckCircle2, Clock3, ExternalLink, Key, Package, Save, CreditCard } from 'lucide-react';
-import { Link, useParams } from 'react-router-dom';
+import { AlertCircle, ArrowLeft, CheckCircle2, Clock3, ExternalLink, Key, Package, Save, CreditCard, Trash2 } from 'lucide-react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { OrderItemsTable } from '@/components/orders/OrderItemsTable';
 import { useOrderAmountFormatter } from '@/hooks/useOrderAmountFormatter';
 import { OrderStatusBadge } from '@/components/orders/OrderStatusBadge';
 import { OrderEmailLogs } from '@/components/admin/OrderEmailLogs';
 import { formatOrderDate, getHistoryOrderStatus, getOrderStatus } from '@/lib/orders';
-import { getAdminOrderById, updateAdminOrderStatus, triggerOrderNotification } from '@/services/orders';
+import { getAdminOrderById, updateAdminOrderStatus, triggerOrderNotification, deleteAdminOrders } from '@/services/orders';
 import { fetchOrderEmailLogs, type OrderEmailLogRow } from '@/services/admin';
 import { adminListOrderFulfillments } from '@/services/fulfillment';
 import { reviewManualPayment, MANUAL_REJECTION_REASONS, type ManualRejectionReasonCode } from '@/services/payment';
@@ -105,10 +105,44 @@ function AdminOrderContent({ detail, onReload }: { detail: OrderWithDetails; onR
     }
   };
 
+  const navigate = useNavigate();
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!window.confirm(`Are you sure you want to delete order ${order.order_number}? This cannot be undone.`)) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      await deleteAdminOrders([order.id]);
+      navigate('/admin/orders', { replace: true });
+    } catch (err: unknown) {
+      console.error('Failed to delete order:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete order.');
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="px-5 py-8 lg:px-8 lg:py-10">
       <Link to="/admin/orders" className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-500 hover:text-ink-900"><ArrowLeft size={16} /> Back to Orders</Link>
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><h1 className="font-display text-2xl font-bold text-ink-900">{order.order_number}</h1><p className="mt-1 text-sm text-ink-500">Created {formatOrderDate(order.created_at)}</p></div><OrderStatusBadge value={getOrderStatus(order)} /></div>
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-ink-900">{order.order_number}</h1>
+          <p className="mt-1 text-sm text-ink-500">Created {formatOrderDate(order.created_at)}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <OrderStatusBadge value={getOrderStatus(order)} />
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-error-200 bg-error-50 px-3 text-xs font-semibold text-error-700 hover:bg-error-100 disabled:opacity-50"
+          >
+            <Trash2 size={14} />
+            {deleting ? 'Deleting...' : 'Delete Order'}
+          </button>
+        </div>
+      </div>
 
       <div className="mt-6 grid gap-5 xl:grid-cols-3">
         <div className="space-y-5 xl:col-span-2">
