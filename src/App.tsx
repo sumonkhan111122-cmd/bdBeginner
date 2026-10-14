@@ -20,6 +20,7 @@ const ProductsPage = lazyPage(() => import('@/pages/ProductsPage'), 'ProductsPag
 const ProductDetailPage = lazyPage(() => import('@/pages/ProductDetailPage'), 'ProductDetailPage');
 const CategoriesPage = lazyPage(() => import('@/pages/CategoriesPage'), 'CategoriesPage');
 const ServicesPage = lazyPage(() => import('@/pages/ServicesPage'), 'ServicesPage');
+const ServiceDetailPage = lazyPage(() => import('@/pages/ServiceDetailPage'), 'ServiceDetailPage');
 const SupportPage = lazyPage(() => import('@/pages/SupportPage'), 'SupportPage');
 const ContactPage = lazyPage(() => import('@/pages/ContactPage'), 'ContactPage');
 const FaqPage = lazyPage(() => import('@/pages/FaqPage'), 'FaqPage');
@@ -109,17 +110,7 @@ export default function App() {
         <Route path="/products/:slug" element={<ProductDetailPage />} />
         <Route path="/categories" element={<CategoriesPage />} />
         <Route path="/services" element={<ServicesPage />} />
-        <Route
-          path="/services/:slug"
-          element={
-            <PlaceholderPage
-              title="Service Details"
-              description="Detailed information about this service, including scope, process, and how to get started, will be available here."
-              backLink="/services"
-              backLabel="Back to Services"
-            />
-          }
-        />
+        <Route path="/services/:slug" element={<ServiceDetailPage />} />
         <Route path="/wordpress" element={<ProductsPage initialCategory="WordPress" />} />
         <Route path="/playflix" element={<PlayflixRedirect />} />
         <Route

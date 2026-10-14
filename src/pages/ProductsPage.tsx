@@ -1,10 +1,11 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { ProductCard } from '@/components/cards/ProductCard';
 import { Button } from '@/components/ui/Button';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { ProductGridSkeleton } from '@/components/ui/SkeletonCard';
 import { CatalogError, CatalogEmpty } from '@/components/ui/CatalogState';
+import { Pagination } from '@/components/ui/Pagination';
 import { usePublishedProducts } from '@/hooks/useCatalog';
 import { useCurrencyFormatter } from '@/hooks/useCurrency';
 import {
@@ -56,6 +57,8 @@ export function ProductsPage({ initialCategory }: ProductsPageProps = {}) {
     () => [...new Set(products.map((p) => p.category))].sort(),
     [products],
   );
+  const PRODUCTS_PER_PAGE = 30;
+  const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     initialCategory ? [initialCategory] : [],
@@ -64,6 +67,10 @@ export function ProductsPage({ initialCategory }: ProductsPageProps = {}) {
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<number[]>([]);
   const [sort, setSort] = useState<SortOption>('featured');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, selectedCategories, selectedTypes, selectedPriceRanges, sort]);
 
   const toggleCategory = useCallback((cat: string) => {
     setSelectedCategories((prev) =>
@@ -139,6 +146,12 @@ export function ProductsPage({ initialCategory }: ProductsPageProps = {}) {
 
     return result;
   }, [products, search, selectedCategories, selectedTypes, selectedPriceRanges, sort]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PRODUCTS_PER_PAGE));
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * PRODUCTS_PER_PAGE;
+    return filtered.slice(start, start + PRODUCTS_PER_PAGE);
+  }, [filtered, currentPage]);
 
   const activeFilterCount =
     selectedCategories.length +
@@ -336,7 +349,13 @@ export function ProductsPage({ initialCategory }: ProductsPageProps = {}) {
             <div className="flex flex-col gap-3 border-b border-ink-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-ink-500">
-                  <span className="font-bold text-ink-900">{filtered.length}</span>{' '}
+                  Showing{' '}
+                  <span className="font-bold text-ink-900">
+                    {filtered.length === 0
+                      ? 0
+                      : `${(currentPage - 1) * PRODUCTS_PER_PAGE + 1}–${Math.min(currentPage * PRODUCTS_PER_PAGE, filtered.length)}`}
+                  </span>{' '}
+                  of <span className="font-bold text-ink-900">{filtered.length}</span>{' '}
                   {filtered.length === 1 ? 'product' : 'products'}
                 </span>
                 {activeFilterCount > 0 && (
@@ -436,11 +455,26 @@ export function ProductsPage({ initialCategory }: ProductsPageProps = {}) {
                 <CatalogError onRetry={retry} />
               </div>
             ) : filtered.length > 0 ? (
-              <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3">
-                {filtered.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
+              <>
+                <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3">
+                  {paginatedProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+
+                {totalPages > 1 && (
+                  <div className="mt-10 overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-soft">
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={(page) => {
+                        setCurrentPage(page);
+                        window.scrollTo({ top: 140, behavior: 'smooth' });
+                      }}
+                    />
+                  </div>
+                )}
+              </>
             ) : hasActiveFilters ? (
               <div className="mt-6">
                 <CatalogEmpty filtered />

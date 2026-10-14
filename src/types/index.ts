@@ -83,9 +83,14 @@ export type Service = {
   id: string;
   slug: string;
   title: string;
+  tagline?: string;
   description: string;
   icon: string;
   features: string[];
+  category?: string;
+  deliveryTime?: string;
+  startingPrice?: string;
+  deliverables?: string[];
 };
 
 export type TrustItem = {
