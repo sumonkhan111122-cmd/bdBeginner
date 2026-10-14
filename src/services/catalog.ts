@@ -104,17 +104,13 @@ function mapProduct(record: ProductRecord, relations: Partial<ProductRelations> 
   const accent = accentByCategory[categorySlug] ?? 'brand';
   const descriptor = record.short_description ?? record.description ?? staticData?.shortDescription ?? '';
 
-  const effectiveImages = productImages.length > 1
+  const effectiveImages = productImages.length > 0
     ? productImages
-    : (staticData?.images && staticData.images.length > 1)
+    : staticData?.images && staticData.images.length > 0
       ? staticData.images
-      : productImages.length > 0
-        ? productImages
-        : record.thumbnail_url
-          ? [{ id: `${record.id}-thumbnail`, url: record.thumbnail_url, alt: record.name }]
-          : staticData?.thumbnail
-            ? [{ id: `${record.id}-thumbnail`, url: staticData.thumbnail, alt: record.name }]
-            : [];
+      : record.thumbnail_url
+        ? [{ id: `${record.id}-thumbnail`, url: record.thumbnail_url, alt: record.name }]
+        : [];
 
   const effectiveFeatures = features.length > 0
     ? features.map((item) => item.feature)

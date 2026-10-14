@@ -2,610 +2,6 @@ import type { Product } from '@/types';
 
 export const allCatalogProducts: Product[] = [
   {
-    "id": "f6dfc90c-7e00-4f25-b67b-6a5a1006ab54",
-    "name": "WordPress Starter Toolkit 2026",
-    "slug": "wordpress-starter-toolkit",
-    "shortDescription": "Complete starter bundle including premium starter templates, speed optimization guide, and essential setup tools.",
-    "description": "The WordPress Starter Toolkit is an all-in-one package crafted for web developers, freelancers, and agency owners. It includes pre-configured theme templates, best-practice security configurations, essential speed optimization snippets, and a step-by-step launch checklist to set up high-converting WordPress websites in minutes.",
-    "category": "WordPress",
-    "subcategory": "Essentials",
-    "price": 590,
-    "compareAtPrice": 1990,
-    "previousPrice": 1990,
-    "featured": true,
-    "newProduct": false,
-    "badge": "featured",
-    "icon": "Package",
-    "accent": "brand",
-    "descriptor": "Complete starter bundle including premium starter templates, speed optimization guide, and essential setup tools.",
-    "thumbnail": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-    "images": [
-      {
-        "id": "wordpress-starter-toolkit-img-0",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "WordPress Starter Toolkit 2026 Preview 1"
-      },
-      {
-        "id": "wordpress-starter-toolkit-img-1",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "WordPress Starter Toolkit 2026 Preview 2"
-      },
-      {
-        "id": "wordpress-starter-toolkit-img-2",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "WordPress Starter Toolkit 2026 Preview 3"
-      }
-    ],
-    "deliveryType": "instant-download",
-    "productType": "digital_download",
-    "version": "2026.1",
-    "compatibility": "Cross-platform compatible",
-    "requirements": "Modern web browser or standard system requirements",
-    "supportPeriod": "Lifetime access & bdBeginner documentation",
-    "updatePolicy": "Regular updates included",
-    "deliveryDescription": "Instant delivery. Download access provided immediately in dashboard upon purchase.",
-    "features": [
-      "Verified, authentic digital package and documentation",
-      "Instant digital delivery upon confirmed payment",
-      "Production-ready resources tested for efficiency",
-      "Comprehensive setup & configuration guide included",
-      "Dedicated priority technical support from bdBeginner"
-    ],
-    "whatsIncluded": [
-      "WordPress Starter Toolkit 2026 Full Package",
-      "Documentation & Quickstart Guide",
-      "Lifetime Access to Updates"
-    ],
-    "faq": [
-      {
-        "question": "How is this product delivered?",
-        "answer": "Instant digital delivery. Files become available in your customer dashboard right after payment confirmation."
-      },
-      {
-        "question": "Is support included?",
-        "answer": "Yes, full technical assistance is provided by bdBeginner team."
-      }
-    ],
-    "seoTitle": "WordPress Starter Toolkit 2026 | bdBeginner",
-    "seoDescription": "Complete starter bundle including premium starter templates, speed optimization guide, and essential setup tools.",
-    "rating": 4.9,
-    "reviewCount": 38,
-    "salesCount": 140,
-    "tags": [
-      "wordpress-starter-toolkit",
-      "digital",
-      "bdbeginner"
-    ]
-  },
-  {
-    "id": "b727ec52-c52e-452f-a19a-3cb784333751",
-    "name": "Modern Landing Page Template Pack",
-    "slug": "landing-page-template-pack",
-    "shortDescription": "High-converting responsive landing page templates built for Elementor, HTML5, and TailwindCSS.",
-    "description": "Accelerate your digital campaigns with our Modern Landing Page Template Pack. Designed with conversion-rate optimization principles, clean responsive grids, and stunning micro-interactions. Perfect for SaaS launches, digital products, consulting services, and agency portfolios.",
-    "category": "Digital Resources",
-    "subcategory": "Essentials",
-    "price": 790,
-    "compareAtPrice": 2490,
-    "previousPrice": 2490,
-    "featured": true,
-    "newProduct": false,
-    "badge": "featured",
-    "icon": "Package",
-    "accent": "brand",
-    "descriptor": "High-converting responsive landing page templates built for Elementor, HTML5, and TailwindCSS.",
-    "thumbnail": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-    "images": [
-      {
-        "id": "landing-page-template-pack-img-0",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Modern Landing Page Template Pack Preview 1"
-      },
-      {
-        "id": "landing-page-template-pack-img-1",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Modern Landing Page Template Pack Preview 2"
-      },
-      {
-        "id": "landing-page-template-pack-img-2",
-        "url": "https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Modern Landing Page Template Pack Preview 3"
-      }
-    ],
-    "deliveryType": "instant-download",
-    "productType": "digital_download",
-    "version": "3.4.0",
-    "compatibility": "Cross-platform compatible",
-    "requirements": "Modern web browser or standard system requirements",
-    "supportPeriod": "Lifetime access & bdBeginner documentation",
-    "updatePolicy": "Regular updates included",
-    "deliveryDescription": "Instant delivery. Download access provided immediately in dashboard upon purchase.",
-    "features": [
-      "Verified, authentic digital package and documentation",
-      "Instant digital delivery upon confirmed payment",
-      "Production-ready resources tested for efficiency",
-      "Comprehensive setup & configuration guide included",
-      "Dedicated priority technical support from bdBeginner"
-    ],
-    "whatsIncluded": [
-      "Modern Landing Page Template Pack Full Package",
-      "Documentation & Quickstart Guide",
-      "Lifetime Access to Updates"
-    ],
-    "faq": [
-      {
-        "question": "How is this product delivered?",
-        "answer": "Instant digital delivery. Files become available in your customer dashboard right after payment confirmation."
-      },
-      {
-        "question": "Is support included?",
-        "answer": "Yes, full technical assistance is provided by bdBeginner team."
-      }
-    ],
-    "seoTitle": "Modern Landing Page Template Pack | bdBeginner",
-    "seoDescription": "High-converting responsive landing page templates built for Elementor, HTML5, and TailwindCSS.",
-    "rating": 4.9,
-    "reviewCount": 38,
-    "salesCount": 140,
-    "tags": [
-      "landing-page-template-pack",
-      "digital",
-      "bdbeginner"
-    ]
-  },
-  {
-    "id": "ccec4485-e365-4a32-b9de-9118bf316043",
-    "name": "Productivity Software Suite License",
-    "slug": "productivity-software-license",
-    "shortDescription": "Premium developer & office productivity suite license with cloud sync, workflow automation, and lifetime access.",
-    "description": "Boost your daily efficiency with the Productivity Software Suite. Featuring advanced task management, automated clipboard synchronization, markdown note-taking with cloud backup, and hotkey automation tools tested for Windows and macOS environments.",
-    "category": "Software",
-    "subcategory": "Essentials",
-    "price": 1290,
-    "compareAtPrice": 3990,
-    "previousPrice": 3990,
-    "featured": true,
-    "newProduct": false,
-    "badge": "featured",
-    "icon": "Package",
-    "accent": "brand",
-    "descriptor": "Premium developer & office productivity suite license with cloud sync, workflow automation, and lifetime access.",
-    "thumbnail": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-    "images": [
-      {
-        "id": "productivity-software-license-img-0",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Productivity Software Suite License Preview 1"
-      },
-      {
-        "id": "productivity-software-license-img-1",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Productivity Software Suite License Preview 2"
-      },
-      {
-        "id": "productivity-software-license-img-2",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Productivity Software Suite License Preview 3"
-      }
-    ],
-    "deliveryType": "instant-download",
-    "productType": "digital_download",
-    "version": "5.2.0",
-    "compatibility": "Cross-platform compatible",
-    "requirements": "Modern web browser or standard system requirements",
-    "supportPeriod": "Lifetime access & bdBeginner documentation",
-    "updatePolicy": "Regular updates included",
-    "deliveryDescription": "Instant delivery. Download access provided immediately in dashboard upon purchase.",
-    "features": [
-      "Verified, authentic digital package and documentation",
-      "Instant digital delivery upon confirmed payment",
-      "Production-ready resources tested for efficiency",
-      "Comprehensive setup & configuration guide included",
-      "Dedicated priority technical support from bdBeginner"
-    ],
-    "whatsIncluded": [
-      "Productivity Software Suite License Full Package",
-      "Documentation & Quickstart Guide",
-      "Lifetime Access to Updates"
-    ],
-    "faq": [
-      {
-        "question": "How is this product delivered?",
-        "answer": "Instant digital delivery. Files become available in your customer dashboard right after payment confirmation."
-      },
-      {
-        "question": "Is support included?",
-        "answer": "Yes, full technical assistance is provided by bdBeginner team."
-      }
-    ],
-    "seoTitle": "Productivity Software Suite License | bdBeginner",
-    "seoDescription": "Premium developer & office productivity suite license with cloud sync, workflow automation, and lifetime access.",
-    "rating": 4.9,
-    "reviewCount": 38,
-    "salesCount": 140,
-    "tags": [
-      "productivity-software-license",
-      "digital",
-      "bdbeginner"
-    ]
-  },
-  {
-    "id": "ff700be6-2531-4dea-b14d-6fd8e95bd09f",
-    "name": "AI Workflow & Prompt Engineering Resource Pack",
-    "slug": "ai-workflow-resource-pack",
-    "shortDescription": "Curated library of 1,500+ production-tested AI prompts, automated agents, and workflow integrations.",
-    "description": "Master generative AI for business, coding, and marketing. Contains verified prompt systems for ChatGPT, Claude, and Midjourney, alongside automated Zapier and Make.com blueprints to put your repetitive content generation on autopilot.",
-    "category": "AI Tools",
-    "subcategory": "Essentials",
-    "price": 690,
-    "compareAtPrice": 2190,
-    "previousPrice": 2190,
-    "featured": true,
-    "newProduct": false,
-    "badge": "featured",
-    "icon": "Package",
-    "accent": "brand",
-    "descriptor": "Curated library of 1,500+ production-tested AI prompts, automated agents, and workflow integrations.",
-    "thumbnail": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-    "images": [
-      {
-        "id": "ai-workflow-resource-pack-img-0",
-        "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-        "alt": "AI Workflow & Prompt Engineering Resource Pack Preview 1"
-      },
-      {
-        "id": "ai-workflow-resource-pack-img-1",
-        "url": "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=1200&q=80",
-        "alt": "AI Workflow & Prompt Engineering Resource Pack Preview 2"
-      },
-      {
-        "id": "ai-workflow-resource-pack-img-2",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "AI Workflow & Prompt Engineering Resource Pack Preview 3"
-      }
-    ],
-    "deliveryType": "instant-download",
-    "productType": "digital_download",
-    "version": "2.5.0",
-    "compatibility": "Cross-platform compatible",
-    "requirements": "Modern web browser or standard system requirements",
-    "supportPeriod": "Lifetime access & bdBeginner documentation",
-    "updatePolicy": "Regular updates included",
-    "deliveryDescription": "Instant delivery. Download access provided immediately in dashboard upon purchase.",
-    "features": [
-      "Verified, authentic digital package and documentation",
-      "Instant digital delivery upon confirmed payment",
-      "Production-ready resources tested for efficiency",
-      "Comprehensive setup & configuration guide included",
-      "Dedicated priority technical support from bdBeginner"
-    ],
-    "whatsIncluded": [
-      "AI Workflow & Prompt Engineering Resource Pack Full Package",
-      "Documentation & Quickstart Guide",
-      "Lifetime Access to Updates"
-    ],
-    "faq": [
-      {
-        "question": "How is this product delivered?",
-        "answer": "Instant digital delivery. Files become available in your customer dashboard right after payment confirmation."
-      },
-      {
-        "question": "Is support included?",
-        "answer": "Yes, full technical assistance is provided by bdBeginner team."
-      }
-    ],
-    "seoTitle": "AI Workflow & Prompt Engineering Resource Pack | bdBeginner",
-    "seoDescription": "Curated library of 1,500+ production-tested AI prompts, automated agents, and workflow integrations.",
-    "rating": 4.9,
-    "reviewCount": 38,
-    "salesCount": 140,
-    "tags": [
-      "ai-workflow-resource-pack",
-      "digital",
-      "bdbeginner"
-    ]
-  },
-  {
-    "id": "405f1b1a-82a1-48c4-89ae-185b415adbfe",
-    "name": "SEO & Technical Growth Masterclass",
-    "slug": "seo-content-fundamentals-course",
-    "shortDescription": "Actionable video course covering technical SEO audits, core web vitals optimization, and high-ranking content strategies.",
-    "description": "Learn modern search engine optimization from industry practitioners. Covers schema markup, crawl budget optimization, Core Web Vitals speed tuning, programmatic SEO with AI, and backlink outreach strategies tailored for Bangladeshi and international markets.",
-    "category": "Courses",
-    "subcategory": "Essentials",
-    "price": 990,
-    "compareAtPrice": 3490,
-    "previousPrice": 3490,
-    "featured": false,
-    "newProduct": false,
-    "icon": "Package",
-    "accent": "brand",
-    "descriptor": "Actionable video course covering technical SEO audits, core web vitals optimization, and high-ranking content strategies",
-    "thumbnail": "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=80",
-    "images": [
-      {
-        "id": "seo-content-fundamentals-course-img-0",
-        "url": "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=80",
-        "alt": "SEO & Technical Growth Masterclass Preview 1"
-      },
-      {
-        "id": "seo-content-fundamentals-course-img-1",
-        "url": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
-        "alt": "SEO & Technical Growth Masterclass Preview 2"
-      },
-      {
-        "id": "seo-content-fundamentals-course-img-2",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "SEO & Technical Growth Masterclass Preview 3"
-      }
-    ],
-    "deliveryType": "instant-download",
-    "productType": "digital_download",
-    "version": "2026 Edition",
-    "compatibility": "Cross-platform compatible",
-    "requirements": "Modern web browser or standard system requirements",
-    "supportPeriod": "Lifetime access & bdBeginner documentation",
-    "updatePolicy": "Regular updates included",
-    "deliveryDescription": "Instant delivery. Download access provided immediately in dashboard upon purchase.",
-    "features": [
-      "Verified, authentic digital package and documentation",
-      "Instant digital delivery upon confirmed payment",
-      "Production-ready resources tested for efficiency",
-      "Comprehensive setup & configuration guide included",
-      "Dedicated priority technical support from bdBeginner"
-    ],
-    "whatsIncluded": [
-      "SEO & Technical Growth Masterclass Full Package",
-      "Documentation & Quickstart Guide",
-      "Lifetime Access to Updates"
-    ],
-    "faq": [
-      {
-        "question": "How is this product delivered?",
-        "answer": "Instant digital delivery. Files become available in your customer dashboard right after payment confirmation."
-      },
-      {
-        "question": "Is support included?",
-        "answer": "Yes, full technical assistance is provided by bdBeginner team."
-      }
-    ],
-    "seoTitle": "SEO & Technical Growth Masterclass | bdBeginner",
-    "seoDescription": "Actionable video course covering technical SEO audits, core web vitals optimization, and high-ranking content strategies.",
-    "rating": 4.9,
-    "reviewCount": 38,
-    "salesCount": 140,
-    "tags": [
-      "seo-content-fundamentals-course",
-      "digital",
-      "bdbeginner"
-    ]
-  },
-  {
-    "id": "eea2f9f8-a367-40c4-90b9-66cfd2bf1cd1",
-    "name": "Creator Design Asset & Iconography Bundle",
-    "slug": "creator-design-asset-bundle",
-    "shortDescription": "Thousands of high-res 3D icons, vector illustrations, mockups, and social media layout packs.",
-    "description": "A comprehensive creative kit for digital creators, YouTubers, and UI designers. Includes Figma components, Adobe Illustrator vectors, transparent 3D render icons, and editable social media canvas templates.",
-    "category": "Digital Resources",
-    "subcategory": "Essentials",
-    "price": 490,
-    "compareAtPrice": 1890,
-    "previousPrice": 1890,
-    "featured": false,
-    "newProduct": false,
-    "icon": "Package",
-    "accent": "brand",
-    "descriptor": "Thousands of high-res 3D icons, vector illustrations, mockups, and social media layout packs.",
-    "thumbnail": "https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&w=1200&q=80",
-    "images": [
-      {
-        "id": "creator-design-asset-bundle-img-0",
-        "url": "https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Creator Design Asset & Iconography Bundle Preview 1"
-      },
-      {
-        "id": "creator-design-asset-bundle-img-1",
-        "url": "https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Creator Design Asset & Iconography Bundle Preview 2"
-      },
-      {
-        "id": "creator-design-asset-bundle-img-2",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Creator Design Asset & Iconography Bundle Preview 3"
-      }
-    ],
-    "deliveryType": "instant-download",
-    "productType": "digital_download",
-    "version": "4.1",
-    "compatibility": "Cross-platform compatible",
-    "requirements": "Modern web browser or standard system requirements",
-    "supportPeriod": "Lifetime access & bdBeginner documentation",
-    "updatePolicy": "Regular updates included",
-    "deliveryDescription": "Instant delivery. Download access provided immediately in dashboard upon purchase.",
-    "features": [
-      "Verified, authentic digital package and documentation",
-      "Instant digital delivery upon confirmed payment",
-      "Production-ready resources tested for efficiency",
-      "Comprehensive setup & configuration guide included",
-      "Dedicated priority technical support from bdBeginner"
-    ],
-    "whatsIncluded": [
-      "Creator Design Asset & Iconography Bundle Full Package",
-      "Documentation & Quickstart Guide",
-      "Lifetime Access to Updates"
-    ],
-    "faq": [
-      {
-        "question": "How is this product delivered?",
-        "answer": "Instant digital delivery. Files become available in your customer dashboard right after payment confirmation."
-      },
-      {
-        "question": "Is support included?",
-        "answer": "Yes, full technical assistance is provided by bdBeginner team."
-      }
-    ],
-    "seoTitle": "Creator Design Asset & Iconography Bundle | bdBeginner",
-    "seoDescription": "Thousands of high-res 3D icons, vector illustrations, mockups, and social media layout packs.",
-    "rating": 4.9,
-    "reviewCount": 38,
-    "salesCount": 140,
-    "tags": [
-      "creator-design-asset-bundle",
-      "digital",
-      "bdbeginner"
-    ]
-  },
-  {
-    "id": "6aef5702-2f16-4352-b5bb-5525834d7a4c",
-    "name": "Digital Developer Tools Access Pass",
-    "slug": "digital-subscription-access",
-    "shortDescription": "All-inclusive pass for premium development tools, APIs, code generators, and dev cloud servers.",
-    "description": "Get verified access to premium software and developer tools under one unified subscription. Enjoy guaranteed uptime, regular license token renewals, and dedicated priority support from bdBeginner.",
-    "category": "Software",
-    "subcategory": "Essentials",
-    "price": 1490,
-    "compareAtPrice": 4990,
-    "previousPrice": 4990,
-    "featured": false,
-    "newProduct": false,
-    "icon": "Package",
-    "accent": "brand",
-    "descriptor": "All-inclusive pass for premium development tools, APIs, code generators, and dev cloud servers.",
-    "thumbnail": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-    "images": [
-      {
-        "id": "digital-subscription-access-img-0",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Digital Developer Tools Access Pass Preview 1"
-      },
-      {
-        "id": "digital-subscription-access-img-1",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Digital Developer Tools Access Pass Preview 2"
-      },
-      {
-        "id": "digital-subscription-access-img-2",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Digital Developer Tools Access Pass Preview 3"
-      }
-    ],
-    "deliveryType": "instant-download",
-    "productType": "digital_download",
-    "version": "Annual Access",
-    "compatibility": "Cross-platform compatible",
-    "requirements": "Modern web browser or standard system requirements",
-    "supportPeriod": "Lifetime access & bdBeginner documentation",
-    "updatePolicy": "Regular updates included",
-    "deliveryDescription": "Instant delivery. Download access provided immediately in dashboard upon purchase.",
-    "features": [
-      "Verified, authentic digital package and documentation",
-      "Instant digital delivery upon confirmed payment",
-      "Production-ready resources tested for efficiency",
-      "Comprehensive setup & configuration guide included",
-      "Dedicated priority technical support from bdBeginner"
-    ],
-    "whatsIncluded": [
-      "Digital Developer Tools Access Pass Full Package",
-      "Documentation & Quickstart Guide",
-      "Lifetime Access to Updates"
-    ],
-    "faq": [
-      {
-        "question": "How is this product delivered?",
-        "answer": "Instant digital delivery. Files become available in your customer dashboard right after payment confirmation."
-      },
-      {
-        "question": "Is support included?",
-        "answer": "Yes, full technical assistance is provided by bdBeginner team."
-      }
-    ],
-    "seoTitle": "Digital Developer Tools Access Pass | bdBeginner",
-    "seoDescription": "All-inclusive pass for premium development tools, APIs, code generators, and dev cloud servers.",
-    "rating": 4.9,
-    "reviewCount": 38,
-    "salesCount": 140,
-    "tags": [
-      "digital-subscription-access",
-      "digital",
-      "bdbeginner"
-    ]
-  },
-  {
-    "id": "780d97b3-fe13-4341-b203-3c38d016e51d",
-    "name": "WordPress Website Setup & Performance Service",
-    "slug": "wordpress-website-setup-service",
-    "shortDescription": "Complete end-to-end WordPress installation, security hardening, CDN setup, and 90+ PageSpeed optimization.",
-    "description": "Let our expert engineers build and optimize your WordPress website. We install your chosen premium theme, configure essential plugins, implement enterprise Cloudflare CDN caching, set up automated daily cloud backups, and guarantee 90+ Google PageSpeed score on mobile and desktop.",
-    "category": "Web Services",
-    "subcategory": "Essentials",
-    "price": 2990,
-    "compareAtPrice": 7500,
-    "previousPrice": 7500,
-    "featured": false,
-    "newProduct": false,
-    "icon": "Package",
-    "accent": "brand",
-    "descriptor": "Complete end-to-end WordPress installation, security hardening, CDN setup, and 90+ PageSpeed optimization.",
-    "thumbnail": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-    "images": [
-      {
-        "id": "wordpress-website-setup-service-img-0",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "WordPress Website Setup & Performance Service Preview 1"
-      },
-      {
-        "id": "wordpress-website-setup-service-img-1",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "WordPress Website Setup & Performance Service Preview 2"
-      },
-      {
-        "id": "wordpress-website-setup-service-img-2",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "WordPress Website Setup & Performance Service Preview 3"
-      }
-    ],
-    "deliveryType": "instant-download",
-    "productType": "digital_download",
-    "version": "Service",
-    "compatibility": "Cross-platform compatible",
-    "requirements": "Modern web browser or standard system requirements",
-    "supportPeriod": "Lifetime access & bdBeginner documentation",
-    "updatePolicy": "Regular updates included",
-    "deliveryDescription": "Instant delivery. Download access provided immediately in dashboard upon purchase.",
-    "features": [
-      "Verified, authentic digital package and documentation",
-      "Instant digital delivery upon confirmed payment",
-      "Production-ready resources tested for efficiency",
-      "Comprehensive setup & configuration guide included",
-      "Dedicated priority technical support from bdBeginner"
-    ],
-    "whatsIncluded": [
-      "WordPress Website Setup & Performance Service Full Package",
-      "Documentation & Quickstart Guide",
-      "Lifetime Access to Updates"
-    ],
-    "faq": [
-      {
-        "question": "How is this product delivered?",
-        "answer": "Instant digital delivery. Files become available in your customer dashboard right after payment confirmation."
-      },
-      {
-        "question": "Is support included?",
-        "answer": "Yes, full technical assistance is provided by bdBeginner team."
-      }
-    ],
-    "seoTitle": "WordPress Website Setup & Performance Service | bdBeginner",
-    "seoDescription": "Complete end-to-end WordPress installation, security hardening, CDN setup, and 90+ PageSpeed optimization.",
-    "rating": 4.9,
-    "reviewCount": 38,
-    "salesCount": 140,
-    "tags": [
-      "wordpress-website-setup-service",
-      "digital",
-      "bdbeginner"
-    ]
-  },
-  {
     "id": "c198a150-6322-42d6-a44d-d826c5aabc6a",
     "name": "Salient 18.4.1 - Creative Multipurpose & WooCommerce Theme",
     "slug": "salient-wordpress-theme",
@@ -613,9 +9,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Salient 18.4.1 - Creative Multipurpose & WooCommerce Theme is a high-performance, professional WordPress theme engineered for speed, conversion, and creative flexibility. Built with modern web development standards, it seamlessly supports Elementor, Gutenberg block builder, and WooCommerce.\n\nWhether you are launching an online store, a corporate business site, a personal portfolio, or a high-traffic blog, Salient 18.4.1 - Creative Multipurpose & WooCommerce Theme offers pre-built responsive templates and one-click demo imports to launch your project effortlessly.\n\nAll theme files are 100% genuine and verified clean under the GNU General Public License (GPL). No license key is required for unlimited domain installations.",
     "category": "WordPress",
     "subcategory": "Themes",
-    "price": 490,
-    "compareAtPrice": 2490,
-    "previousPrice": 2490,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": true,
     "newProduct": true,
     "badge": "featured",
@@ -625,24 +21,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2025/12/salient-17-4-1-creative-multipurpose-woocommerce-theme.jpg",
     "images": [
       {
-        "id": "salient-wordpress-theme-1",
+        "id": "salient-wordpress-theme-thumb",
         "url": "https://weadown.com/wp-content/uploads/2025/12/salient-17-4-1-creative-multipurpose-woocommerce-theme.jpg",
-        "alt": "Salient 18.4.1 - Creative Multipurpose & WooCommerce Theme - Cover Banner"
-      },
-      {
-        "id": "salient-wordpress-theme-2",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Salient 18.4.1 - Creative Multipurpose & WooCommerce Theme - Layout Showcase"
-      },
-      {
-        "id": "salient-wordpress-theme-3",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Salient 18.4.1 - Creative Multipurpose & WooCommerce Theme - Builder & Customizer"
-      },
-      {
-        "id": "salient-wordpress-theme-4",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Salient 18.4.1 - Creative Multipurpose & WooCommerce Theme - Mobile Responsive View"
+        "alt": "Salient 18.4.1 - Creative Multipurpose & WooCommerce Theme - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -702,9 +83,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Kapee 1.7.5 - Modern Multipurpose WooCommerce Theme is a high-performance, professional WordPress theme engineered for speed, conversion, and creative flexibility. Built with modern web development standards, it seamlessly supports Elementor, Gutenberg block builder, and WooCommerce.\n\nWhether you are launching an online store, a corporate business site, a personal portfolio, or a high-traffic blog, Kapee 1.7.5 - Modern Multipurpose WooCommerce Theme offers pre-built responsive templates and one-click demo imports to launch your project effortlessly.\n\nAll theme files are 100% genuine and verified clean under the GNU General Public License (GPL). No license key is required for unlimited domain installations.",
     "category": "WordPress",
     "subcategory": "Themes",
-    "price": 450,
-    "compareAtPrice": 1990,
-    "previousPrice": 1990,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": true,
     "newProduct": true,
     "badge": "featured",
@@ -714,24 +95,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2023/05/kapee-1-6-0-fashion-store-woocommerce-theme.jpg",
     "images": [
       {
-        "id": "kapee-wordpress-theme-1",
+        "id": "kapee-wordpress-theme-thumb",
         "url": "https://weadown.com/wp-content/uploads/2023/05/kapee-1-6-0-fashion-store-woocommerce-theme.jpg",
-        "alt": "Kapee 1.7.5 - Modern Multipurpose WooCommerce Theme - Cover Banner"
-      },
-      {
-        "id": "kapee-wordpress-theme-2",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Kapee 1.7.5 - Modern Multipurpose WooCommerce Theme - Layout Showcase"
-      },
-      {
-        "id": "kapee-wordpress-theme-3",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Kapee 1.7.5 - Modern Multipurpose WooCommerce Theme - Builder & Customizer"
-      },
-      {
-        "id": "kapee-wordpress-theme-4",
-        "url": "https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Kapee 1.7.5 - Modern Multipurpose WooCommerce Theme - Mobile Responsive View"
+        "alt": "Kapee 1.7.5 - Modern Multipurpose WooCommerce Theme - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -791,9 +157,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Bricks 2.4.3 - Visual Site Builder for WordPress is a high-performance, professional WordPress theme engineered for speed, conversion, and creative flexibility. Built with modern web development standards, it seamlessly supports Elementor, Gutenberg block builder, and WooCommerce.\n\nWhether you are launching an online store, a corporate business site, a personal portfolio, or a high-traffic blog, Bricks 2.4.3 - Visual Site Builder for WordPress offers pre-built responsive templates and one-click demo imports to launch your project effortlessly.\n\nAll theme files are 100% genuine and verified clean under the GNU General Public License (GPL). No license key is required for unlimited domain installations.",
     "category": "WordPress",
     "subcategory": "Themes",
-    "price": 590,
-    "compareAtPrice": 2990,
-    "previousPrice": 2990,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": true,
     "newProduct": true,
     "badge": "featured",
@@ -803,24 +169,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2026/07/Bricks-Visual-Site-Builder-for-WordPress.jpg",
     "images": [
       {
-        "id": "bricks-build-wordpress-sites-1",
+        "id": "bricks-build-wordpress-sites-thumb",
         "url": "https://weadown.com/wp-content/uploads/2026/07/Bricks-Visual-Site-Builder-for-WordPress.jpg",
-        "alt": "Bricks 2.4.3 - Visual Site Builder for WordPress - Cover Banner"
-      },
-      {
-        "id": "bricks-build-wordpress-sites-2",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Bricks 2.4.3 - Visual Site Builder for WordPress - Layout Showcase"
-      },
-      {
-        "id": "bricks-build-wordpress-sites-3",
-        "url": "https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Bricks 2.4.3 - Visual Site Builder for WordPress - Builder & Customizer"
-      },
-      {
-        "id": "bricks-build-wordpress-sites-4",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Bricks 2.4.3 - Visual Site Builder for WordPress - Mobile Responsive View"
+        "alt": "Bricks 2.4.3 - Visual Site Builder for WordPress - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -880,9 +231,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Xtra 6.2 - Multipurpose WordPress & WooCommerce Theme + RTL is a high-performance, professional WordPress theme engineered for speed, conversion, and creative flexibility. Built with modern web development standards, it seamlessly supports Elementor, Gutenberg block builder, and WooCommerce.\n\nWhether you are launching an online store, a corporate business site, a personal portfolio, or a high-traffic blog, Xtra 6.2 - Multipurpose WordPress & WooCommerce Theme + RTL offers pre-built responsive templates and one-click demo imports to launch your project effortlessly.\n\nAll theme files are 100% genuine and verified clean under the GNU General Public License (GPL). No license key is required for unlimited domain installations.",
     "category": "WordPress",
     "subcategory": "Themes",
-    "price": 550,
-    "compareAtPrice": 2750,
-    "previousPrice": 2750,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": true,
     "newProduct": true,
     "badge": "featured",
@@ -892,24 +243,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2025/01/xtra-4-9-12-wordpress-website-builder-rtl.jpg",
     "images": [
       {
-        "id": "xtra-wordpress-website-builder-1",
+        "id": "xtra-wordpress-website-builder-thumb",
         "url": "https://weadown.com/wp-content/uploads/2025/01/xtra-4-9-12-wordpress-website-builder-rtl.jpg",
-        "alt": "Xtra 6.2 - Multipurpose WordPress & WooCommerce Theme + RTL - Cover Banner"
-      },
-      {
-        "id": "xtra-wordpress-website-builder-2",
-        "url": "https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Xtra 6.2 - Multipurpose WordPress & WooCommerce Theme + RTL - Layout Showcase"
-      },
-      {
-        "id": "xtra-wordpress-website-builder-3",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Xtra 6.2 - Multipurpose WordPress & WooCommerce Theme + RTL - Builder & Customizer"
-      },
-      {
-        "id": "xtra-wordpress-website-builder-4",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Xtra 6.2 - Multipurpose WordPress & WooCommerce Theme + RTL - Mobile Responsive View"
+        "alt": "Xtra 6.2 - Multipurpose WordPress & WooCommerce Theme + RTL - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -969,9 +305,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Traveler 3.4 - Travel Booking WordPress Theme is a high-performance, professional WordPress theme engineered for speed, conversion, and creative flexibility. Built with modern web development standards, it seamlessly supports Elementor, Gutenberg block builder, and WooCommerce.\n\nWhether you are launching an online store, a corporate business site, a personal portfolio, or a high-traffic blog, Traveler 3.4 - Travel Booking WordPress Theme offers pre-built responsive templates and one-click demo imports to launch your project effortlessly.\n\nAll theme files are 100% genuine and verified clean under the GNU General Public License (GPL). No license key is required for unlimited domain installations.",
     "category": "WordPress",
     "subcategory": "Themes",
-    "price": 390,
-    "compareAtPrice": 1800,
-    "previousPrice": 1800,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": true,
     "newProduct": true,
     "badge": "featured",
@@ -981,24 +317,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2023/04/traveler-3-0-7-travel-booking-wordpress-theme.png",
     "images": [
       {
-        "id": "traveler-travel-booking-wordpress-theme-1",
+        "id": "traveler-travel-booking-wordpress-theme-thumb",
         "url": "https://weadown.com/wp-content/uploads/2023/04/traveler-3-0-7-travel-booking-wordpress-theme.png",
-        "alt": "Traveler 3.4 - Travel Booking WordPress Theme - Cover Banner"
-      },
-      {
-        "id": "traveler-travel-booking-wordpress-theme-2",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Traveler 3.4 - Travel Booking WordPress Theme - Layout Showcase"
-      },
-      {
-        "id": "traveler-travel-booking-wordpress-theme-3",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Traveler 3.4 - Travel Booking WordPress Theme - Builder & Customizer"
-      },
-      {
-        "id": "traveler-travel-booking-wordpress-theme-4",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Traveler 3.4 - Travel Booking WordPress Theme - Mobile Responsive View"
+        "alt": "Traveler 3.4 - Travel Booking WordPress Theme - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -1058,9 +379,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Divi 5.15.1 + 4.27.6 - The Essential Site Building Framework For WordPress is a high-performance, professional WordPress theme engineered for speed, conversion, and creative flexibility. Built with modern web development standards, it seamlessly supports Elementor, Gutenberg block builder, and WooCommerce.\n\nWhether you are launching an online store, a corporate business site, a personal portfolio, or a high-traffic blog, Divi 5.15.1 + 4.27.6 - The Essential Site Building Framework For WordPress offers pre-built responsive templates and one-click demo imports to launch your project effortlessly.\n\nAll theme files are 100% genuine and verified clean under the GNU General Public License (GPL). No license key is required for unlimited domain installations.",
     "category": "WordPress",
     "subcategory": "Themes",
-    "price": 490,
-    "compareAtPrice": 2500,
-    "previousPrice": 2500,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": true,
     "newProduct": true,
     "badge": "featured",
@@ -1070,24 +391,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2024/11/Divi-WordPress-Theme-Visual-Page-Builder.jpg",
     "images": [
       {
-        "id": "divi-wordpress-theme-1",
+        "id": "divi-wordpress-theme-thumb",
         "url": "https://weadown.com/wp-content/uploads/2024/11/Divi-WordPress-Theme-Visual-Page-Builder.jpg",
-        "alt": "Divi 5.15.1 + 4.27.6 - The Essential Site Building Framework For WordPress - Cover Banner"
-      },
-      {
-        "id": "divi-wordpress-theme-2",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Divi 5.15.1 + 4.27.6 - The Essential Site Building Framework For WordPress - Layout Showcase"
-      },
-      {
-        "id": "divi-wordpress-theme-3",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Divi 5.15.1 + 4.27.6 - The Essential Site Building Framework For WordPress - Builder & Customizer"
-      },
-      {
-        "id": "divi-wordpress-theme-4",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Divi 5.15.1 + 4.27.6 - The Essential Site Building Framework For WordPress - Mobile Responsive View"
+        "alt": "Divi 5.15.1 + 4.27.6 - The Essential Site Building Framework For WordPress - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -1147,9 +453,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Finbiz 2.2.3 - Consulting Business WordPress Theme is a high-performance, professional WordPress theme engineered for speed, conversion, and creative flexibility. Built with modern web development standards, it seamlessly supports Elementor, Gutenberg block builder, and WooCommerce.\n\nWhether you are launching an online store, a corporate business site, a personal portfolio, or a high-traffic blog, Finbiz 2.2.3 - Consulting Business WordPress Theme offers pre-built responsive templates and one-click demo imports to launch your project effortlessly.\n\nAll theme files are 100% genuine and verified clean under the GNU General Public License (GPL). No license key is required for unlimited domain installations.",
     "category": "WordPress",
     "subcategory": "Themes",
-    "price": 450,
-    "compareAtPrice": 2200,
-    "previousPrice": 2200,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": true,
     "newProduct": true,
     "badge": "featured",
@@ -1159,24 +465,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2025/03/finbiz-2-1-5-consulting-business-wordpress-theme.png",
     "images": [
       {
-        "id": "finbiz-wordpress-theme-1",
+        "id": "finbiz-wordpress-theme-thumb",
         "url": "https://weadown.com/wp-content/uploads/2025/03/finbiz-2-1-5-consulting-business-wordpress-theme.png",
-        "alt": "Finbiz 2.2.3 - Consulting Business WordPress Theme - Cover Banner"
-      },
-      {
-        "id": "finbiz-wordpress-theme-2",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Finbiz 2.2.3 - Consulting Business WordPress Theme - Layout Showcase"
-      },
-      {
-        "id": "finbiz-wordpress-theme-3",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Finbiz 2.2.3 - Consulting Business WordPress Theme - Builder & Customizer"
-      },
-      {
-        "id": "finbiz-wordpress-theme-4",
-        "url": "https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Finbiz 2.2.3 - Consulting Business WordPress Theme - Mobile Responsive View"
+        "alt": "Finbiz 2.2.3 - Consulting Business WordPress Theme - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -1236,9 +527,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Voxel 1.7.11 - Create WordPress Dynamic Sites is a high-performance, professional WordPress theme engineered for speed, conversion, and creative flexibility. Built with modern web development standards, it seamlessly supports Elementor, Gutenberg block builder, and WooCommerce.\n\nWhether you are launching an online store, a corporate business site, a personal portfolio, or a high-traffic blog, Voxel 1.7.11 - Create WordPress Dynamic Sites offers pre-built responsive templates and one-click demo imports to launch your project effortlessly.\n\nAll theme files are 100% genuine and verified clean under the GNU General Public License (GPL). No license key is required for unlimited domain installations.",
     "category": "WordPress",
     "subcategory": "Themes",
-    "price": 590,
-    "compareAtPrice": 2900,
-    "previousPrice": 2900,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": true,
     "newProduct": true,
     "badge": "featured",
@@ -1248,24 +539,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2024/12/Voxel-Create-WordPress-Dynamic-Sites.jpg",
     "images": [
       {
-        "id": "voxel-create-wordpress-dynamic-sites-1",
+        "id": "voxel-create-wordpress-dynamic-sites-thumb",
         "url": "https://weadown.com/wp-content/uploads/2024/12/Voxel-Create-WordPress-Dynamic-Sites.jpg",
-        "alt": "Voxel 1.7.11 - Create WordPress Dynamic Sites - Cover Banner"
-      },
-      {
-        "id": "voxel-create-wordpress-dynamic-sites-2",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Voxel 1.7.11 - Create WordPress Dynamic Sites - Layout Showcase"
-      },
-      {
-        "id": "voxel-create-wordpress-dynamic-sites-3",
-        "url": "https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Voxel 1.7.11 - Create WordPress Dynamic Sites - Builder & Customizer"
-      },
-      {
-        "id": "voxel-create-wordpress-dynamic-sites-4",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Voxel 1.7.11 - Create WordPress Dynamic Sites - Mobile Responsive View"
+        "alt": "Voxel 1.7.11 - Create WordPress Dynamic Sites - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -1325,9 +601,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Infinite 5.0.1 - Corporate Business WordPress Theme is a high-performance, professional WordPress theme engineered for speed, conversion, and creative flexibility. Built with modern web development standards, it seamlessly supports Elementor, Gutenberg block builder, and WooCommerce.\n\nWhether you are launching an online store, a corporate business site, a personal portfolio, or a high-traffic blog, Infinite 5.0.1 - Corporate Business WordPress Theme offers pre-built responsive templates and one-click demo imports to launch your project effortlessly.\n\nAll theme files are 100% genuine and verified clean under the GNU General Public License (GPL). No license key is required for unlimited domain installations.",
     "category": "WordPress",
     "subcategory": "Themes",
-    "price": 390,
-    "compareAtPrice": 1750,
-    "previousPrice": 1750,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "ShoppingBag",
@@ -1336,24 +612,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2023/08/infinite-4-0-4-multipurpose-wordpress-theme.jpg",
     "images": [
       {
-        "id": "infinite-wordpress-theme-1",
+        "id": "infinite-wordpress-theme-thumb",
         "url": "https://weadown.com/wp-content/uploads/2023/08/infinite-4-0-4-multipurpose-wordpress-theme.jpg",
-        "alt": "Infinite 5.0.1 - Corporate Business WordPress Theme - Cover Banner"
-      },
-      {
-        "id": "infinite-wordpress-theme-2",
-        "url": "https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Infinite 5.0.1 - Corporate Business WordPress Theme - Layout Showcase"
-      },
-      {
-        "id": "infinite-wordpress-theme-3",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Infinite 5.0.1 - Corporate Business WordPress Theme - Builder & Customizer"
-      },
-      {
-        "id": "infinite-wordpress-theme-4",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Infinite 5.0.1 - Corporate Business WordPress Theme - Mobile Responsive View"
+        "alt": "Infinite 5.0.1 - Corporate Business WordPress Theme - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -1413,9 +674,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Bellevue 4.2.24 - Hotel + Bed and Breakfast Booking Calendar Theme is a high-performance, professional WordPress theme engineered for speed, conversion, and creative flexibility. Built with modern web development standards, it seamlessly supports Elementor, Gutenberg block builder, and WooCommerce.\n\nWhether you are launching an online store, a corporate business site, a personal portfolio, or a high-traffic blog, Bellevue 4.2.24 - Hotel + Bed and Breakfast Booking Calendar Theme offers pre-built responsive templates and one-click demo imports to launch your project effortlessly.\n\nAll theme files are 100% genuine and verified clean under the GNU General Public License (GPL). No license key is required for unlimited domain installations.",
     "category": "WordPress",
     "subcategory": "Themes",
-    "price": 490,
-    "compareAtPrice": 2400,
-    "previousPrice": 2400,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "ShoppingBag",
@@ -1424,24 +685,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2024/12/bellevue-4-2-6-hotel-bed-and-breakfast-booking-calendar-theme.jpg",
     "images": [
       {
-        "id": "bellevue-hotel-wordpress-theme-1",
+        "id": "bellevue-hotel-wordpress-theme-thumb",
         "url": "https://weadown.com/wp-content/uploads/2024/12/bellevue-4-2-6-hotel-bed-and-breakfast-booking-calendar-theme.jpg",
-        "alt": "Bellevue 4.2.24 - Hotel + Bed and Breakfast Booking Calendar Theme - Cover Banner"
-      },
-      {
-        "id": "bellevue-hotel-wordpress-theme-2",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Bellevue 4.2.24 - Hotel + Bed and Breakfast Booking Calendar Theme - Layout Showcase"
-      },
-      {
-        "id": "bellevue-hotel-wordpress-theme-3",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Bellevue 4.2.24 - Hotel + Bed and Breakfast Booking Calendar Theme - Builder & Customizer"
-      },
-      {
-        "id": "bellevue-hotel-wordpress-theme-4",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Bellevue 4.2.24 - Hotel + Bed and Breakfast Booking Calendar Theme - Mobile Responsive View"
+        "alt": "Bellevue 4.2.24 - Hotel + Bed and Breakfast Booking Calendar Theme - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -1501,9 +747,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Savoy 3.2.3 - Minimalist AJAX WooCommerce Theme is a high-performance, professional WordPress theme engineered for speed, conversion, and creative flexibility. Built with modern web development standards, it seamlessly supports Elementor, Gutenberg block builder, and WooCommerce.\n\nWhether you are launching an online store, a corporate business site, a personal portfolio, or a high-traffic blog, Savoy 3.2.3 - Minimalist AJAX WooCommerce Theme offers pre-built responsive templates and one-click demo imports to launch your project effortlessly.\n\nAll theme files are 100% genuine and verified clean under the GNU General Public License (GPL). No license key is required for unlimited domain installations.",
     "category": "WordPress",
     "subcategory": "Themes",
-    "price": 550,
-    "compareAtPrice": 2800,
-    "previousPrice": 2800,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "ShoppingBag",
@@ -1512,24 +758,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2023/06/savoy-2-8-2-minimalist-ajax-woocommerce-theme.jpg",
     "images": [
       {
-        "id": "savoy-woocommerce-theme-1",
+        "id": "savoy-woocommerce-theme-thumb",
         "url": "https://weadown.com/wp-content/uploads/2023/06/savoy-2-8-2-minimalist-ajax-woocommerce-theme.jpg",
-        "alt": "Savoy 3.2.3 - Minimalist AJAX WooCommerce Theme - Cover Banner"
-      },
-      {
-        "id": "savoy-woocommerce-theme-2",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Savoy 3.2.3 - Minimalist AJAX WooCommerce Theme - Layout Showcase"
-      },
-      {
-        "id": "savoy-woocommerce-theme-3",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Savoy 3.2.3 - Minimalist AJAX WooCommerce Theme - Builder & Customizer"
-      },
-      {
-        "id": "savoy-woocommerce-theme-4",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Savoy 3.2.3 - Minimalist AJAX WooCommerce Theme - Mobile Responsive View"
+        "alt": "Savoy 3.2.3 - Minimalist AJAX WooCommerce Theme - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -1589,9 +820,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Elessi 6.6.4.1 - WooCommerce AJAX WordPress Theme - RTL support is a high-performance, professional WordPress theme engineered for speed, conversion, and creative flexibility. Built with modern web development standards, it seamlessly supports Elementor, Gutenberg block builder, and WooCommerce.\n\nWhether you are launching an online store, a corporate business site, a personal portfolio, or a high-traffic blog, Elessi 6.6.4.1 - WooCommerce AJAX WordPress Theme - RTL support offers pre-built responsive templates and one-click demo imports to launch your project effortlessly.\n\nAll theme files are 100% genuine and verified clean under the GNU General Public License (GPL). No license key is required for unlimited domain installations.",
     "category": "WordPress",
     "subcategory": "Themes",
-    "price": 450,
-    "compareAtPrice": 2300,
-    "previousPrice": 2300,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "ShoppingBag",
@@ -1600,24 +831,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2023/04/elessi-5-1-8-woocommerce-ajax-wordpress-theme.jpg",
     "images": [
       {
-        "id": "elessi-wordpress-theme-1",
+        "id": "elessi-wordpress-theme-thumb",
         "url": "https://weadown.com/wp-content/uploads/2023/04/elessi-5-1-8-woocommerce-ajax-wordpress-theme.jpg",
-        "alt": "Elessi 6.6.4.1 - WooCommerce AJAX WordPress Theme - RTL support - Cover Banner"
-      },
-      {
-        "id": "elessi-wordpress-theme-2",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Elessi 6.6.4.1 - WooCommerce AJAX WordPress Theme - RTL support - Layout Showcase"
-      },
-      {
-        "id": "elessi-wordpress-theme-3",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Elessi 6.6.4.1 - WooCommerce AJAX WordPress Theme - RTL support - Builder & Customizer"
-      },
-      {
-        "id": "elessi-wordpress-theme-4",
-        "url": "https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Elessi 6.6.4.1 - WooCommerce AJAX WordPress Theme - RTL support - Mobile Responsive View"
+        "alt": "Elessi 6.6.4.1 - WooCommerce AJAX WordPress Theme - RTL support - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -1677,9 +893,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Bridge 30.9 - Creative Elementor and WooCommerce WordPress Theme is a high-performance, professional WordPress theme engineered for speed, conversion, and creative flexibility. Built with modern web development standards, it seamlessly supports Elementor, Gutenberg block builder, and WooCommerce.\n\nWhether you are launching an online store, a corporate business site, a personal portfolio, or a high-traffic blog, Bridge 30.9 - Creative Elementor and WooCommerce WordPress Theme offers pre-built responsive templates and one-click demo imports to launch your project effortlessly.\n\nAll theme files are 100% genuine and verified clean under the GNU General Public License (GPL). No license key is required for unlimited domain installations.",
     "category": "WordPress",
     "subcategory": "Themes",
-    "price": 490,
-    "compareAtPrice": 2500,
-    "previousPrice": 2500,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "ShoppingBag",
@@ -1688,24 +904,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2024/02/bridge-30-2-creative-multipurpose-wordpress-theme.jpg",
     "images": [
       {
-        "id": "bridge-wordpress-theme-1",
+        "id": "bridge-wordpress-theme-thumb",
         "url": "https://weadown.com/wp-content/uploads/2024/02/bridge-30-2-creative-multipurpose-wordpress-theme.jpg",
-        "alt": "Bridge 30.9 - Creative Elementor and WooCommerce WordPress Theme - Cover Banner"
-      },
-      {
-        "id": "bridge-wordpress-theme-2",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Bridge 30.9 - Creative Elementor and WooCommerce WordPress Theme - Layout Showcase"
-      },
-      {
-        "id": "bridge-wordpress-theme-3",
-        "url": "https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Bridge 30.9 - Creative Elementor and WooCommerce WordPress Theme - Builder & Customizer"
-      },
-      {
-        "id": "bridge-wordpress-theme-4",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Bridge 30.9 - Creative Elementor and WooCommerce WordPress Theme - Mobile Responsive View"
+        "alt": "Bridge 30.9 - Creative Elementor and WooCommerce WordPress Theme - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -1765,9 +966,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Zota 1.3.21 - Elementor Multi-Purpose WooCommerce Theme is a high-performance, professional WordPress theme engineered for speed, conversion, and creative flexibility. Built with modern web development standards, it seamlessly supports Elementor, Gutenberg block builder, and WooCommerce.\n\nWhether you are launching an online store, a corporate business site, a personal portfolio, or a high-traffic blog, Zota 1.3.21 - Elementor Multi-Purpose WooCommerce Theme offers pre-built responsive templates and one-click demo imports to launch your project effortlessly.\n\nAll theme files are 100% genuine and verified clean under the GNU General Public License (GPL). No license key is required for unlimited domain installations.",
     "category": "WordPress",
     "subcategory": "Themes",
-    "price": 590,
-    "compareAtPrice": 3100,
-    "previousPrice": 3100,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "ShoppingBag",
@@ -1776,24 +977,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2023/05/zota-1-2-9-elementor-multi-purpose-woocommerce-theme.jpg",
     "images": [
       {
-        "id": "zota-wordpress-theme-1",
+        "id": "zota-wordpress-theme-thumb",
         "url": "https://weadown.com/wp-content/uploads/2023/05/zota-1-2-9-elementor-multi-purpose-woocommerce-theme.jpg",
-        "alt": "Zota 1.3.21 - Elementor Multi-Purpose WooCommerce Theme - Cover Banner"
-      },
-      {
-        "id": "zota-wordpress-theme-2",
-        "url": "https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Zota 1.3.21 - Elementor Multi-Purpose WooCommerce Theme - Layout Showcase"
-      },
-      {
-        "id": "zota-wordpress-theme-3",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Zota 1.3.21 - Elementor Multi-Purpose WooCommerce Theme - Builder & Customizer"
-      },
-      {
-        "id": "zota-wordpress-theme-4",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Zota 1.3.21 - Elementor Multi-Purpose WooCommerce Theme - Mobile Responsive View"
+        "alt": "Zota 1.3.21 - Elementor Multi-Purpose WooCommerce Theme - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -1853,9 +1039,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Ecom 1.3.2 - Multipurpose WooCommerce WordPress Theme is a high-performance, professional WordPress theme engineered for speed, conversion, and creative flexibility. Built with modern web development standards, it seamlessly supports Elementor, Gutenberg block builder, and WooCommerce.\n\nWhether you are launching an online store, a corporate business site, a personal portfolio, or a high-traffic blog, Ecom 1.3.2 - Multipurpose WooCommerce WordPress Theme offers pre-built responsive templates and one-click demo imports to launch your project effortlessly.\n\nAll theme files are 100% genuine and verified clean under the GNU General Public License (GPL). No license key is required for unlimited domain installations.",
     "category": "WordPress",
     "subcategory": "Themes",
-    "price": 450,
-    "compareAtPrice": 2100,
-    "previousPrice": 2100,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "ShoppingBag",
@@ -1864,24 +1050,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2026/10/ecom-1-3-2-multipurpose-woocommerce-wordpress-theme.jpg",
     "images": [
       {
-        "id": "ecom-multipurpose-woocommerce-wordpress-theme-1",
+        "id": "ecom-multipurpose-woocommerce-wordpress-theme-thumb",
         "url": "https://weadown.com/wp-content/uploads/2026/10/ecom-1-3-2-multipurpose-woocommerce-wordpress-theme.jpg",
-        "alt": "Ecom 1.3.2 - Multipurpose WooCommerce WordPress Theme - Cover Banner"
-      },
-      {
-        "id": "ecom-multipurpose-woocommerce-wordpress-theme-2",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Ecom 1.3.2 - Multipurpose WooCommerce WordPress Theme - Layout Showcase"
-      },
-      {
-        "id": "ecom-multipurpose-woocommerce-wordpress-theme-3",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Ecom 1.3.2 - Multipurpose WooCommerce WordPress Theme - Builder & Customizer"
-      },
-      {
-        "id": "ecom-multipurpose-woocommerce-wordpress-theme-4",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Ecom 1.3.2 - Multipurpose WooCommerce WordPress Theme - Mobile Responsive View"
+        "alt": "Ecom 1.3.2 - Multipurpose WooCommerce WordPress Theme - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -1941,9 +1112,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Trueman 1.5.0 - Resume WordPress Theme is a high-performance, professional WordPress theme engineered for speed, conversion, and creative flexibility. Built with modern web development standards, it seamlessly supports Elementor, Gutenberg block builder, and WooCommerce.\n\nWhether you are launching an online store, a corporate business site, a personal portfolio, or a high-traffic blog, Trueman 1.5.0 - Resume WordPress Theme offers pre-built responsive templates and one-click demo imports to launch your project effortlessly.\n\nAll theme files are 100% genuine and verified clean under the GNU General Public License (GPL). No license key is required for unlimited domain installations.",
     "category": "WordPress",
     "subcategory": "Themes",
-    "price": 390,
-    "compareAtPrice": 1650,
-    "previousPrice": 1650,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "ShoppingBag",
@@ -1952,24 +1123,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2025/01/trueman-1-3-1-cv-resume-wordpress-theme.jpg",
     "images": [
       {
-        "id": "trueman-cv-resume-wordpress-theme-1",
+        "id": "trueman-cv-resume-wordpress-theme-thumb",
         "url": "https://weadown.com/wp-content/uploads/2025/01/trueman-1-3-1-cv-resume-wordpress-theme.jpg",
-        "alt": "Trueman 1.5.0 - Resume WordPress Theme - Cover Banner"
-      },
-      {
-        "id": "trueman-cv-resume-wordpress-theme-2",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Trueman 1.5.0 - Resume WordPress Theme - Layout Showcase"
-      },
-      {
-        "id": "trueman-cv-resume-wordpress-theme-3",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Trueman 1.5.0 - Resume WordPress Theme - Builder & Customizer"
-      },
-      {
-        "id": "trueman-cv-resume-wordpress-theme-4",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Trueman 1.5.0 - Resume WordPress Theme - Mobile Responsive View"
+        "alt": "Trueman 1.5.0 - Resume WordPress Theme - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -2029,9 +1185,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Porto 7.9.5 - AI Powered WordPress Website & Shop Builder is a high-performance, professional WordPress theme engineered for speed, conversion, and creative flexibility. Built with modern web development standards, it seamlessly supports Elementor, Gutenberg block builder, and WooCommerce.\n\nWhether you are launching an online store, a corporate business site, a personal portfolio, or a high-traffic blog, Porto 7.9.5 - AI Powered WordPress Website & Shop Builder offers pre-built responsive templates and one-click demo imports to launch your project effortlessly.\n\nAll theme files are 100% genuine and verified clean under the GNU General Public License (GPL). No license key is required for unlimited domain installations.",
     "category": "WordPress",
     "subcategory": "Themes",
-    "price": 490,
-    "compareAtPrice": 2400,
-    "previousPrice": 2400,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "ShoppingBag",
@@ -2040,24 +1196,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2024/05/porto-7-1-2-multipurpose-woocommerce-theme.jpg",
     "images": [
       {
-        "id": "porto-wordpress-theme-1",
+        "id": "porto-wordpress-theme-thumb",
         "url": "https://weadown.com/wp-content/uploads/2024/05/porto-7-1-2-multipurpose-woocommerce-theme.jpg",
-        "alt": "Porto 7.9.5 - AI Powered WordPress Website & Shop Builder - Cover Banner"
-      },
-      {
-        "id": "porto-wordpress-theme-2",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Porto 7.9.5 - AI Powered WordPress Website & Shop Builder - Layout Showcase"
-      },
-      {
-        "id": "porto-wordpress-theme-3",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Porto 7.9.5 - AI Powered WordPress Website & Shop Builder - Builder & Customizer"
-      },
-      {
-        "id": "porto-wordpress-theme-4",
-        "url": "https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Porto 7.9.5 - AI Powered WordPress Website & Shop Builder - Mobile Responsive View"
+        "alt": "Porto 7.9.5 - AI Powered WordPress Website & Shop Builder - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -2117,9 +1258,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Hub 7.0 - Responsive Multi-Purpose WordPress Theme is a high-performance, professional WordPress theme engineered for speed, conversion, and creative flexibility. Built with modern web development standards, it seamlessly supports Elementor, Gutenberg block builder, and WooCommerce.\n\nWhether you are launching an online store, a corporate business site, a personal portfolio, or a high-traffic blog, Hub 7.0 - Responsive Multi-Purpose WordPress Theme offers pre-built responsive templates and one-click demo imports to launch your project effortlessly.\n\nAll theme files are 100% genuine and verified clean under the GNU General Public License (GPL). No license key is required for unlimited domain installations.",
     "category": "WordPress",
     "subcategory": "Themes",
-    "price": 550,
-    "compareAtPrice": 2850,
-    "previousPrice": 2850,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "ShoppingBag",
@@ -2128,24 +1269,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2023/11/hub-4-2-1-responsive-multi-purpose-wordpress-theme.jpg",
     "images": [
       {
-        "id": "hub-wordpress-theme-1",
+        "id": "hub-wordpress-theme-thumb",
         "url": "https://weadown.com/wp-content/uploads/2023/11/hub-4-2-1-responsive-multi-purpose-wordpress-theme.jpg",
-        "alt": "Hub 7.0 - Responsive Multi-Purpose WordPress Theme - Cover Banner"
-      },
-      {
-        "id": "hub-wordpress-theme-2",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Hub 7.0 - Responsive Multi-Purpose WordPress Theme - Layout Showcase"
-      },
-      {
-        "id": "hub-wordpress-theme-3",
-        "url": "https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Hub 7.0 - Responsive Multi-Purpose WordPress Theme - Builder & Customizer"
-      },
-      {
-        "id": "hub-wordpress-theme-4",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Hub 7.0 - Responsive Multi-Purpose WordPress Theme - Mobile Responsive View"
+        "alt": "Hub 7.0 - Responsive Multi-Purpose WordPress Theme - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -2205,9 +1331,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Besa 2.3.24 - Elementor Marketplace WooCommerce Theme is a high-performance, professional WordPress theme engineered for speed, conversion, and creative flexibility. Built with modern web development standards, it seamlessly supports Elementor, Gutenberg block builder, and WooCommerce.\n\nWhether you are launching an online store, a corporate business site, a personal portfolio, or a high-traffic blog, Besa 2.3.24 - Elementor Marketplace WooCommerce Theme offers pre-built responsive templates and one-click demo imports to launch your project effortlessly.\n\nAll theme files are 100% genuine and verified clean under the GNU General Public License (GPL). No license key is required for unlimited domain installations.",
     "category": "WordPress",
     "subcategory": "Themes",
-    "price": 450,
-    "compareAtPrice": 2200,
-    "previousPrice": 2200,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "ShoppingBag",
@@ -2216,24 +1342,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2023/04/besa-2-2-10-elementor-marketplace-woocommerce-theme.jpg",
     "images": [
       {
-        "id": "besa-elementor-marketplace-woocommerce-theme-1",
+        "id": "besa-elementor-marketplace-woocommerce-theme-thumb",
         "url": "https://weadown.com/wp-content/uploads/2023/04/besa-2-2-10-elementor-marketplace-woocommerce-theme.jpg",
-        "alt": "Besa 2.3.24 - Elementor Marketplace WooCommerce Theme - Cover Banner"
-      },
-      {
-        "id": "besa-elementor-marketplace-woocommerce-theme-2",
-        "url": "https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Besa 2.3.24 - Elementor Marketplace WooCommerce Theme - Layout Showcase"
-      },
-      {
-        "id": "besa-elementor-marketplace-woocommerce-theme-3",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Besa 2.3.24 - Elementor Marketplace WooCommerce Theme - Builder & Customizer"
-      },
-      {
-        "id": "besa-elementor-marketplace-woocommerce-theme-4",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Besa 2.3.24 - Elementor Marketplace WooCommerce Theme - Mobile Responsive View"
+        "alt": "Besa 2.3.24 - Elementor Marketplace WooCommerce Theme - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -2293,9 +1404,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Machic 1.6.7 - Electronics Store WooCommerce Theme is a high-performance, professional WordPress theme engineered for speed, conversion, and creative flexibility. Built with modern web development standards, it seamlessly supports Elementor, Gutenberg block builder, and WooCommerce.\n\nWhether you are launching an online store, a corporate business site, a personal portfolio, or a high-traffic blog, Machic 1.6.7 - Electronics Store WooCommerce Theme offers pre-built responsive templates and one-click demo imports to launch your project effortlessly.\n\nAll theme files are 100% genuine and verified clean under the GNU General Public License (GPL). No license key is required for unlimited domain installations.",
     "category": "WordPress",
     "subcategory": "Themes",
-    "price": 390,
-    "compareAtPrice": 1850,
-    "previousPrice": 1850,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "ShoppingBag",
@@ -2304,24 +1415,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2023/06/machic-1-2-5-electronics-store-woocommerce-theme.png",
     "images": [
       {
-        "id": "machic-wordpress-theme-1",
+        "id": "machic-wordpress-theme-thumb",
         "url": "https://weadown.com/wp-content/uploads/2023/06/machic-1-2-5-electronics-store-woocommerce-theme.png",
-        "alt": "Machic 1.6.7 - Electronics Store WooCommerce Theme - Cover Banner"
-      },
-      {
-        "id": "machic-wordpress-theme-2",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Machic 1.6.7 - Electronics Store WooCommerce Theme - Layout Showcase"
-      },
-      {
-        "id": "machic-wordpress-theme-3",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Machic 1.6.7 - Electronics Store WooCommerce Theme - Builder & Customizer"
-      },
-      {
-        "id": "machic-wordpress-theme-4",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Machic 1.6.7 - Electronics Store WooCommerce Theme - Mobile Responsive View"
+        "alt": "Machic 1.6.7 - Electronics Store WooCommerce Theme - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -2381,9 +1477,9 @@ export const allCatalogProducts: Product[] = [
     "description": "XStore 9.7.9 - Multipurpose WooCommerce Theme is a high-performance, professional WordPress theme engineered for speed, conversion, and creative flexibility. Built with modern web development standards, it seamlessly supports Elementor, Gutenberg block builder, and WooCommerce.\n\nWhether you are launching an online store, a corporate business site, a personal portfolio, or a high-traffic blog, XStore 9.7.9 - Multipurpose WooCommerce Theme offers pre-built responsive templates and one-click demo imports to launch your project effortlessly.\n\nAll theme files are 100% genuine and verified clean under the GNU General Public License (GPL). No license key is required for unlimited domain installations.",
     "category": "WordPress",
     "subcategory": "Themes",
-    "price": 590,
-    "compareAtPrice": 2990,
-    "previousPrice": 2990,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "ShoppingBag",
@@ -2392,24 +1488,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2025/11/xstore-9-6-1-multipurpose-woocommerce-theme.jpg",
     "images": [
       {
-        "id": "xstore-wordpress-theme-1",
+        "id": "xstore-wordpress-theme-thumb",
         "url": "https://weadown.com/wp-content/uploads/2025/11/xstore-9-6-1-multipurpose-woocommerce-theme.jpg",
-        "alt": "XStore 9.7.9 - Multipurpose WooCommerce Theme - Cover Banner"
-      },
-      {
-        "id": "xstore-wordpress-theme-2",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "XStore 9.7.9 - Multipurpose WooCommerce Theme - Layout Showcase"
-      },
-      {
-        "id": "xstore-wordpress-theme-3",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "XStore 9.7.9 - Multipurpose WooCommerce Theme - Builder & Customizer"
-      },
-      {
-        "id": "xstore-wordpress-theme-4",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "XStore 9.7.9 - Multipurpose WooCommerce Theme - Mobile Responsive View"
+        "alt": "XStore 9.7.9 - Multipurpose WooCommerce Theme - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -2469,9 +1550,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Masterstudy 4.8.161 - Education WordPress Theme is a high-performance, professional WordPress theme engineered for speed, conversion, and creative flexibility. Built with modern web development standards, it seamlessly supports Elementor, Gutenberg block builder, and WooCommerce.\n\nWhether you are launching an online store, a corporate business site, a personal portfolio, or a high-traffic blog, Masterstudy 4.8.161 - Education WordPress Theme offers pre-built responsive templates and one-click demo imports to launch your project effortlessly.\n\nAll theme files are 100% genuine and verified clean under the GNU General Public License (GPL). No license key is required for unlimited domain installations.",
     "category": "WordPress",
     "subcategory": "Themes",
-    "price": 490,
-    "compareAtPrice": 2500,
-    "previousPrice": 2500,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "ShoppingBag",
@@ -2480,24 +1561,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2023/07/masterstudy-4-8-7-education-wordpress-theme.png",
     "images": [
       {
-        "id": "masterstudy-education-wordpress-theme-1",
+        "id": "masterstudy-education-wordpress-theme-thumb",
         "url": "https://weadown.com/wp-content/uploads/2023/07/masterstudy-4-8-7-education-wordpress-theme.png",
-        "alt": "Masterstudy 4.8.161 - Education WordPress Theme - Cover Banner"
-      },
-      {
-        "id": "masterstudy-education-wordpress-theme-2",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Masterstudy 4.8.161 - Education WordPress Theme - Layout Showcase"
-      },
-      {
-        "id": "masterstudy-education-wordpress-theme-3",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Masterstudy 4.8.161 - Education WordPress Theme - Builder & Customizer"
-      },
-      {
-        "id": "masterstudy-education-wordpress-theme-4",
-        "url": "https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Masterstudy 4.8.161 - Education WordPress Theme - Mobile Responsive View"
+        "alt": "Masterstudy 4.8.161 - Education WordPress Theme - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -2557,9 +1623,9 @@ export const allCatalogProducts: Product[] = [
     "description": "BeTheme 29.0.2.1 - Responsive Multipurpose WordPress & WooCommerce Theme is a high-performance, professional WordPress theme engineered for speed, conversion, and creative flexibility. Built with modern web development standards, it seamlessly supports Elementor, Gutenberg block builder, and WooCommerce.\n\nWhether you are launching an online store, a corporate business site, a personal portfolio, or a high-traffic blog, BeTheme 29.0.2.1 - Responsive Multipurpose WordPress & WooCommerce Theme offers pre-built responsive templates and one-click demo imports to launch your project effortlessly.\n\nAll theme files are 100% genuine and verified clean under the GNU General Public License (GPL). No license key is required for unlimited domain installations.",
     "category": "WordPress",
     "subcategory": "Themes",
-    "price": 550,
-    "compareAtPrice": 2800,
-    "previousPrice": 2800,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "ShoppingBag",
@@ -2568,24 +1634,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2025/02/betheme-27-6-3-responsive-multipurpose-wordpress-woocommerce-theme.jpg",
     "images": [
       {
-        "id": "betheme-wordpress-theme-1",
+        "id": "betheme-wordpress-theme-thumb",
         "url": "https://weadown.com/wp-content/uploads/2025/02/betheme-27-6-3-responsive-multipurpose-wordpress-woocommerce-theme.jpg",
-        "alt": "BeTheme 29.0.2.1 - Responsive Multipurpose WordPress & WooCommerce Theme - Cover Banner"
-      },
-      {
-        "id": "betheme-wordpress-theme-2",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "BeTheme 29.0.2.1 - Responsive Multipurpose WordPress & WooCommerce Theme - Layout Showcase"
-      },
-      {
-        "id": "betheme-wordpress-theme-3",
-        "url": "https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=1200&q=80",
-        "alt": "BeTheme 29.0.2.1 - Responsive Multipurpose WordPress & WooCommerce Theme - Builder & Customizer"
-      },
-      {
-        "id": "betheme-wordpress-theme-4",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "BeTheme 29.0.2.1 - Responsive Multipurpose WordPress & WooCommerce Theme - Mobile Responsive View"
+        "alt": "BeTheme 29.0.2.1 - Responsive Multipurpose WordPress & WooCommerce Theme - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -2645,9 +1696,9 @@ export const allCatalogProducts: Product[] = [
     "description": "GreenMart 4.3.5 - Organic & Food WooCommerce WordPress Theme is a high-performance, professional WordPress theme engineered for speed, conversion, and creative flexibility. Built with modern web development standards, it seamlessly supports Elementor, Gutenberg block builder, and WooCommerce.\n\nWhether you are launching an online store, a corporate business site, a personal portfolio, or a high-traffic blog, GreenMart 4.3.5 - Organic & Food WooCommerce WordPress Theme offers pre-built responsive templates and one-click demo imports to launch your project effortlessly.\n\nAll theme files are 100% genuine and verified clean under the GNU General Public License (GPL). No license key is required for unlimited domain installations.",
     "category": "WordPress",
     "subcategory": "Themes",
-    "price": 450,
-    "compareAtPrice": 2250,
-    "previousPrice": 2250,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "ShoppingBag",
@@ -2656,24 +1707,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2023/05/greenmart-4-1-2-organic-food-woocommerce-wordpress-theme.jpg",
     "images": [
       {
-        "id": "greenmart-wordpress-theme-1",
+        "id": "greenmart-wordpress-theme-thumb",
         "url": "https://weadown.com/wp-content/uploads/2023/05/greenmart-4-1-2-organic-food-woocommerce-wordpress-theme.jpg",
-        "alt": "GreenMart 4.3.5 - Organic & Food WooCommerce WordPress Theme - Cover Banner"
-      },
-      {
-        "id": "greenmart-wordpress-theme-2",
-        "url": "https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=1200&q=80",
-        "alt": "GreenMart 4.3.5 - Organic & Food WooCommerce WordPress Theme - Layout Showcase"
-      },
-      {
-        "id": "greenmart-wordpress-theme-3",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "GreenMart 4.3.5 - Organic & Food WooCommerce WordPress Theme - Builder & Customizer"
-      },
-      {
-        "id": "greenmart-wordpress-theme-4",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "GreenMart 4.3.5 - Organic & Food WooCommerce WordPress Theme - Mobile Responsive View"
+        "alt": "GreenMart 4.3.5 - Organic & Food WooCommerce WordPress Theme - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -2733,9 +1769,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Yoast Seo Premium 28.7 – WordPress SEO Plugin is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\nYoast SEO Premium ensures that your site meets the highest technical SEO standards. Yoast SEO for WordPress also gives...\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 390,
-    "compareAtPrice": 1800,
-    "previousPrice": 1800,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": true,
     "newProduct": true,
     "badge": "featured",
@@ -2745,24 +1781,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2026/08/Yoast-Seo-Premium-WordPress-SEO-Plugin.jpg",
     "images": [
       {
-        "id": "yoast-seo-premium-plugin-1",
+        "id": "yoast-seo-premium-plugin-thumb",
         "url": "https://weadown.com/wp-content/uploads/2026/08/Yoast-Seo-Premium-WordPress-SEO-Plugin.jpg",
-        "alt": "Yoast Seo Premium 28.7 – WordPress SEO Plugin - Cover Banner"
-      },
-      {
-        "id": "yoast-seo-premium-plugin-2",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Yoast Seo Premium 28.7 – WordPress SEO Plugin - Admin Dashboard Preview"
-      },
-      {
-        "id": "yoast-seo-premium-plugin-3",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Yoast Seo Premium 28.7 – WordPress SEO Plugin - Settings & Controls"
-      },
-      {
-        "id": "yoast-seo-premium-plugin-4",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Yoast Seo Premium 28.7 – WordPress SEO Plugin - Feature Overview"
+        "alt": "Yoast Seo Premium 28.7 – WordPress SEO Plugin - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -2822,9 +1843,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Dokan Pro 5.3.1 + Booking 1.4.5 + Theme – Multivendor Marketplace Plugin for WordPress is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\nDokan Pro enables you to build multi-seller or multi-vendor e-commerce solution with WordPress. Dokan Business can start your own...\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 450,
-    "compareAtPrice": 2200,
-    "previousPrice": 2200,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": true,
     "newProduct": true,
     "badge": "featured",
@@ -2834,24 +1855,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2025/03/Dokan-Pro-Multivendor-Marketplace-Plugin-for-WordPress.jpg",
     "images": [
       {
-        "id": "dokan-pro-wordpress-plugin-1",
+        "id": "dokan-pro-wordpress-plugin-thumb",
         "url": "https://weadown.com/wp-content/uploads/2025/03/Dokan-Pro-Multivendor-Marketplace-Plugin-for-WordPress.jpg",
-        "alt": "Dokan Pro 5.3.1 + Booking 1.4.5 + Theme – Multivendor Marketplace Plugin for WordPress - Cover Banner"
-      },
-      {
-        "id": "dokan-pro-wordpress-plugin-2",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Dokan Pro 5.3.1 + Booking 1.4.5 + Theme – Multivendor Marketplace Plugin for WordPress - Admin Dashboard Preview"
-      },
-      {
-        "id": "dokan-pro-wordpress-plugin-3",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Dokan Pro 5.3.1 + Booking 1.4.5 + Theme – Multivendor Marketplace Plugin for WordPress - Settings & Controls"
-      },
-      {
-        "id": "dokan-pro-wordpress-plugin-4",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Dokan Pro 5.3.1 + Booking 1.4.5 + Theme – Multivendor Marketplace Plugin for WordPress - Feature Overview"
+        "alt": "Dokan Pro 5.3.1 + Booking 1.4.5 + Theme – Multivendor Marketplace Plugin for WordPress - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -2911,9 +1917,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Divi Supreme Pro 5.0.83 – Modules & Extensions Plugin is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\nDivi Supreme Pro design and create creative digital products and child themes for Divi. Take Divi to the next...\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 490,
-    "compareAtPrice": 2500,
-    "previousPrice": 2500,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": true,
     "newProduct": true,
     "badge": "featured",
@@ -2923,24 +1929,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2023/07/divi-supreme-pro-4961-divi-plugin-for-building-amazing-divi-websites.jpg",
     "images": [
       {
-        "id": "divi-supreme-pro-plugin-1",
+        "id": "divi-supreme-pro-plugin-thumb",
         "url": "https://weadown.com/wp-content/uploads/2023/07/divi-supreme-pro-4961-divi-plugin-for-building-amazing-divi-websites.jpg",
-        "alt": "Divi Supreme Pro 5.0.83 – Modules & Extensions Plugin - Cover Banner"
-      },
-      {
-        "id": "divi-supreme-pro-plugin-2",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Divi Supreme Pro 5.0.83 – Modules & Extensions Plugin - Admin Dashboard Preview"
-      },
-      {
-        "id": "divi-supreme-pro-plugin-3",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Divi Supreme Pro 5.0.83 – Modules & Extensions Plugin - Settings & Controls"
-      },
-      {
-        "id": "divi-supreme-pro-plugin-4",
-        "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Divi Supreme Pro 5.0.83 – Modules & Extensions Plugin - Feature Overview"
+        "alt": "Divi Supreme Pro 5.0.83 – Modules & Extensions Plugin - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -3000,9 +1991,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Ultimate Dashboard Pro 3.11.4 – Custom WordPress Dashboard Plugin is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\nUltimate Dashboard Pro you can completely change the look of the admin area.\r\nDemo Ultimate Dashboard Pro WordPress Plugin\r\n\r\nUltimate Dashboard...\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 390,
-    "compareAtPrice": 1900,
-    "previousPrice": 1900,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": true,
     "newProduct": true,
     "badge": "featured",
@@ -3012,24 +2003,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2024/01/ultimate-dashboard-pro-380-custom-wordpress-dashboard-plugin.png",
     "images": [
       {
-        "id": "ultimate-dashboard-pro-1",
+        "id": "ultimate-dashboard-pro-thumb",
         "url": "https://weadown.com/wp-content/uploads/2024/01/ultimate-dashboard-pro-380-custom-wordpress-dashboard-plugin.png",
-        "alt": "Ultimate Dashboard Pro 3.11.4 – Custom WordPress Dashboard Plugin - Cover Banner"
-      },
-      {
-        "id": "ultimate-dashboard-pro-2",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Ultimate Dashboard Pro 3.11.4 – Custom WordPress Dashboard Plugin - Admin Dashboard Preview"
-      },
-      {
-        "id": "ultimate-dashboard-pro-3",
-        "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Ultimate Dashboard Pro 3.11.4 – Custom WordPress Dashboard Plugin - Settings & Controls"
-      },
-      {
-        "id": "ultimate-dashboard-pro-4",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Ultimate Dashboard Pro 3.11.4 – Custom WordPress Dashboard Plugin - Feature Overview"
+        "alt": "Ultimate Dashboard Pro 3.11.4 – Custom WordPress Dashboard Plugin - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -3089,9 +2065,9 @@ export const allCatalogProducts: Product[] = [
     "description": "CheckoutWC 11.4.1 – Woocommerce Checkout Plugin is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\nCheckoutWC is a plugin for WooCommerce that replaces your checkout page with a Shopify-style cart and checkout page. Proven to increase sales and...\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 450,
-    "compareAtPrice": 2300,
-    "previousPrice": 2300,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": true,
     "newProduct": true,
     "badge": "featured",
@@ -3101,24 +2077,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2023/04/checkoutwc-7108-woocommerce-checkout-plugin.jpg",
     "images": [
       {
-        "id": "checkoutwc-woocommerce-plugin-1",
+        "id": "checkoutwc-woocommerce-plugin-thumb",
         "url": "https://weadown.com/wp-content/uploads/2023/04/checkoutwc-7108-woocommerce-checkout-plugin.jpg",
-        "alt": "CheckoutWC 11.4.1 – Woocommerce Checkout Plugin - Cover Banner"
-      },
-      {
-        "id": "checkoutwc-woocommerce-plugin-2",
-        "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-        "alt": "CheckoutWC 11.4.1 – Woocommerce Checkout Plugin - Admin Dashboard Preview"
-      },
-      {
-        "id": "checkoutwc-woocommerce-plugin-3",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "CheckoutWC 11.4.1 – Woocommerce Checkout Plugin - Settings & Controls"
-      },
-      {
-        "id": "checkoutwc-woocommerce-plugin-4",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "CheckoutWC 11.4.1 – Woocommerce Checkout Plugin - Feature Overview"
+        "alt": "CheckoutWC 11.4.1 – Woocommerce Checkout Plugin - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -3178,9 +2139,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Unlimited Elements for Elementor Premium 2.0.24 is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\nUnlimited Elements for Elementor Premium is the biggest and best elements library now available for both Elementor and WordPress,...\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 590,
-    "compareAtPrice": 2900,
-    "previousPrice": 2900,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": true,
     "newProduct": true,
     "badge": "featured",
@@ -3190,24 +2151,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2023/11/unlimited-elements-for-elementor-premium-1588.jpg",
     "images": [
       {
-        "id": "unlimited-elements-for-elementor-1",
+        "id": "unlimited-elements-for-elementor-thumb",
         "url": "https://weadown.com/wp-content/uploads/2023/11/unlimited-elements-for-elementor-premium-1588.jpg",
-        "alt": "Unlimited Elements for Elementor Premium 2.0.24 - Cover Banner"
-      },
-      {
-        "id": "unlimited-elements-for-elementor-2",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Unlimited Elements for Elementor Premium 2.0.24 - Admin Dashboard Preview"
-      },
-      {
-        "id": "unlimited-elements-for-elementor-3",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Unlimited Elements for Elementor Premium 2.0.24 - Settings & Controls"
-      },
-      {
-        "id": "unlimited-elements-for-elementor-4",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Unlimited Elements for Elementor Premium 2.0.24 - Feature Overview"
+        "alt": "Unlimited Elements for Elementor Premium 2.0.24 - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -3267,9 +2213,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Slider Revolution Responsive WordPress Plugin 7.2.4 + RevSlider 6.7.58 is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\nSlider Revolution is a new way to build rich & dynamic content for your websites. With our powerful visual...\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 490,
-    "compareAtPrice": 2400,
-    "previousPrice": 2400,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "Layers",
@@ -3278,24 +2224,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2026/03/Slider-Revolution-Responsive-WordPress-Plugin.jpg",
     "images": [
       {
-        "id": "slider-revolution-wordpress-plugin-1",
+        "id": "slider-revolution-wordpress-plugin-thumb",
         "url": "https://weadown.com/wp-content/uploads/2026/03/Slider-Revolution-Responsive-WordPress-Plugin.jpg",
-        "alt": "Slider Revolution Responsive WordPress Plugin 7.2.4 + RevSlider 6.7.58 - Cover Banner"
-      },
-      {
-        "id": "slider-revolution-wordpress-plugin-2",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Slider Revolution Responsive WordPress Plugin 7.2.4 + RevSlider 6.7.58 - Admin Dashboard Preview"
-      },
-      {
-        "id": "slider-revolution-wordpress-plugin-3",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Slider Revolution Responsive WordPress Plugin 7.2.4 + RevSlider 6.7.58 - Settings & Controls"
-      },
-      {
-        "id": "slider-revolution-wordpress-plugin-4",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Slider Revolution Responsive WordPress Plugin 7.2.4 + RevSlider 6.7.58 - Feature Overview"
+        "alt": "Slider Revolution Responsive WordPress Plugin 7.2.4 + RevSlider 6.7.58 - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -3355,9 +2286,9 @@ export const allCatalogProducts: Product[] = [
     "description": "MailPoet Pro 5.42.0 – Email Marketing Plugin for WordPress is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\nMailPoet Pro Better Email for WordPress-Powered Websites. Send beautiful emails that reach inboxes every time, and create loyal subscribers.\r\nDemo...\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 390,
-    "compareAtPrice": 1850,
-    "previousPrice": 1850,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "Layers",
@@ -3366,24 +2297,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2024/10/MailPoet-Premium-Email-Marketing-Plugin-for-WordPress.jpg",
     "images": [
       {
-        "id": "mailpoet-wordpress-plugin-5-14-0-1",
+        "id": "mailpoet-wordpress-plugin-5-14-0-thumb",
         "url": "https://weadown.com/wp-content/uploads/2024/10/MailPoet-Premium-Email-Marketing-Plugin-for-WordPress.jpg",
-        "alt": "MailPoet Pro 5.42.0 – Email Marketing Plugin for WordPress - Cover Banner"
-      },
-      {
-        "id": "mailpoet-wordpress-plugin-5-14-0-2",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "MailPoet Pro 5.42.0 – Email Marketing Plugin for WordPress - Admin Dashboard Preview"
-      },
-      {
-        "id": "mailpoet-wordpress-plugin-5-14-0-3",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "MailPoet Pro 5.42.0 – Email Marketing Plugin for WordPress - Settings & Controls"
-      },
-      {
-        "id": "mailpoet-wordpress-plugin-5-14-0-4",
-        "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-        "alt": "MailPoet Pro 5.42.0 – Email Marketing Plugin for WordPress - Feature Overview"
+        "alt": "MailPoet Pro 5.42.0 – Email Marketing Plugin for WordPress - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -3443,9 +2359,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Element Pack 10.0.1 – Addon for Elementor Page Builder WordPress Plugin is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\nElement Pack Free Download Latest Version ultimate essential addons for Elementor Page Builder with 185 of the most popular...\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 450,
-    "compareAtPrice": 2250,
-    "previousPrice": 2250,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "Layers",
@@ -3454,24 +2370,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2023/11/element-pack-7-6-1-addon-for-elementor-page-builder-wordpress-plugin.jpg",
     "images": [
       {
-        "id": "element-pack-pro-addon-1",
+        "id": "element-pack-pro-addon-thumb",
         "url": "https://weadown.com/wp-content/uploads/2023/11/element-pack-7-6-1-addon-for-elementor-page-builder-wordpress-plugin.jpg",
-        "alt": "Element Pack 10.0.1 – Addon for Elementor Page Builder WordPress Plugin - Cover Banner"
-      },
-      {
-        "id": "element-pack-pro-addon-2",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Element Pack 10.0.1 – Addon for Elementor Page Builder WordPress Plugin - Admin Dashboard Preview"
-      },
-      {
-        "id": "element-pack-pro-addon-3",
-        "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Element Pack 10.0.1 – Addon for Elementor Page Builder WordPress Plugin - Settings & Controls"
-      },
-      {
-        "id": "element-pack-pro-addon-4",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Element Pack 10.0.1 – Addon for Elementor Page Builder WordPress Plugin - Feature Overview"
+        "alt": "Element Pack 10.0.1 – Addon for Elementor Page Builder WordPress Plugin - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -3531,9 +2432,9 @@ export const allCatalogProducts: Product[] = [
     "description": "CrocoBuilder 1.0.1 – AI-Native Frontend Builder for WordPress is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\nCrocoBuilder is an AI-native frontend builder for WordPress that provides developers with atomic DOM output, unified CSS control, and...\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 490,
-    "compareAtPrice": 2600,
-    "previousPrice": 2600,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "Layers",
@@ -3542,24 +2443,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2026/07/CrocoBuilder-WordPress-AI-Native-Frontend-Builder-Plugin.jpg",
     "images": [
       {
-        "id": "crocobuilder-wordpress-builder-plugin-1",
+        "id": "crocobuilder-wordpress-builder-plugin-thumb",
         "url": "https://weadown.com/wp-content/uploads/2026/07/CrocoBuilder-WordPress-AI-Native-Frontend-Builder-Plugin.jpg",
-        "alt": "CrocoBuilder 1.0.1 – AI-Native Frontend Builder for WordPress - Cover Banner"
-      },
-      {
-        "id": "crocobuilder-wordpress-builder-plugin-2",
-        "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-        "alt": "CrocoBuilder 1.0.1 – AI-Native Frontend Builder for WordPress - Admin Dashboard Preview"
-      },
-      {
-        "id": "crocobuilder-wordpress-builder-plugin-3",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "CrocoBuilder 1.0.1 – AI-Native Frontend Builder for WordPress - Settings & Controls"
-      },
-      {
-        "id": "crocobuilder-wordpress-builder-plugin-4",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "CrocoBuilder 1.0.1 – AI-Native Frontend Builder for WordPress - Feature Overview"
+        "alt": "CrocoBuilder 1.0.1 – AI-Native Frontend Builder for WordPress - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -3619,9 +2505,9 @@ export const allCatalogProducts: Product[] = [
     "description": "FluentCRM Pro 3.2.6 – Marketing Automation For WordPress Plugin is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\nFluentCRM Pro is a Self Hosted Email Marketing Automation Plugin for WordPress. Manage your leads and customers, email campaigns,...\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 550,
-    "compareAtPrice": 2800,
-    "previousPrice": 2800,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "Layers",
@@ -3630,24 +2516,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2026/07/FluentCRM-Pro-Marketing-Automation-For-WordPress-Plugin.jpg",
     "images": [
       {
-        "id": "fluentcrm-pro-wordpress-plugin-1",
+        "id": "fluentcrm-pro-wordpress-plugin-thumb",
         "url": "https://weadown.com/wp-content/uploads/2026/07/FluentCRM-Pro-Marketing-Automation-For-WordPress-Plugin.jpg",
-        "alt": "FluentCRM Pro 3.2.6 – Marketing Automation For WordPress Plugin - Cover Banner"
-      },
-      {
-        "id": "fluentcrm-pro-wordpress-plugin-2",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "FluentCRM Pro 3.2.6 – Marketing Automation For WordPress Plugin - Admin Dashboard Preview"
-      },
-      {
-        "id": "fluentcrm-pro-wordpress-plugin-3",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "FluentCRM Pro 3.2.6 – Marketing Automation For WordPress Plugin - Settings & Controls"
-      },
-      {
-        "id": "fluentcrm-pro-wordpress-plugin-4",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "FluentCRM Pro 3.2.6 – Marketing Automation For WordPress Plugin - Feature Overview"
+        "alt": "FluentCRM Pro 3.2.6 – Marketing Automation For WordPress Plugin - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -3707,9 +2578,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Fluent Boards Pro 2.2.1 – Project Management Plugin for WordPress is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\nGain complete control over your projects with Fluent Boards Pro, the simplest solution specifically crafted for WordPress. Get it...\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 390,
-    "compareAtPrice": 1950,
-    "previousPrice": 1950,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "Layers",
@@ -3718,24 +2589,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2024/07/Fluent-Boards-Pro-1.20-Project-Management-Plugin-for-WordPress.jpg",
     "images": [
       {
-        "id": "fluent-boards-pro-wordpress-plugin-1",
+        "id": "fluent-boards-pro-wordpress-plugin-thumb",
         "url": "https://weadown.com/wp-content/uploads/2024/07/Fluent-Boards-Pro-1.20-Project-Management-Plugin-for-WordPress.jpg",
-        "alt": "Fluent Boards Pro 2.2.1 – Project Management Plugin for WordPress - Cover Banner"
-      },
-      {
-        "id": "fluent-boards-pro-wordpress-plugin-2",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Fluent Boards Pro 2.2.1 – Project Management Plugin for WordPress - Admin Dashboard Preview"
-      },
-      {
-        "id": "fluent-boards-pro-wordpress-plugin-3",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Fluent Boards Pro 2.2.1 – Project Management Plugin for WordPress - Settings & Controls"
-      },
-      {
-        "id": "fluent-boards-pro-wordpress-plugin-4",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Fluent Boards Pro 2.2.1 – Project Management Plugin for WordPress - Feature Overview"
+        "alt": "Fluent Boards Pro 2.2.1 – Project Management Plugin for WordPress - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -3795,9 +2651,9 @@ export const allCatalogProducts: Product[] = [
     "description": "JetEngine 3.9.0 + External Modules – WordPress Dynamic Content Plugin for Elementor is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\nJetEngine – Adding & Editing Dynamic Content with Elementor is a must-have plugin for Elementor Page Builder allowing to...\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 450,
-    "compareAtPrice": 2350,
-    "previousPrice": 2350,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "Layers",
@@ -3806,24 +2662,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2023/04/JetEngine-3.1.4-–-WordPress-Dynamic-Content-Plugin-for-Elementor.jpg",
     "images": [
       {
-        "id": "jet-engine-plugin-elementor-1",
+        "id": "jet-engine-plugin-elementor-thumb",
         "url": "https://weadown.com/wp-content/uploads/2023/04/JetEngine-3.1.4-–-WordPress-Dynamic-Content-Plugin-for-Elementor.jpg",
-        "alt": "JetEngine 3.9.0 + External Modules – WordPress Dynamic Content Plugin for Elementor - Cover Banner"
-      },
-      {
-        "id": "jet-engine-plugin-elementor-2",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "JetEngine 3.9.0 + External Modules – WordPress Dynamic Content Plugin for Elementor - Admin Dashboard Preview"
-      },
-      {
-        "id": "jet-engine-plugin-elementor-3",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "JetEngine 3.9.0 + External Modules – WordPress Dynamic Content Plugin for Elementor - Settings & Controls"
-      },
-      {
-        "id": "jet-engine-plugin-elementor-4",
-        "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-        "alt": "JetEngine 3.9.0 + External Modules – WordPress Dynamic Content Plugin for Elementor - Feature Overview"
+        "alt": "JetEngine 3.9.0 + External Modules – WordPress Dynamic Content Plugin for Elementor - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -3883,9 +2724,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Instagram Feed Pro WordPress Plugin 6.14.1 is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\nInstagram Feed Pro Keep your website looking fresh with new Instagram content.\r\nDemo Instagram Feed Pro WordPress Plugin\r\n\r\nInstagram Feed Pro...\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 490,
-    "compareAtPrice": 2500,
-    "previousPrice": 2500,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "Layers",
@@ -3894,24 +2735,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2023/05/instagram-feed-pro-623-instagram-feeds-wordpress-plugin.webp",
     "images": [
       {
-        "id": "instagram-feed-pro-plugin-full-1",
+        "id": "instagram-feed-pro-plugin-full-thumb",
         "url": "https://weadown.com/wp-content/uploads/2023/05/instagram-feed-pro-623-instagram-feeds-wordpress-plugin.webp",
-        "alt": "Instagram Feed Pro WordPress Plugin 6.14.1 - Cover Banner"
-      },
-      {
-        "id": "instagram-feed-pro-plugin-full-2",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Instagram Feed Pro WordPress Plugin 6.14.1 - Admin Dashboard Preview"
-      },
-      {
-        "id": "instagram-feed-pro-plugin-full-3",
-        "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Instagram Feed Pro WordPress Plugin 6.14.1 - Settings & Controls"
-      },
-      {
-        "id": "instagram-feed-pro-plugin-full-4",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Instagram Feed Pro WordPress Plugin 6.14.1 - Feature Overview"
+        "alt": "Instagram Feed Pro WordPress Plugin 6.14.1 - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -3971,9 +2797,9 @@ export const allCatalogProducts: Product[] = [
     "description": "WP Funnels Pro 2.10.3 – Marketing Funnel Automation In WordPress is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\nWPFunnels Pro to create high converting landing pages, sales funnels, and checkout flows in minutes. Drag & Drop Sales...\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 590,
-    "compareAtPrice": 3100,
-    "previousPrice": 3100,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "Layers",
@@ -3982,24 +2808,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2024/11/WP-Funnels-Pro-Marketing-Funnel-Automation-In-WordPress.jpg",
     "images": [
       {
-        "id": "wp-funnels-pro-wordpress-plugin-1",
+        "id": "wp-funnels-pro-wordpress-plugin-thumb",
         "url": "https://weadown.com/wp-content/uploads/2024/11/WP-Funnels-Pro-Marketing-Funnel-Automation-In-WordPress.jpg",
-        "alt": "WP Funnels Pro 2.10.3 – Marketing Funnel Automation In WordPress - Cover Banner"
-      },
-      {
-        "id": "wp-funnels-pro-wordpress-plugin-2",
-        "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-        "alt": "WP Funnels Pro 2.10.3 – Marketing Funnel Automation In WordPress - Admin Dashboard Preview"
-      },
-      {
-        "id": "wp-funnels-pro-wordpress-plugin-3",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "WP Funnels Pro 2.10.3 – Marketing Funnel Automation In WordPress - Settings & Controls"
-      },
-      {
-        "id": "wp-funnels-pro-wordpress-plugin-4",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "WP Funnels Pro 2.10.3 – Marketing Funnel Automation In WordPress - Feature Overview"
+        "alt": "WP Funnels Pro 2.10.3 – Marketing Funnel Automation In WordPress - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -4059,9 +2870,9 @@ export const allCatalogProducts: Product[] = [
     "description": "WP Security Ninja Premium 5.305 is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\nWP Security Ninja Pro steps in as your silent guardian. With its hassle-free setup and comprehensive coverage, you can...\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 390,
-    "compareAtPrice": 1800,
-    "previousPrice": 1800,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "Layers",
@@ -4070,24 +2881,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2024/06/WP-Security-Ninja-Premium-5.188.jpg",
     "images": [
       {
-        "id": "wp-security-ninja-premium-1",
+        "id": "wp-security-ninja-premium-thumb",
         "url": "https://weadown.com/wp-content/uploads/2024/06/WP-Security-Ninja-Premium-5.188.jpg",
-        "alt": "WP Security Ninja Premium 5.305 - Cover Banner"
-      },
-      {
-        "id": "wp-security-ninja-premium-2",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "WP Security Ninja Premium 5.305 - Admin Dashboard Preview"
-      },
-      {
-        "id": "wp-security-ninja-premium-3",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "WP Security Ninja Premium 5.305 - Settings & Controls"
-      },
-      {
-        "id": "wp-security-ninja-premium-4",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "WP Security Ninja Premium 5.305 - Feature Overview"
+        "alt": "WP Security Ninja Premium 5.305 - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -4147,9 +2943,9 @@ export const allCatalogProducts: Product[] = [
     "description": "PowerPack Pro for Elementor 3.1.1 is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\nPowerPack Pro for Elementor  is extends the Elementor Page Builder plugin with custom widgets, features, and templates. Get access...\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 450,
-    "compareAtPrice": 2200,
-    "previousPrice": 2200,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "Layers",
@@ -4158,24 +2954,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2023/11/powerpack-for-elements-2105-addons-for-elementor.jpg",
     "images": [
       {
-        "id": "powerpack-for-elements-1",
+        "id": "powerpack-for-elements-thumb",
         "url": "https://weadown.com/wp-content/uploads/2023/11/powerpack-for-elements-2105-addons-for-elementor.jpg",
-        "alt": "PowerPack Pro for Elementor 3.1.1 - Cover Banner"
-      },
-      {
-        "id": "powerpack-for-elements-2",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "PowerPack Pro for Elementor 3.1.1 - Admin Dashboard Preview"
-      },
-      {
-        "id": "powerpack-for-elements-3",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "PowerPack Pro for Elementor 3.1.1 - Settings & Controls"
-      },
-      {
-        "id": "powerpack-for-elements-4",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "PowerPack Pro for Elementor 3.1.1 - Feature Overview"
+        "alt": "PowerPack Pro for Elementor 3.1.1 - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -4235,9 +3016,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Elementor Pro 4.3.2 – WordPress Page Builder Plugin – Template Kits is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\nElementor Pro with your favorite or customized theme. Change themes and still keep all your designs. Landing pages, homepages, posts,...\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 490,
-    "compareAtPrice": 2450,
-    "previousPrice": 2450,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "Layers",
@@ -4246,24 +3027,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2026/07/Elementor-Pro-–-WordPress-Page-Builder-Plugin.jpg",
     "images": [
       {
-        "id": "elementor-pro-builder-template-kits-1",
+        "id": "elementor-pro-builder-template-kits-thumb",
         "url": "https://weadown.com/wp-content/uploads/2026/07/Elementor-Pro-–-WordPress-Page-Builder-Plugin.jpg",
-        "alt": "Elementor Pro 4.3.2 – WordPress Page Builder Plugin – Template Kits - Cover Banner"
-      },
-      {
-        "id": "elementor-pro-builder-template-kits-2",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Elementor Pro 4.3.2 – WordPress Page Builder Plugin – Template Kits - Admin Dashboard Preview"
-      },
-      {
-        "id": "elementor-pro-builder-template-kits-3",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Elementor Pro 4.3.2 – WordPress Page Builder Plugin – Template Kits - Settings & Controls"
-      },
-      {
-        "id": "elementor-pro-builder-template-kits-4",
-        "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Elementor Pro 4.3.2 – WordPress Page Builder Plugin – Template Kits - Feature Overview"
+        "alt": "Elementor Pro 4.3.2 – WordPress Page Builder Plugin – Template Kits - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -4323,9 +3089,9 @@ export const allCatalogProducts: Product[] = [
     "description": "WP Courseware 4.18.4 – Course Builder for WordPress is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\n\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 390,
-    "compareAtPrice": 1900,
-    "previousPrice": 1900,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "Layers",
@@ -4334,24 +3100,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2023/06/wp-courseware-4-9-11-wordpress-lms-plugin-300x153.jpg",
     "images": [
       {
-        "id": "wp-courseware-plugin-1",
+        "id": "wp-courseware-plugin-thumb",
         "url": "https://weadown.com/wp-content/uploads/2023/06/wp-courseware-4-9-11-wordpress-lms-plugin-300x153.jpg",
-        "alt": "WP Courseware 4.18.4 – Course Builder for WordPress - Cover Banner"
-      },
-      {
-        "id": "wp-courseware-plugin-2",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "WP Courseware 4.18.4 – Course Builder for WordPress - Admin Dashboard Preview"
-      },
-      {
-        "id": "wp-courseware-plugin-3",
-        "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-        "alt": "WP Courseware 4.18.4 – Course Builder for WordPress - Settings & Controls"
-      },
-      {
-        "id": "wp-courseware-plugin-4",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "WP Courseware 4.18.4 – Course Builder for WordPress - Feature Overview"
+        "alt": "WP Courseware 4.18.4 – Course Builder for WordPress - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -4411,9 +3162,9 @@ export const allCatalogProducts: Product[] = [
     "description": "FiboFilters Pro 1.13.1 – WooCommerce Product Filters Plugin is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\n\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 450,
-    "compareAtPrice": 2300,
-    "previousPrice": 2300,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "Layers",
@@ -4422,24 +3173,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2025/03/FiboFilters-Pro-WooCommerce-Product-Filters-Plugin-300x153.jpg",
     "images": [
       {
-        "id": "fibofilters-pro-woocommerce-product-filters-1",
+        "id": "fibofilters-pro-woocommerce-product-filters-thumb",
         "url": "https://weadown.com/wp-content/uploads/2025/03/FiboFilters-Pro-WooCommerce-Product-Filters-Plugin-300x153.jpg",
-        "alt": "FiboFilters Pro 1.13.1 – WooCommerce Product Filters Plugin - Cover Banner"
-      },
-      {
-        "id": "fibofilters-pro-woocommerce-product-filters-2",
-        "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-        "alt": "FiboFilters Pro 1.13.1 – WooCommerce Product Filters Plugin - Admin Dashboard Preview"
-      },
-      {
-        "id": "fibofilters-pro-woocommerce-product-filters-3",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "FiboFilters Pro 1.13.1 – WooCommerce Product Filters Plugin - Settings & Controls"
-      },
-      {
-        "id": "fibofilters-pro-woocommerce-product-filters-4",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "FiboFilters Pro 1.13.1 – WooCommerce Product Filters Plugin - Feature Overview"
+        "alt": "FiboFilters Pro 1.13.1 – WooCommerce Product Filters Plugin - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -4499,9 +3235,9 @@ export const allCatalogProducts: Product[] = [
     "description": "UPS Shipping Method for WooCommerce 3.9.18 is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\n\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 550,
-    "compareAtPrice": 2750,
-    "previousPrice": 2750,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "Layers",
@@ -4510,24 +3246,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2025/01/UPS-Shipping-Method-for-WooCommerce-300x153.jpg",
     "images": [
       {
-        "id": "woocommerce-ups-shipping-method-1",
+        "id": "woocommerce-ups-shipping-method-thumb",
         "url": "https://weadown.com/wp-content/uploads/2025/01/UPS-Shipping-Method-for-WooCommerce-300x153.jpg",
-        "alt": "UPS Shipping Method for WooCommerce 3.9.18 - Cover Banner"
-      },
-      {
-        "id": "woocommerce-ups-shipping-method-2",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "UPS Shipping Method for WooCommerce 3.9.18 - Admin Dashboard Preview"
-      },
-      {
-        "id": "woocommerce-ups-shipping-method-3",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "UPS Shipping Method for WooCommerce 3.9.18 - Settings & Controls"
-      },
-      {
-        "id": "woocommerce-ups-shipping-method-4",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "UPS Shipping Method for WooCommerce 3.9.18 - Feature Overview"
+        "alt": "UPS Shipping Method for WooCommerce 3.9.18 - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -4587,9 +3308,9 @@ export const allCatalogProducts: Product[] = [
     "description": "FOX – WooCommerce Currency Switcher Professional – Multi Currency [WOOCS] 2.5.5 is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\n\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 490,
-    "compareAtPrice": 2500,
-    "previousPrice": 2500,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "Layers",
@@ -4598,24 +3319,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2023/08/fox-2-4-1-woocommerce-currency-switcher-professional-multi-currency-woocs-300x153.jpg",
     "images": [
       {
-        "id": "fox-woocommerce-currency-switcher-professional-multi-currency-woocs-1",
+        "id": "fox-woocommerce-currency-switcher-professional-multi-currency-woocs-thumb",
         "url": "https://weadown.com/wp-content/uploads/2023/08/fox-2-4-1-woocommerce-currency-switcher-professional-multi-currency-woocs-300x153.jpg",
-        "alt": "FOX – WooCommerce Currency Switcher Professional – Multi Currency [WOOCS] 2.5.5 - Cover Banner"
-      },
-      {
-        "id": "fox-woocommerce-currency-switcher-professional-multi-currency-woocs-2",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "FOX – WooCommerce Currency Switcher Professional – Multi Currency [WOOCS] 2.5.5 - Admin Dashboard Preview"
-      },
-      {
-        "id": "fox-woocommerce-currency-switcher-professional-multi-currency-woocs-3",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "FOX – WooCommerce Currency Switcher Professional – Multi Currency [WOOCS] 2.5.5 - Settings & Controls"
-      },
-      {
-        "id": "fox-woocommerce-currency-switcher-professional-multi-currency-woocs-4",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "FOX – WooCommerce Currency Switcher Professional – Multi Currency [WOOCS] 2.5.5 - Feature Overview"
+        "alt": "FOX – WooCommerce Currency Switcher Professional – Multi Currency [WOOCS] 2.5.5 - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -4675,9 +3381,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Media Cleaner Pro 7.3.1 is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\n\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 390,
-    "compareAtPrice": 1850,
-    "previousPrice": 1850,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "Layers",
@@ -4686,24 +3392,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2023/06/media-cleaner-pro-664-300x153.jpg",
     "images": [
       {
-        "id": "media-cleaner-pro-1",
+        "id": "media-cleaner-pro-thumb",
         "url": "https://weadown.com/wp-content/uploads/2023/06/media-cleaner-pro-664-300x153.jpg",
-        "alt": "Media Cleaner Pro 7.3.1 - Cover Banner"
-      },
-      {
-        "id": "media-cleaner-pro-2",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Media Cleaner Pro 7.3.1 - Admin Dashboard Preview"
-      },
-      {
-        "id": "media-cleaner-pro-3",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Media Cleaner Pro 7.3.1 - Settings & Controls"
-      },
-      {
-        "id": "media-cleaner-pro-4",
-        "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Media Cleaner Pro 7.3.1 - Feature Overview"
+        "alt": "Media Cleaner Pro 7.3.1 - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -4763,9 +3454,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Flexible Shipping Pro 4.1.4 – Table Rate Shipping for WooCommerce is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\n\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 450,
-    "compareAtPrice": 2250,
-    "previousPrice": 2250,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "Layers",
@@ -4774,24 +3465,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2023/06/flexible-shipping-pro-woocommerce-2-16-1-300x153.jpg",
     "images": [
       {
-        "id": "flexible-shipping-pro-woocommerce-1",
+        "id": "flexible-shipping-pro-woocommerce-thumb",
         "url": "https://weadown.com/wp-content/uploads/2023/06/flexible-shipping-pro-woocommerce-2-16-1-300x153.jpg",
-        "alt": "Flexible Shipping Pro 4.1.4 – Table Rate Shipping for WooCommerce - Cover Banner"
-      },
-      {
-        "id": "flexible-shipping-pro-woocommerce-2",
-        "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Flexible Shipping Pro 4.1.4 – Table Rate Shipping for WooCommerce - Admin Dashboard Preview"
-      },
-      {
-        "id": "flexible-shipping-pro-woocommerce-3",
-        "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Flexible Shipping Pro 4.1.4 – Table Rate Shipping for WooCommerce - Settings & Controls"
-      },
-      {
-        "id": "flexible-shipping-pro-woocommerce-4",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Flexible Shipping Pro 4.1.4 – Table Rate Shipping for WooCommerce - Feature Overview"
+        "alt": "Flexible Shipping Pro 4.1.4 – Table Rate Shipping for WooCommerce - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -4851,9 +3527,9 @@ export const allCatalogProducts: Product[] = [
     "description": "Wallet for WooCommerce 6.8.0 is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\n\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 490,
-    "compareAtPrice": 2400,
-    "previousPrice": 2400,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "Layers",
@@ -4862,24 +3538,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2025/02/Wallet-for-WooCommerce-1-300x153.jpg",
     "images": [
       {
-        "id": "wallet-for-woocommerce-1",
+        "id": "wallet-for-woocommerce-thumb",
         "url": "https://weadown.com/wp-content/uploads/2025/02/Wallet-for-WooCommerce-1-300x153.jpg",
-        "alt": "Wallet for WooCommerce 6.8.0 - Cover Banner"
-      },
-      {
-        "id": "wallet-for-woocommerce-2",
-        "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Wallet for WooCommerce 6.8.0 - Admin Dashboard Preview"
-      },
-      {
-        "id": "wallet-for-woocommerce-3",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Wallet for WooCommerce 6.8.0 - Settings & Controls"
-      },
-      {
-        "id": "wallet-for-woocommerce-4",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "Wallet for WooCommerce 6.8.0 - Feature Overview"
+        "alt": "Wallet for WooCommerce 6.8.0 - Cover"
       }
     ],
     "deliveryType": "instant-download",
@@ -4939,9 +3600,9 @@ export const allCatalogProducts: Product[] = [
     "description": "WooCommerce Memberships 1.30.1 is an indispensable WordPress plugin built to empower your website with enterprise-grade functionality, top-tier performance, and seamless user experiences.\n\n\n\nFeatures 100% clean and verified code under the GNU General Public License (GPL). Install on unlimited websites without domain restrictions or recurring subscription fees. Comes with complete documentation and instant download access.",
     "category": "WordPress",
     "subcategory": "Plugins",
-    "price": 390,
-    "compareAtPrice": 1900,
-    "previousPrice": 1900,
+    "price": 99,
+    "compareAtPrice": 499,
+    "previousPrice": 499,
     "featured": false,
     "newProduct": true,
     "icon": "Layers",
@@ -4950,24 +3611,9 @@ export const allCatalogProducts: Product[] = [
     "thumbnail": "https://weadown.com/wp-content/uploads/2026/08/WooCommerce-Memberships-300x153.jpg",
     "images": [
       {
-        "id": "woocommerce-memberships-1",
+        "id": "woocommerce-memberships-thumb",
         "url": "https://weadown.com/wp-content/uploads/2026/08/WooCommerce-Memberships-300x153.jpg",
-        "alt": "WooCommerce Memberships 1.30.1 - Cover Banner"
-      },
-      {
-        "id": "woocommerce-memberships-2",
-        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-        "alt": "WooCommerce Memberships 1.30.1 - Admin Dashboard Preview"
-      },
-      {
-        "id": "woocommerce-memberships-3",
-        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-        "alt": "WooCommerce Memberships 1.30.1 - Settings & Controls"
-      },
-      {
-        "id": "woocommerce-memberships-4",
-        "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-        "alt": "WooCommerce Memberships 1.30.1 - Feature Overview"
+        "alt": "WooCommerce Memberships 1.30.1 - Cover"
       }
     ],
     "deliveryType": "instant-download",
