@@ -17,6 +17,8 @@ import {
   BarChart3,
   BadgePercent,
   CloudDownload,
+  Globe,
+  ExternalLink,
 } from 'lucide-react';
 import { useAdminAuth } from '@/context/AdminAuthContext';
 
@@ -58,6 +60,22 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             Admin
           </span>
         </div>
+      </div>
+
+      <div className="border-b border-ink-100 px-3 py-2.5">
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-between rounded-xl border border-ink-200 bg-ink-50/70 px-3 py-2 text-xs font-semibold text-ink-700 transition-all hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
+          title="Open website storefront in a new tab"
+        >
+          <span className="flex items-center gap-2">
+            <Globe size={15} className="text-brand-600" />
+            Visit Website
+          </span>
+          <ExternalLink size={13} className="text-ink-400" />
+        </a>
       </div>
 
       <nav className="flex-1 overflow-y-auto p-3">
@@ -147,13 +165,26 @@ export function AdminLayout({ children }: { children: ReactNode }) {
             Admin
           </span>
         </div>
-        <button
-          onClick={() => setMobileOpen(true)}
-          className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-700 hover:bg-ink-50"
-          aria-label="Open admin menu"
-        >
-          <Menu size={22} />
-        </button>
+        <div className="flex items-center gap-2">
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex h-9 items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3 text-xs font-semibold text-ink-700 shadow-2xs hover:bg-ink-50"
+            title="Visit Website"
+          >
+            <Globe size={14} className="text-brand-600" />
+            <span className="hidden sm:inline">Website</span>
+            <ExternalLink size={11} className="text-ink-400" />
+          </a>
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-700 hover:bg-ink-50"
+            aria-label="Open admin menu"
+          >
+            <Menu size={22} />
+          </button>
+        </div>
       </div>
 
       {/* Mobile drawer */}
@@ -178,7 +209,29 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 
       {/* Main content */}
       <div className="lg:pl-64">
-        <main className="min-h-screen">{children}</main>
+        {/* Desktop top header bar */}
+        <header className="sticky top-0 z-20 hidden h-14 items-center justify-between border-b border-ink-100 bg-white/80 px-8 backdrop-blur-md lg:flex">
+          <div className="flex items-center gap-2 text-xs font-medium text-ink-500">
+            <span className="inline-block h-2 w-2 rounded-full bg-success-500" />
+            <span>Store Online</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <a
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-9 items-center gap-2 rounded-xl border border-ink-200 bg-white px-3.5 text-xs font-semibold text-ink-700 shadow-2xs transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
+              title="Open customer storefront in a new tab"
+            >
+              <Globe size={14} className="text-brand-600" />
+              <span>Visit Website</span>
+              <ExternalLink size={12} className="text-ink-400" />
+            </a>
+          </div>
+        </header>
+
+        <main className="min-h-[calc(100vh-3.5rem)]">{children}</main>
       </div>
     </div>
   );

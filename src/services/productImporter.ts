@@ -11,6 +11,8 @@ export type ProductImportPreviewItem = {
   version: string | null;
   excerpt: string;
   imageUrl: string | null;
+  galleryImages?: string[];
+  features?: string[];
   sourceCategory: string | null;
   importStatus: ProductImportStatus;
   productId: string | null;
@@ -35,16 +37,28 @@ export type ProductImportResult = {
   updated: number;
 };
 
+async function tryLocalEndpoint<T>(url: string, options?: RequestInit): Promise<T | null> {
+  try {
+    const res = await fetch(url, options);
+    if (res.ok) {
+      return (await res.json()) as T;
+    }
+  } catch {
+    // local endpoint not available
+  }
+  return null;
+}
+
 async function invokeImporter<T>(body: Record<string, unknown>): Promise<T> {
   const { data, error } = await getSupabase().functions.invoke('weadown-import', { body });
   if (error) {
     const response = (error as Error & { context?: Response }).context;
     if (response?.status === 404 || /Failed to send a request|Failed to fetch/i.test(error.message)) {
-      throw new Error('Importer service is not deployed yet. Deploy the weadown-import Edge Function, then try again.');
+      throw new Error('Importer service is not available. Please ensure the dev server is active or the Edge Function is deployed.');
     }
     if (response) {
       try {
-        const payload = await response.clone().json() as {
+        const payload = (await response.clone().json()) as {
           error?: unknown;
           errors?: Array<{ message?: unknown }>;
         };
@@ -54,7 +68,7 @@ async function invokeImporter<T>(body: Record<string, unknown>): Promise<T> {
         if (Array.isArray(payload.errors) && payload.errors.length > 0) {
           const messages = payload.errors
             .slice(0, 3)
-            .map((item) => typeof item.message === 'string' ? item.message : 'Import failed')
+            .map((item) => (typeof item.message === 'string' ? item.message : 'Import failed'))
             .join(' · ');
           throw new Error(`Import failed: ${messages}`);
         }
@@ -70,20 +84,62 @@ async function invokeImporter<T>(body: Record<string, unknown>): Promise<T> {
   return data as T;
 }
 
-export async function previewLatestSourceProducts(limit = 50): Promise<ProductImportPreview> {
-  return invokeImporter<ProductImportPreview>({ action: 'preview', limit });
+export async function previewLatestSourceProducts(
+  limit = 30,
+  sourceUrl = 'https://weadown.com/wordpress-theme/'
+): Promise<ProductImportPreview> {
+  // 1. Try local dev scraper API
+  const local = await tryLocalEndpoint<ProductImportPreview>(
+    `/api/weadown/preview?url=${encodeURIComponent(sourceUrl)}&limit=${limit}`
+  );
+  if (local && Array.isArray(local.items)) {
+    return local;
+  }
+
+  // 2. Fallback to Supabase Edge Function
+  return invokeImporter<ProductImportPreview>({ action: 'preview', limit, sourceUrl });
 }
 
 export async function previewSourceProduct(sourceUrl: string): Promise<ProductImportPreview> {
+  const local = await tryLocalEndpoint<ProductImportPreview>(
+    `/api/weadown/preview?url=${encodeURIComponent(sourceUrl)}&limit=1`
+  );
+  if (local && Array.isArray(local.items)) {
+    return local;
+  }
+
   return invokeImporter<ProductImportPreview>({ action: 'preview_urls', sourceUrls: [sourceUrl] });
+}
+
+export async function checkSourceUpdates(limit = 30): Promise<ProductImportPreview> {
+  const local = await tryLocalEndpoint<ProductImportPreview>(
+    `/api/weadown/check-updates?limit=${limit}`
+  );
+  if (local && Array.isArray(local.items)) {
+    return local;
+  }
+
+  return previewLatestSourceProducts(limit);
 }
 
 export async function importSourceProducts(input: {
   sourceUrls: string[];
   price: number;
-  categoryId?: string | null;
+  categoryName?: string;
+  status?: 'published' | 'draft';
   overwritePrice?: boolean;
 }): Promise<ProductImportResult> {
+  // 1. Try local dev API
+  const local = await tryLocalEndpoint<ProductImportResult>('/api/weadown/import', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  if (local && typeof local.created === 'number') {
+    return local;
+  }
+
+  // 2. Fallback to Supabase Edge Function
   const chunks: string[][] = [];
   for (let index = 0; index < input.sourceUrls.length; index += 10) {
     chunks.push(input.sourceUrls.slice(index, index + 10));
@@ -100,8 +156,9 @@ export async function importSourceProducts(input: {
       action: 'import',
       sourceUrls,
       price: input.price,
-      categoryId: input.categoryId || null,
       overwritePrice: input.overwritePrice === true,
+      categoryName: input.categoryName || 'WordPress',
+      status: input.status || 'published',
     });
     combined.imported.push(...result.imported);
     combined.errors.push(...result.errors);

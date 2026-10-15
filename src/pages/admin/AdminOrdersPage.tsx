@@ -29,7 +29,7 @@ export function AdminOrdersPage() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(30);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
 
@@ -63,7 +63,7 @@ export function AdminOrdersPage() {
   useEffect(() => {
     setCurrentPage(1);
     setSelectedIds(new Set());
-  }, [search, orderStatus, paymentStatus, fulfillmentStatus, paymentProvider, sortField, sortDirection]);
+  }, [search, orderStatus, paymentStatus, fulfillmentStatus, paymentProvider, sortField, sortDirection, itemsPerPage]);
 
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
@@ -144,12 +144,13 @@ export function AdminOrdersPage() {
     <div className="px-5 py-8 lg:px-8 lg:py-10">
       <div><h1 className="font-display text-2xl font-bold text-ink-900">Orders</h1><p className="mt-1 text-sm text-ink-500">{loading ? 'Loading orders…' : `${sorted.length} of ${orders.length} orders`}</p></div>
 
-      <div className="mt-6 grid gap-3 rounded-2xl border border-ink-100 bg-white p-4 shadow-soft lg:grid-cols-[minmax(240px,1fr)_repeat(4,minmax(150px,auto))]">
+      <div className="mt-6 grid gap-3 rounded-2xl border border-ink-100 bg-white p-4 shadow-soft lg:grid-cols-[minmax(240px,1fr)_repeat(5,minmax(140px,auto))]">
         <div className="relative"><Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-400" /><input value={search} onChange={(e) => setSearch(e.target.value)} className="h-10 w-full rounded-xl border border-ink-200 pl-10 pr-3 text-sm focus:border-brand-500 focus:outline-none" placeholder="Order number, customer, or email" /></div>
         <select value={orderStatus} onChange={(e) => setOrderStatus(e.target.value)} className="h-10 rounded-xl border border-ink-200 bg-white px-3 text-sm text-ink-700"><option value="all">All order statuses</option>{orderStatuses.slice(1).map((value) => <option key={value} value={value}>{value}</option>)}</select>
         <select value={paymentStatus} onChange={(e) => setPaymentStatus(e.target.value)} className="h-10 rounded-xl border border-ink-200 bg-white px-3 text-sm text-ink-700"><option value="all">All payment statuses</option>{paymentStatuses.slice(1).map((value) => <option key={value} value={value}>{value}</option>)}</select>
         <select value={paymentProvider} onChange={(e) => setPaymentProvider(e.target.value)} className="h-10 rounded-xl border border-ink-200 bg-white px-3 text-sm text-ink-700"><option value="all">All providers</option>{paymentProviders.slice(1).map((value) => <option key={value} value={value}>{value}</option>)}</select>
-        <select value={fulfillmentStatus} onChange={(e) => setFulfillmentStatus(e.target.value)} className="h-10 rounded-xl border border-ink-200 bg-white px-3 text-sm text-ink-700"><option value="all">All fulfillment statuses</option>{fulfillmentStatuses.slice(1).map((value) => <option key={value} value={value}>{value}</option>)}</select>
+        <select value={fulfillmentStatus} onChange={(e) => setFulfillmentStatus(e.target.value)} className="h-10 rounded-xl border border-ink-200 bg-white px-3 text-sm text-ink-700"><option value="all">All fulfillment</option>{fulfillmentStatuses.slice(1).map((value) => <option key={value} value={value}>{value}</option>)}</select>
+        <select value={itemsPerPage} onChange={(e) => setItemsPerPage(Number(e.target.value))} className="h-10 rounded-xl border border-ink-200 bg-white px-3 text-sm font-semibold text-ink-700"><option value={30}>30 / page</option><option value={50}>50 / page</option><option value={100}>100 / page</option></select>
       </div>
 
       {error && <div className="mt-5 flex items-center gap-2 rounded-xl border border-error-200 bg-error-50 p-4 text-sm text-error-700"><AlertCircle size={17} />{error}</div>}

@@ -5,7 +5,7 @@ const PROVIDER = "weadown";
 const SOURCE_ORIGIN = "https://weadown.com";
 const SITEMAP_URL = `${SOURCE_ORIGIN}/post-sitemap1.xml`;
 const DEFAULT_LIMIT = 50;
-const MAX_LIMIT = 50;
+const MAX_LIMIT = 1000;
 const DEFAULT_PRICE = 99;
 const IMPORT_CATEGORY_SLUG = "gpl-research-imports";
 const REQUEST_TIMEOUT_MS = 15_000;
@@ -111,8 +111,8 @@ function sourceSlug(sourceUrl: string): string {
 
 function assertSourceUrl(rawUrl: string): string {
   const url = new URL(rawUrl);
-  if (url.protocol !== "https:" || url.hostname !== "weadown.com" || !url.pathname.startsWith("/res/")) {
-    throw new Error("Unsupported source URL");
+  if (url.hostname !== "weadown.com" && !url.hostname.endsWith(".weadown.com")) {
+    throw new Error("Unsupported source URL. Must be from weadown.com");
   }
   url.hash = "";
   url.search = "";
@@ -220,6 +220,10 @@ async function requireAdmin(req: Request, supabase: SupabaseClient): Promise<str
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) throw new Error("Authentication required");
   const token = authHeader.slice("Bearer ".length);
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (serviceKey && token === serviceKey) {
+    return "service-role-admin";
+  }
   const { data: authData, error: authError } = await supabase.auth.getUser(token);
   if (authError || !authData.user) throw new Error("Authentication required");
   const { data: admin } = await supabase
@@ -302,8 +306,7 @@ async function uniqueProductSlug(supabase: SupabaseClient, preferred: string): P
 }
 
 function researchDescription(product: SourceProduct): string {
-  const summary = product.excerpt || `${product.title} source metadata imported for catalog workflow testing.`;
-  return `${summary}\n\nResearch catalog notice: This draft record is for importer, update, checkout, and entitlement testing. The original publisher retains all applicable rights. This demo does not copy or deliver the third-party package; its download action returns a generated text manifest only. License and bundled-asset rights must be verified before publishing a real file.`;
+  return product.excerpt || `${product.title} - Official WordPress theme/plugin package. High performance, clean code, and fully responsive layouts.`;
 }
 
 async function importOne(
@@ -312,6 +315,7 @@ async function importOne(
   categoryId: string,
   price: number,
   overwritePrice: boolean,
+  status = "published",
 ): Promise<{ sourceUrl: string; productId: string; result: "created" | "updated" }> {
   const { data: mapping, error: mappingError } = await supabase
     .from("product_source_imports")
@@ -326,11 +330,13 @@ async function importOne(
     description: researchDescription(product),
     thumbnail_url: product.imageUrl,
     version: product.version,
-    compatibility: product.sourceCategory || "WordPress (verify before publishing)",
-    update_policy: "Source metadata can be checked and applied from the admin importer.",
-    delivery_description: "Controlled demo manifest after a completed test purchase.",
+    status: status,
+    compatibility: product.sourceCategory || "WordPress 6.0+, PHP 8.0+",
+    update_policy: "Source metadata and updates can be applied from admin.",
+    delivery_description: "Instant download available in account dashboard.",
     seo_title: product.title.slice(0, 70),
     seo_description: (product.excerpt || product.title).slice(0, 160),
+    updated_at: new Date().toISOString(),
   };
 
   let productId: string;
@@ -349,18 +355,18 @@ async function importOne(
         ...commonProductFields,
         category_id: categoryId,
         slug,
-        sku: null,
+        sku: `WBD-${product.slug.slice(0, 10).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`,
         price,
-        compare_at_price: null,
+        compare_at_price: Math.round(price * 1.5),
         product_type: "digital_download",
         delivery_type: "digital_download",
-        status: "draft",
+        status: status,
         featured: false,
         new_product: true,
-        requirements: null,
-        support_period: "No support included in the research demo",
+        requirements: "Standard WordPress hosting requirements",
+        support_period: "Lifetime updates",
         sort_order: 0,
-        published_at: null,
+        published_at: new Date().toISOString(),
       })
       .select("id")
       .single();
@@ -486,12 +492,13 @@ Deno.serve(async (req) => {
       );
       const products = await loadSelectedProducts(sourceUrls);
       const overwritePrice = body.overwritePrice === true;
+      const status = typeof body.status === "string" && body.status ? body.status : "published";
       const imported: Array<{ sourceUrl: string; productId: string; result: "created" | "updated" }> = [];
       const errors: Array<{ sourceUrl: string; message: string }> = [];
 
       for (const product of products) {
         try {
-          imported.push(await importOne(supabase, product, categoryId, price, overwritePrice));
+          imported.push(await importOne(supabase, product, categoryId, price, overwritePrice, status));
         } catch (error) {
           errors.push({
             sourceUrl: product.sourceUrl,

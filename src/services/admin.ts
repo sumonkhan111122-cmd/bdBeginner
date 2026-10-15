@@ -911,8 +911,32 @@ export async function syncDownloadLinks(
     if (l.id && existingIds.has(l.id)) {
       await updateProductDownloadLink(l.id, payload);
     } else {
-      await createProductDownloadLink(payload);
+      createProductDownloadLink(payload);
     }
   }
 }
-// Force HMR update
+
+export async function deleteProducts(productIds: string[]): Promise<void> {
+  if (!productIds || productIds.length === 0) return;
+  const sb = getSupabase();
+
+  // Delete dependent rows across all related tables first
+  await Promise.allSettled([
+    sb.from('product_images').delete().in('product_id', productIds),
+    sb.from('product_features').delete().in('product_id', productIds),
+    sb.from('product_includes').delete().in('product_id', productIds),
+    sb.from('product_faqs').delete().in('product_id', productIds),
+    sb.from('product_download_links').delete().in('product_id', productIds),
+    sb.from('product_source_imports').delete().in('product_id', productIds),
+    sb.from('coupon_products').delete().in('product_id', productIds),
+    sb.from('promotion_products').delete().in('product_id', productIds),
+    sb.from('product_reviews').delete().in('product_id', productIds),
+  ]);
+
+  const { error } = await sb.from('products').delete().in('id', productIds);
+  if (error) {
+    console.error('Failed to delete products:', error);
+    throw new Error(error.message || 'Failed to delete products.');
+  }
+}
+
