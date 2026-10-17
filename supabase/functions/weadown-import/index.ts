@@ -3,7 +3,6 @@ import { corsHeaders } from "../_shared/cors.ts";
 
 const PROVIDER = "weadown";
 const SOURCE_ORIGIN = "https://weadown.com";
-const SITEMAP_URL = `${SOURCE_ORIGIN}/post-sitemap1.xml`;
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 1000;
 const DEFAULT_PRICE = 99;
@@ -40,8 +39,6 @@ function jsonResponse(body: Record<string, unknown>, status = 200): Response {
   });
 }
 
-// Supabase/PostgREST errors are plain objects rather than Error instances.
-// Keep their useful fields so the admin UI can show the actual import failure.
 function formatError(error: unknown): string {
   if (error instanceof Error) return error.message;
   if (typeof error === "string" && error.trim()) return error;
@@ -53,7 +50,7 @@ function formatError(error: unknown): string {
     try {
       return JSON.stringify(error);
     } catch {
-      // Fall through to the generic message for non-serializable values.
+      // Fall through to generic message
     }
   }
   return "Import failed";
@@ -128,13 +125,14 @@ async function fetchText(url: string): Promise<string> {
     },
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
-  if (!response.ok) throw new Error(`Source request failed (${response.status})`);
+  if (!response.ok) throw new Error(`Source request failed (${response.status}) for ${url}`);
   return response.text();
 }
 
-function parseSitemap(xml: string, limit: number): SitemapEntry[] {
+function parseSitemap(xml: string, limit: number, offset = 0): SitemapEntry[] {
   const entries: SitemapEntry[] = [];
   const blocks = xml.match(/<url>[^]*?<\/url>/gi) ?? [];
+  let index = 0;
   for (const block of blocks) {
     const loc = block.match(/<loc>([^]*?)<\/loc>/i)?.[1];
     if (!loc) continue;
@@ -144,6 +142,12 @@ function parseSitemap(xml: string, limit: number): SitemapEntry[] {
     } catch {
       continue;
     }
+
+    if (index < offset) {
+      index++;
+      continue;
+    }
+
     const modified = block.match(/<lastmod>([^]*?)<\/lastmod>/i)?.[1]?.trim() ?? null;
     entries.push({
       sourceUrl,
@@ -151,9 +155,62 @@ function parseSitemap(xml: string, limit: number): SitemapEntry[] {
         ? new Date(modified).toISOString()
         : null,
     });
+    index++;
     if (entries.length >= limit) break;
   }
   return entries;
+}
+
+function parseListingHtml(html: string): SourceProduct[] {
+  const items: SourceProduct[] = [];
+  const seenUrls = new Set<string>();
+
+  // Extract td_module blocks from WeaDown category / listing pages
+  const modules = [...html.matchAll(/<div[^>]*class="[^"]*td_module_[^"]*"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/gi)];
+
+  for (const m of modules) {
+    const block = m[1];
+    const titleMatch = block.match(/<h3[^>]*class="[^"]*entry-title[^"]*"[^>]*>\s*<a\s+href="([^"]+)"[^>]*title="([^"]+)"/i) ||
+                       block.match(/<a\s+href="(https:\/\/weadown\.com\/res\/[^"]+)"[^>]*title="([^"]+)"/i) ||
+                       block.match(/<a\s+href="(https:\/\/weadown\.com\/res\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/i);
+    if (!titleMatch) continue;
+
+    let url = titleMatch[1].trim();
+    if (!url.endsWith("/")) url += "/";
+    if (seenUrls.has(url)) continue;
+    seenUrls.add(url);
+
+    const rawTitle = stripTags(titleMatch[2]);
+    const cleanTitle = rawTitle.replace(/\s*[|–-]\s*WeaDown\s*$/i, "").trim();
+
+    const imgMatch = block.match(/data-img-url="([^"]+)"/i) ||
+                     block.match(/<img[^>]+src="([^"]+)"/i);
+    const img = imgMatch ? imgMatch[1] : null;
+
+    const excerptMatch = block.match(/<div[^>]*class="[^"]*td-excerpt[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
+    const excerpt = excerptMatch ? stripTags(excerptMatch[1]).slice(0, 700) : "";
+
+    const dateMatch = block.match(/<time[^>]*datetime="([^"]+)"/i);
+    const publishedAt = dateMatch && !Number.isNaN(Date.parse(dateMatch[1]))
+      ? new Date(dateMatch[1]).toISOString()
+      : null;
+
+    const slug = sourceSlug(url);
+    const version = extractVersion(cleanTitle) || "1.0.0";
+
+    items.push({
+      sourceUrl: url,
+      sourceModifiedAt: publishedAt,
+      title: cleanTitle || slug.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
+      slug,
+      version,
+      excerpt,
+      imageUrl: img,
+      sourceCategory: null,
+    });
+  }
+
+  return items;
 }
 
 function parseSourceProduct(html: string, entry: SitemapEntry): SourceProduct {
@@ -164,12 +221,17 @@ function parseSourceProduct(html: string, entry: SitemapEntry): SourceProduct {
   const description = stripTags(readMeta(html, "og:description") ?? "").slice(0, 700);
   const image = readMeta(html, "og:image");
   const category = readMeta(html, "article:section");
+  const published = readMeta(html, "article:published_time") ?? readMeta(html, "article:modified_time");
+  const modifiedAt = published && !Number.isNaN(Date.parse(published))
+    ? new Date(published).toISOString()
+    : entry.sourceModifiedAt;
 
   return {
-    ...entry,
+    sourceUrl: entry.sourceUrl,
+    sourceModifiedAt: modifiedAt,
     title,
     slug: sourceSlug(entry.sourceUrl),
-    version: extractVersion(title),
+    version: extractVersion(title) || "1.0.0",
     excerpt: description,
     imageUrl: image?.startsWith("https://") ? image : null,
     sourceCategory: category ? stripTags(category) : null,
@@ -193,25 +255,116 @@ async function mapWithConcurrency<T, R>(
   return results;
 }
 
-async function loadLatestProducts(limit: number): Promise<SourceProduct[]> {
-  const sitemap = await fetchText(SITEMAP_URL);
-  const entries = parseSitemap(sitemap, limit);
-  if (entries.length === 0) throw new Error("No source products found in sitemap");
-  return mapWithConcurrency(entries, 6, async (entry) => {
-    const html = await fetchText(entry.sourceUrl);
-    return parseSourceProduct(html, entry);
-  });
+async function loadListingProducts(
+  sourceUrl: string,
+  page = 1,
+  limit = DEFAULT_LIMIT,
+): Promise<SourceProduct[]> {
+  const normalized = (sourceUrl || "").trim() || "https://weadown.com/wordpress-theme/";
+
+  // 1. If Sitemap XML URL is explicitly requested
+  if (normalized.endsWith(".xml")) {
+    let sitemapUrl = normalized;
+    if (page > 1 && sitemapUrl.includes("post-sitemap1.xml")) {
+      sitemapUrl = sitemapUrl.replace("post-sitemap1.xml", `post-sitemap${page}.xml`);
+    }
+    const xml = await fetchText(sitemapUrl);
+    const entries = parseSitemap(xml, limit);
+    if (entries.length === 0) return [];
+    return mapWithConcurrency(entries, 5, async (entry) => {
+      try {
+        const html = await fetchText(entry.sourceUrl);
+        return parseSourceProduct(html, entry);
+      } catch {
+        return {
+          ...entry,
+          title: sourceSlug(entry.sourceUrl).replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
+          slug: sourceSlug(entry.sourceUrl),
+          version: "1.0.0",
+          excerpt: "",
+          imageUrl: null,
+          sourceCategory: null,
+        };
+      }
+    });
+  }
+
+  // 2. Category / Listing URL pagination: WeaDown uses /pages/{page}/
+  // Extract existing page from URL if present
+  let currentPage = page;
+  let cleanBase = normalized;
+  const pageMatch = normalized.match(/\/pages\/(\d+)\/?$/i);
+  if (pageMatch) {
+    if (page === 1) currentPage = parseInt(pageMatch[1], 10);
+    cleanBase = normalized.replace(/\/pages\/\d+\/?$/i, "");
+  }
+  cleanBase = cleanBase.replace(/\/+$/, "");
+
+  const allItems: SourceProduct[] = [];
+  const seenUrls = new Set<string>();
+
+  // Fetch page(s) until limit is fulfilled or max 3 pages
+  let p = currentPage;
+  const maxPagesToFetch = Math.min(3, Math.ceil(limit / 25));
+
+  for (let step = 0; step < maxPagesToFetch; step++) {
+    const pageUrl = p === 1 ? `${cleanBase}/` : `${cleanBase}/pages/${p}/`;
+    try {
+      const html = await fetchText(pageUrl);
+      const parsedItems = parseListingHtml(html);
+      if (parsedItems.length === 0) break;
+
+      for (const item of parsedItems) {
+        if (!seenUrls.has(item.sourceUrl)) {
+          seenUrls.add(item.sourceUrl);
+          allItems.push(item);
+        }
+        if (allItems.length >= limit) break;
+      }
+
+      if (allItems.length >= limit) break;
+      p++;
+    } catch (err) {
+      // If next page fails, stop gracefully
+      break;
+    }
+  }
+
+  // Fallback: If listing markup did not yield items, try sitemap
+  if (allItems.length === 0 && currentPage === 1) {
+    const sitemapUrl = `https://weadown.com/post-sitemap${page}.xml`;
+    try {
+      const xml = await fetchText(sitemapUrl);
+      const entries = parseSitemap(xml, Math.min(30, limit));
+      for (const entry of entries) {
+        allItems.push({
+          ...entry,
+          title: sourceSlug(entry.sourceUrl).replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
+          slug: sourceSlug(entry.sourceUrl),
+          version: "1.0.0",
+          excerpt: "",
+          imageUrl: null,
+          sourceCategory: null,
+        });
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return allItems.slice(0, limit);
 }
 
 async function loadSelectedProducts(urls: string[]): Promise<SourceProduct[]> {
   const uniqueUrls = [...new Set(urls.map(assertSourceUrl))].slice(0, MAX_LIMIT);
-  const sitemap = parseSitemap(await fetchText(SITEMAP_URL), 200);
-  const modifiedByUrl = new Map(sitemap.map((entry) => [entry.sourceUrl, entry.sourceModifiedAt]));
-  return mapWithConcurrency(uniqueUrls, 6, async (sourceUrl) => {
+  return mapWithConcurrency(uniqueUrls, 5, async (sourceUrl) => {
     const html = await fetchText(sourceUrl);
+    const published = readMeta(html, "article:published_time") ?? readMeta(html, "article:modified_time");
     return parseSourceProduct(html, {
       sourceUrl,
-      sourceModifiedAt: modifiedByUrl.get(sourceUrl) ?? null,
+      sourceModifiedAt: published && !Number.isNaN(Date.parse(published))
+        ? new Date(published).toISOString()
+        : null,
     });
   });
 }
@@ -239,6 +392,7 @@ async function buildPreview(
   supabase: SupabaseClient,
   products: SourceProduct[],
 ): Promise<ImportPreviewItem[]> {
+  if (products.length === 0) return [];
   const urls = products.map((product) => product.sourceUrl);
   const { data, error } = await supabase
     .from("product_source_imports")
@@ -268,9 +422,21 @@ async function buildPreview(
   });
 }
 
-async function resolveCategory(supabase: SupabaseClient, requestedId: string | null): Promise<string> {
+async function resolveCategory(
+  supabase: SupabaseClient,
+  requestedId: string | null,
+  categoryName?: string | null,
+): Promise<string> {
   if (requestedId) {
     const { data } = await supabase.from("categories").select("id").eq("id", requestedId).maybeSingle();
+    if (data?.id) return data.id as string;
+  }
+  if (categoryName && categoryName.trim()) {
+    const { data } = await supabase
+      .from("categories")
+      .select("id")
+      .ilike("name", `%${categoryName.trim()}%`)
+      .maybeSingle();
     if (data?.id) return data.id as string;
   }
   const { data: existing } = await supabase
@@ -457,15 +623,32 @@ Deno.serve(async (req) => {
     });
     await requireAdmin(req, supabase);
 
-    const body = await req.json() as Record<string, unknown>;
+    const body = (await req.json()) as Record<string, unknown>;
     const action = typeof body.action === "string" ? body.action : "preview";
 
     if (action === "preview") {
+      const sourceUrl = typeof body.sourceUrl === "string" && body.sourceUrl.trim()
+        ? body.sourceUrl.trim()
+        : "https://weadown.com/wordpress-theme/";
+      const page = Math.max(1, Number(body.page) || 1);
       const requestedLimit = Number(body.limit ?? DEFAULT_LIMIT);
       const limit = Math.max(1, Math.min(MAX_LIMIT, Number.isFinite(requestedLimit) ? requestedLimit : DEFAULT_LIMIT));
-      const products = await loadLatestProducts(limit);
+
+      let products: SourceProduct[] = [];
+      if (sourceUrl.includes("/res/")) {
+        products = await loadSelectedProducts([sourceUrl]);
+      } else {
+        products = await loadListingProducts(sourceUrl, page, limit);
+      }
+
       const items = await buildPreview(supabase, products);
-      return jsonResponse({ items, count: items.length, source: SITEMAP_URL });
+      return jsonResponse({
+        items,
+        count: items.length,
+        source: sourceUrl,
+        page,
+        limit,
+      });
     }
 
     if (action === "preview_urls") {
@@ -489,6 +672,7 @@ Deno.serve(async (req) => {
       const categoryId = await resolveCategory(
         supabase,
         typeof body.categoryId === "string" && body.categoryId ? body.categoryId : null,
+        typeof body.categoryName === "string" && body.categoryName ? body.categoryName : null,
       );
       const products = await loadSelectedProducts(sourceUrls);
       const overwritePrice = body.overwritePrice === true;
@@ -507,12 +691,15 @@ Deno.serve(async (req) => {
         }
       }
 
-      return jsonResponse({
-        imported,
-        errors,
-        created: imported.filter((item) => item.result === "created").length,
-        updated: imported.filter((item) => item.result === "updated").length,
-      }, errors.length === products.length ? 422 : 200);
+      return jsonResponse(
+        {
+          imported,
+          errors,
+          created: imported.filter((item) => item.result === "created").length,
+          updated: imported.filter((item) => item.result === "updated").length,
+        },
+        errors.length === products.length ? 422 : 200,
+      );
     }
 
     return jsonResponse({ error: "unsupported_action" }, 400);

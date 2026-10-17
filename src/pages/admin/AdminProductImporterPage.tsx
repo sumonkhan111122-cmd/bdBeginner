@@ -4,6 +4,8 @@ import {
   ArrowUpCircle,
   Check,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   ExternalLink,
   Filter,
   Globe,
@@ -31,8 +33,14 @@ const LIMIT_PRESETS = [10, 20, 30, 50, 100, 200, 500, 1000];
 
 const PRESETS = [
   { label: '🌐 All / Homepage', url: 'https://weadown.com/' },
-  { label: '🎨 WordPress Themes', url: 'https://weadown.com/wordpress-theme/' },
-  { label: '🧩 WordPress Plugins', url: 'https://weadown.com/wordpress-plugins/' },
+  { label: '🎨 Themes (Page 1)', url: 'https://weadown.com/wordpress-theme/' },
+  { label: '🎨 Themes (Page 2 - Old)', url: 'https://weadown.com/wordpress-theme/pages/2/' },
+  { label: '🎨 Themes (Page 3 - Older)', url: 'https://weadown.com/wordpress-theme/pages/3/' },
+  { label: '🧩 Plugins (Page 1)', url: 'https://weadown.com/wordpress-plugins/' },
+  { label: '🧩 Plugins (Page 2 - Old)', url: 'https://weadown.com/wordpress-plugins/pages/2/' },
+  { label: '📜 Sitemap 1', url: 'https://weadown.com/post-sitemap1.xml' },
+  { label: '📜 Sitemap 2 (Old Posts)', url: 'https://weadown.com/post-sitemap2.xml' },
+  { label: '📜 Sitemap 3 (Older Posts)', url: 'https://weadown.com/post-sitemap3.xml' },
 ];
 
 const CATEGORIES = [
@@ -49,6 +57,7 @@ export function AdminProductImporterPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [sourceUrl, setSourceUrl] = useState('https://weadown.com/wordpress-theme/');
   const [importLimit, setImportLimit] = useState<number>(30);
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const [categoryName, setCategoryName] = useState('WordPress');
   const [price, setPrice] = useState(DEFAULT_PRICE);
   const [overwritePrice, setOverwritePrice] = useState(false);
@@ -61,10 +70,26 @@ export function AdminProductImporterPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ProductImportResult | null>(null);
 
-  // Load products from entered URL or default
-  const handleFetchPreview = async (overrideUrl?: string, customLimit?: number) => {
+  // Load products from entered URL or default with pagination
+  const handleFetchPreview = async (
+    overrideUrl?: string,
+    customLimit?: number,
+    customPage?: number,
+  ) => {
     const url = (overrideUrl ?? sourceUrl).trim();
     const limit = customLimit ?? importLimit;
+    const page = customPage ?? currentPage;
+    if (customPage !== undefined) {
+      setCurrentPage(customPage);
+    }
+
+    // Auto-detect page from URL if present
+    const pageMatch = url.match(/\/pages\/(\d+)\/?$/i);
+    if (pageMatch && customPage === undefined) {
+      const detected = parseInt(pageMatch[1], 10);
+      if (!isNaN(detected)) setCurrentPage(detected);
+    }
+
     if (!url) return;
     setPreviewing(true);
     setError(null);
@@ -75,7 +100,7 @@ export function AdminProductImporterPage() {
         setItems(preview.items);
         setSelected(new Set(preview.items.map((i) => i.sourceUrl)));
       } else {
-        const preview = await previewLatestSourceProducts(limit, url);
+        const preview = await previewLatestSourceProducts(limit, url, page);
         setItems(preview.items);
         // Pre-select items that need import (new or update available)
         setSelected(
@@ -193,7 +218,7 @@ export function AdminProductImporterPage() {
         const preview = await previewSourceProduct(sourceUrl);
         setItems(preview.items);
       } else {
-        const preview = await previewLatestSourceProducts(30, sourceUrl);
+        const preview = await previewLatestSourceProducts(importLimit, sourceUrl, currentPage);
         setItems(preview.items);
       }
       setSelected(new Set());
@@ -295,7 +320,10 @@ export function AdminProductImporterPage() {
               type="button"
               onClick={() => {
                 setSourceUrl(preset.url);
-                void handleFetchPreview(preset.url);
+                const match = preset.url.match(/\/pages\/(\d+)\/?$/i);
+                const p = match ? parseInt(match[1], 10) : 1;
+                setCurrentPage(p);
+                void handleFetchPreview(preset.url, undefined, p);
               }}
               className={`rounded-lg border px-2.5 py-1 font-medium transition-colors ${
                 sourceUrl === preset.url
@@ -362,6 +390,104 @@ export function AdminProductImporterPage() {
           </div>
           <p className="mt-2 text-[11px] text-ink-400">
             * ৫০ বা তার বেশি সংখ্যা সিলেক্ট করলে স্বয়ংক্রিয়ভাবে পরবর্তী পেজ বা সাইটম্যাপ থেকে প্রোডাক্ট ফেচ করা হবে (সর্বোচ্চ ১০০০ টি পর্যন্ত)।
+          </p>
+        </div>
+
+        {/* Page Navigation & Old Posts Fetching */}
+        <div className="mt-4 border-t border-ink-100 pt-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <Layers size={15} className="text-brand-600" />
+              <label className="text-xs font-bold uppercase tracking-wider text-ink-700">
+                পেজ নেভিগেশন (ওল্ড পোস্ট লোড করুন):
+              </label>
+              <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-bold text-brand-700 ring-1 ring-inset ring-brand-600/20">
+                বর্তমান পেজ: {currentPage}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-ink-500 font-medium">যেকোনো পেজে যান:</span>
+              <div className="relative flex items-center">
+                <input
+                  type="number"
+                  min={1}
+                  max={200}
+                  value={currentPage}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    if (!isNaN(val) && val >= 1) {
+                      setCurrentPage(val);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') void handleFetchPreview(undefined, undefined, currentPage);
+                  }}
+                  className="h-8 w-20 rounded-lg border border-ink-200 px-2 text-center text-xs font-bold text-ink-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                />
+                <button
+                  type="button"
+                  onClick={() => void handleFetchPreview(undefined, undefined, currentPage)}
+                  disabled={previewing}
+                  className="ml-1.5 inline-flex h-8 items-center rounded-lg bg-ink-900 px-2.5 text-xs font-bold text-white transition-colors hover:bg-ink-800 disabled:opacity-50"
+                >
+                  যান
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-xs">
+            <button
+              type="button"
+              onClick={() => {
+                const prev = Math.max(1, currentPage - 1);
+                setCurrentPage(prev);
+                void handleFetchPreview(undefined, undefined, prev);
+              }}
+              disabled={previewing || currentPage <= 1}
+              className="inline-flex h-8 items-center gap-1 rounded-lg border border-ink-200 bg-white px-2.5 font-semibold text-ink-700 shadow-2xs transition-all hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <ChevronLeft size={13} />
+              <span>আগের পেজ</span>
+            </button>
+
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20].map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => {
+                  setCurrentPage(p);
+                  void handleFetchPreview(undefined, undefined, p);
+                }}
+                disabled={previewing}
+                className={`h-8 min-w-8 rounded-lg px-2 text-xs font-bold transition-all ${
+                  currentPage === p
+                    ? 'border border-brand-600 bg-brand-600 text-white shadow-xs'
+                    : 'border border-ink-200 bg-ink-50 text-ink-700 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+
+            <button
+              type="button"
+              onClick={() => {
+                const next = currentPage + 1;
+                setCurrentPage(next);
+                void handleFetchPreview(undefined, undefined, next);
+              }}
+              disabled={previewing}
+              className="inline-flex h-8 items-center gap-1 rounded-lg bg-brand-600 px-3 font-semibold text-white shadow-xs transition-all hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <span>পরের পেজ (ওল্ড পোস্ট)</span>
+              <ChevronRight size={13} />
+            </button>
+          </div>
+
+          <p className="mt-2 text-[11px] text-ink-500">
+            💡 <strong>ওল্ড পোস্ট আনার নিয়ম:</strong> WeaDown-এ প্রতিটি পেজে ২৪-২৮টি করে পোস্ট থাকে। পেজ ২, ৩, ৪ বা &apos;পরের পেজ&apos; এ ক্লিক করলে আগের সব পুরোনো পোস্ট লোড হবে এবং সেগুলো সিলেক্ট করে এক ক্লিকেই ইম্পোর্ট করতে পারবেন।
           </p>
         </div>
       </div>
@@ -727,6 +853,65 @@ export function AdminProductImporterPage() {
                   </div>
                 );
               })}
+            </div>
+
+            {/* Bottom Pagination Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-ink-100 bg-ink-50/50 p-4">
+              <div className="flex items-center gap-2 text-xs font-semibold text-ink-600">
+                <span>পেজ {currentPage} এর ফলাফল ({items.length} টি পোস্ট)</span>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const prev = Math.max(1, currentPage - 1);
+                    setCurrentPage(prev);
+                    void handleFetchPreview(undefined, undefined, prev);
+                    window.scrollTo({ top: 300, behavior: 'smooth' });
+                  }}
+                  disabled={previewing || currentPage <= 1}
+                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-ink-200 bg-white px-2.5 font-semibold text-ink-700 shadow-2xs transition-all hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <ChevronLeft size={13} />
+                  <span>আগের পেজ</span>
+                </button>
+
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => {
+                      setCurrentPage(p);
+                      void handleFetchPreview(undefined, undefined, p);
+                      window.scrollTo({ top: 300, behavior: 'smooth' });
+                    }}
+                    disabled={previewing}
+                    className={`h-8 min-w-8 rounded-lg px-2 text-xs font-bold transition-all ${
+                      currentPage === p
+                        ? 'border border-brand-600 bg-brand-600 text-white shadow-xs'
+                        : 'border border-ink-200 bg-white text-ink-700 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = currentPage + 1;
+                    setCurrentPage(next);
+                    void handleFetchPreview(undefined, undefined, next);
+                    window.scrollTo({ top: 300, behavior: 'smooth' });
+                  }}
+                  disabled={previewing}
+                  className="inline-flex h-8 items-center gap-1 rounded-lg bg-brand-600 px-3 font-semibold text-white shadow-xs transition-all hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <span>পরের পেজ (ওল্ড পোস্ট)</span>
+                  <ChevronRight size={13} />
+                </button>
+              </div>
             </div>
           </div>
         </>

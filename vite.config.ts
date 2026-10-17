@@ -34,7 +34,8 @@ function weadownApiPlugin() {
           if (pathname === '/preview' || pathname === '') {
             const sourceUrl = urlObj.searchParams.get('url') || 'https://weadown.com/wordpress-theme/';
             const limit = parseInt(urlObj.searchParams.get('limit') || '30', 10);
-            const data = await previewProducts(sourceUrl, limit);
+            const page = parseInt(urlObj.searchParams.get('page') || '1', 10);
+            const data = await previewProducts(sourceUrl, limit, page);
             res.setHeader('Content-Type', 'application/json');
             res.end(JSON.stringify(data));
             return;

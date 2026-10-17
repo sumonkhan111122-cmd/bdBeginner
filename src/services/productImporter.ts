@@ -86,18 +86,19 @@ async function invokeImporter<T>(body: Record<string, unknown>): Promise<T> {
 
 export async function previewLatestSourceProducts(
   limit = 30,
-  sourceUrl = 'https://weadown.com/wordpress-theme/'
+  sourceUrl = 'https://weadown.com/wordpress-theme/',
+  page = 1
 ): Promise<ProductImportPreview> {
   // 1. Try local dev scraper API
   const local = await tryLocalEndpoint<ProductImportPreview>(
-    `/api/weadown/preview?url=${encodeURIComponent(sourceUrl)}&limit=${limit}`
+    `/api/weadown/preview?url=${encodeURIComponent(sourceUrl)}&limit=${limit}&page=${page}`
   );
   if (local && Array.isArray(local.items)) {
     return local;
   }
 
   // 2. Fallback to Supabase Edge Function
-  return invokeImporter<ProductImportPreview>({ action: 'preview', limit, sourceUrl });
+  return invokeImporter<ProductImportPreview>({ action: 'preview', limit, sourceUrl, page });
 }
 
 export async function previewSourceProduct(sourceUrl: string): Promise<ProductImportPreview> {

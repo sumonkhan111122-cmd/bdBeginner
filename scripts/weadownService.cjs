@@ -34,7 +34,7 @@ const CATEGORIES = {
   'Web Services': 'dd5fe544-7b50-46d0-8d9b-4ed4588f6c8f'
 };
 
-async function getProductUrls(sourceUrl, limit = 50) {
+async function getProductUrls(sourceUrl, limit = 50, pageNum = 1) {
   let normalized = (sourceUrl || '').trim();
   if (!normalized) normalized = 'https://weadown.com/wordpress-theme/';
 
@@ -46,7 +46,11 @@ async function getProductUrls(sourceUrl, limit = 50) {
 
   // 2. Specific Sitemap URL
   if (normalized.endsWith('.xml')) {
-    const xml = await fetchHtml(normalized);
+    let sitemapUrl = normalized;
+    if (pageNum > 1 && sitemapUrl.includes('post-sitemap1.xml')) {
+      sitemapUrl = sitemapUrl.replace('post-sitemap1.xml', `post-sitemap${pageNum}.xml`);
+    }
+    const xml = await fetchHtml(sitemapUrl);
     const matches = xml.match(/<loc>(https:\/\/weadown\.com\/res\/[a-z0-9\-]+\/?)<\/loc>/gi) || [];
     const urls = matches.map(m => m.replace(/<\/?loc>/gi, '').trim());
     return [...new Set(urls)].slice(0, limit);
@@ -54,35 +58,17 @@ async function getProductUrls(sourceUrl, limit = 50) {
 
   const cleanUrls = new Set();
 
-  // If high limit (> 60) and requesting from homepage or sitemap
-  if (limit > 60 && (normalized === 'https://weadown.com/' || normalized === 'https://weadown.com')) {
-    let sitemapIndex = 1;
-    while (cleanUrls.size < limit && sitemapIndex <= 10) {
-      try {
-        const sitemapUrl = `https://weadown.com/post-sitemap${sitemapIndex}.xml`;
-        const xml = await fetchHtml(sitemapUrl);
-        const matches = xml.match(/<loc>(https:\/\/weadown\.com\/res\/[a-z0-9\-]+\/?)<\/loc>/gi) || [];
-        if (!matches || matches.length === 0) break;
-        for (const m of matches) {
-          const u = m.replace(/<\/?loc>/gi, '').trim().toLowerCase();
-          cleanUrls.add(u.endsWith('/') ? u : u + '/');
-          if (cleanUrls.size >= limit) break;
-        }
-        sitemapIndex++;
-      } catch (e) {
-        break;
-      }
-    }
-    return Array.from(cleanUrls).slice(0, limit);
+  // 3. Category or Listing URL: page by page crawling using /pages/{page}/
+  let page = pageNum || 1;
+  const pageMatch = normalized.match(/\/pages\/(\d+)\/?$/i);
+  if (pageMatch) {
+    if (pageNum === 1) page = parseInt(pageMatch[1], 10);
   }
+  const baseUrl = normalized.replace(/\/pages\/\d+\/?$/i, '').replace(/\/$/, '');
 
-  // 3. Category or Listing URL: page by page crawling
-  let page = 1;
-  const baseUrl = normalized.replace(/\/page\/\d+\/?$/, '').replace(/\/$/, '');
-
-  while (cleanUrls.size < limit && page <= 50) {
+  while (cleanUrls.size < limit && page <= 100) {
     try {
-      const pageUrl = page === 1 ? `${baseUrl}/` : `${baseUrl}/page/${page}/`;
+      const pageUrl = page === 1 ? `${baseUrl}/` : `${baseUrl}/pages/${page}/`;
       const html = await fetchHtml(pageUrl);
       const matches = html.match(/https:\/\/weadown\.com\/res\/[a-z0-9\-]+\/?/gi) || [];
       if (!matches || matches.length === 0) break;
@@ -105,8 +91,8 @@ async function getProductUrls(sourceUrl, limit = 50) {
   return Array.from(cleanUrls).slice(0, limit);
 }
 
-async function previewProducts(sourceUrl, limit = 30) {
-  const urls = await getProductUrls(sourceUrl, limit);
+async function previewProducts(sourceUrl, limit = 30, pageNum = 1) {
+  const urls = await getProductUrls(sourceUrl, limit, pageNum);
   if (urls.length === 0) return { items: [], count: 0 };
 
   // Fetch existing imports from Supabase
