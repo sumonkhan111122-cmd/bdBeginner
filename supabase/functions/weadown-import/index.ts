@@ -396,7 +396,7 @@ async function buildPreview(
   const urls = products.map((product) => product.sourceUrl);
   const { data, error } = await supabase
     .from("product_source_imports")
-    .select("product_id,source_url,source_version,source_modified_at,license_status")
+    .select("product_id,source_url,source_version,source_modified_at,license_status,metadata")
     .in("source_url", urls);
   if (error) throw error;
   const existing = new Map((data ?? []).map((row) => [row.source_url as string, row]));
@@ -412,12 +412,33 @@ async function buildPreview(
       const versionChanged = Boolean(product.version && product.version !== current.source_version);
       importStatus = sourceIsNewer || versionChanged ? "update_available" : "up_to_date";
     }
+
+    const flow = (current?.metadata as any)?.download_flow;
+    let downloadStatus = "missing";
+    let downloadUrl: string | null = null;
+    let downloadPageUrl: string | null = null;
+    let downloadPackageName: string | null = null;
+    let downloadError: string | null = null;
+
+    if (flow) {
+      downloadStatus = flow.status || "missing";
+      downloadUrl = flow.final_download_url || null;
+      downloadPageUrl = flow.download_page_url || null;
+      downloadPackageName = flow.package_name || null;
+      downloadError = flow.last_error || null;
+    }
+
     return {
       ...product,
       importStatus,
       productId: (current?.product_id as string | undefined) ?? null,
       currentVersion: (current?.source_version as string | undefined) ?? null,
       licenseStatus: (current?.license_status as ImportPreviewItem["licenseStatus"] | undefined) ?? "unverified",
+      downloadStatus,
+      downloadUrl,
+      downloadPageUrl,
+      downloadPackageName,
+      downloadError,
     };
   });
 }
@@ -680,18 +701,23 @@ async function extractDownloadLinkDeno(sourcePostUrl: string): Promise<{
   error?: string;
 }> {
   try {
-    const postRes = await fetch(sourcePostUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-      },
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    });
-    if (!postRes.ok) throw new Error(`Product page HTTP ${postRes.status}`);
-    const postHtml = await postRes.text();
-    const fileLinkMatch = postHtml.match(/href=["'](https?:\/\/weadown\.com\/files\/[^"']+)["']/i);
-    if (!fileLinkMatch) throw new Error("No files page link found");
-    const downloadPageUrl = fileLinkMatch[1];
+    let downloadPageUrl = "";
+    if (sourcePostUrl.includes("/files/")) {
+      downloadPageUrl = sourcePostUrl;
+    } else {
+      const postRes = await fetch(sourcePostUrl, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        },
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+      if (!postRes.ok) throw new Error(`Product page HTTP ${postRes.status}`);
+      const postHtml = await postRes.text();
+      const fileLinkMatch = postHtml.match(/href=["'](https?:\/\/weadown\.com\/files\/[^"']+)["']/i);
+      if (!fileLinkMatch) throw new Error("No files page link found");
+      downloadPageUrl = fileLinkMatch[1];
+    }
 
     const filePageRes = await fetch(downloadPageUrl, {
       headers: {
@@ -701,8 +727,18 @@ async function extractDownloadLinkDeno(sourcePostUrl: string): Promise<{
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
     if (!filePageRes.ok) throw new Error(`Download page HTTP ${filePageRes.status}`);
-    const setCookie = filePageRes.headers.get("set-cookie") || "";
-    const cookieHeader = setCookie.split(";")[0] || "";
+
+    let cookieHeader = "";
+    try {
+      if (typeof (filePageRes.headers as any).getSetCookie === "function") {
+        const cookies = (filePageRes.headers as any).getSetCookie();
+        cookieHeader = cookies.map((c: string) => c.split(";")[0]).join("; ");
+      }
+    } catch (_) {}
+    if (!cookieHeader) {
+      const rawCookie = filePageRes.headers.get("set-cookie") || "";
+      cookieHeader = rawCookie.split(";")[0] || "";
+    }
     const fileHtml = await filePageRes.text();
 
     const slugMatch = fileHtml.match(/data-slug="([^"]+)"/i);
@@ -806,7 +842,8 @@ Deno.serve(async (req) => {
     await requireAdmin(req, supabase);
 
     const body = (await req.json()) as Record<string, unknown>;
-    const action = typeof body.action === "string" ? body.action : "preview";
+    const rawAction = typeof body.action === "string" ? body.action : "preview";
+    const action = rawAction.trim().toLowerCase().replace(/-/g, "_");
 
     if (action === "queue_status") {
       const { data: allImports, error } = await supabase
@@ -857,7 +894,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (action === "extract_single") {
+    if (action === "extract_single" || action === "retry_download" || action === "extract" || action === "retry") {
       const productId = typeof body.productId === "string" ? body.productId : "";
       const sourceUrl = typeof body.sourceUrl === "string" ? body.sourceUrl : "";
       if (!productId || !sourceUrl) return jsonResponse({ error: "Missing productId or sourceUrl" }, 400);
@@ -893,9 +930,20 @@ Deno.serve(async (req) => {
           await supabase.from("product_source_imports").update({ metadata: meta }).eq("id", imp.id);
         }
 
-        return jsonResponse({ success: true, result: ext });
+        return jsonResponse({
+          success: true,
+          result: ext,
+          finalDownloadUrl: ext.finalDownloadUrl,
+          downloadPageUrl: ext.downloadPageUrl,
+          packageName: ext.packageName,
+        });
       } else {
-        return jsonResponse({ success: false, error: ext.error || "Extraction failed" }, 500);
+        return jsonResponse({
+          success: false,
+          error: ext.error || "Extraction failed",
+          finalDownloadUrl: null,
+          result: ext,
+        }, 200);
       }
     }
 
@@ -943,6 +991,7 @@ Deno.serve(async (req) => {
               productId: item.product_id,
               status: "success",
               downloadUrl: res.finalDownloadUrl,
+              packageName: res.packageName,
             });
           } else {
             results.push({ productId: item.product_id, status: "failed", error: res.error });
@@ -950,7 +999,7 @@ Deno.serve(async (req) => {
         } catch (e) {
           results.push({ productId: item.product_id, status: "failed", error: String(e) });
         }
-        await new Promise((r) => setTimeout(r, 2000));
+        await new Promise((r) => setTimeout(r, 1500));
       }
 
       return jsonResponse({
@@ -959,6 +1008,34 @@ Deno.serve(async (req) => {
         remaining: Math.max(0, pending.length - batch.length),
         totalRemaining: pending.length,
         results,
+      });
+    }
+
+    if (action === "check_updates") {
+      const requestedLimit = Number(body.limit ?? DEFAULT_LIMIT);
+      const limit = Math.max(1, Math.min(MAX_LIMIT, Number.isFinite(requestedLimit) ? requestedLimit : DEFAULT_LIMIT));
+
+      const { data: imported } = await supabase
+        .from("product_source_imports")
+        .select("source_url")
+        .order("last_checked_at", { ascending: true })
+        .limit(limit);
+
+      const sourceUrls = (imported ?? []).map((row) => row.source_url as string).filter(Boolean);
+
+      let items: ImportPreviewItem[] = [];
+      if (sourceUrls.length > 0) {
+        const products = await loadSelectedProducts(sourceUrls);
+        items = await buildPreview(supabase, products);
+      } else {
+        const products = await loadListingProducts("https://weadown.com/wordpress-theme/", 1, limit);
+        items = await buildPreview(supabase, products);
+      }
+
+      return jsonResponse({
+        items,
+        count: items.length,
+        source: "https://weadown.com",
       });
     }
 
@@ -1038,7 +1115,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    return jsonResponse({ error: "unsupported_action" }, 400);
+    return jsonResponse({ error: `unsupported_action: ${action}` }, 400);
   } catch (error) {
     const message = formatError(error);
     const status = /Authentication|required|Administrator/.test(message) ? 403 : 500;

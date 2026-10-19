@@ -152,13 +152,31 @@ export function AdminProductImporterPage() {
   const handleRetryDownload = async (productId: string, sourceUrl: string) => {
     setExtractingMap((prev) => ({ ...prev, [productId]: true }));
     try {
-      await retryProductDownloadLink(productId, sourceUrl);
-      setItems((prev) =>
-        prev.map((i) => (i.productId === productId ? { ...i, downloadStatus: 'in_queue' } : i))
-      );
+      const res = await retryProductDownloadLink(productId, sourceUrl);
+      const finalUrl = res?.finalDownloadUrl || res?.result?.finalDownloadUrl;
+      if (res && (res.success || finalUrl) && finalUrl) {
+        setItems((prev) =>
+          prev.map((i) =>
+            i.productId === productId
+              ? {
+                  ...i,
+                  downloadStatus: 'success',
+                  downloadUrl: finalUrl,
+                  downloadPageUrl: res.downloadPageUrl || res.result?.downloadPageUrl,
+                  downloadPackageName: res.packageName || res.result?.packageName,
+                  downloadError: null,
+                }
+              : i
+          )
+        );
+      } else {
+        setItems((prev) =>
+          prev.map((i) => (i.productId === productId ? { ...i, downloadStatus: 'in_queue' } : i))
+        );
+      }
       await refreshQueueStatus();
     } catch (err: any) {
-      setError(err.message || 'Retry failed');
+      console.warn('Retry download failed', err);
     } finally {
       setExtractingMap((prev) => ({ ...prev, [productId]: false }));
     }
@@ -168,16 +186,18 @@ export function AdminProductImporterPage() {
     setExtractingMap((prev) => ({ ...prev, [productId]: true }));
     try {
       const res = await extractSingleDownload(productId, sourceUrl);
-      if (res && res.success && res.finalDownloadUrl) {
+      const finalUrl = res?.finalDownloadUrl || res?.result?.finalDownloadUrl;
+      if (res && (res.success || finalUrl) && finalUrl) {
         setItems((prev) =>
           prev.map((i) =>
             i.productId === productId
               ? {
                   ...i,
                   downloadStatus: 'success',
-                  downloadUrl: res.finalDownloadUrl,
-                  downloadPageUrl: res.downloadPageUrl,
-                  downloadPackageName: res.packageName,
+                  downloadUrl: finalUrl,
+                  downloadPageUrl: res.downloadPageUrl || res.result?.downloadPageUrl,
+                  downloadPackageName: res.packageName || res.result?.packageName,
+                  downloadError: null,
                 }
               : i
           )
@@ -189,7 +209,7 @@ export function AdminProductImporterPage() {
               ? {
                   ...i,
                   downloadStatus: 'failed',
-                  downloadError: res?.error || 'Extraction failed',
+                  downloadError: res?.error || res?.result?.error || 'Extraction failed',
                 }
               : i
           )
@@ -197,7 +217,18 @@ export function AdminProductImporterPage() {
       }
       await refreshQueueStatus();
     } catch (err: any) {
-      setError(err.message || 'Extraction failed');
+      console.warn('Extract single failed', err);
+      setItems((prev) =>
+        prev.map((i) =>
+          i.productId === productId
+            ? {
+                ...i,
+                downloadStatus: 'failed',
+                downloadError: err?.message || 'Extraction failed',
+              }
+            : i
+        )
+      );
     } finally {
       setExtractingMap((prev) => ({ ...prev, [productId]: false }));
     }

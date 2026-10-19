@@ -141,6 +141,13 @@ export async function checkSourceUpdates(limit = 30): Promise<ProductImportPrevi
     return local;
   }
 
+  try {
+    const edge = await invokeImporter<ProductImportPreview>({ action: 'check_updates', limit });
+    if (edge && Array.isArray(edge.items)) {
+      return edge;
+    }
+  } catch (_) {}
+
   return previewLatestSourceProducts(limit);
 }
 
@@ -286,26 +293,21 @@ export async function recoverMissingDownloadLinks(limit = 10): Promise<{ count?:
   return { count: 0, processed: 0, remaining: 0, enqueued: [] };
 }
 
-export async function retryProductDownloadLink(productId: string, sourceUrl: string): Promise<{ success: boolean }> {
+export async function retryProductDownloadLink(productId: string, sourceUrl: string): Promise<any> {
   // 1. Try local or cPanel PHP/Node endpoint
-  const local = await tryLocalEndpoint<{ success: boolean }>('/api/weadown/retry-download', {
+  const local = await tryLocalEndpoint<any>('/api/weadown/retry-download', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ productId, sourceUrl }),
   });
-  if (local && local.success) return local;
+  if (local && (local.success || local.finalDownloadUrl)) return local;
 
   // 2. Try Supabase Edge Function fallback
-  try {
-    const edge = await invokeImporter<{ success: boolean }>({
-      action: 'extract_single',
-      productId,
-      sourceUrl,
-    });
-    return edge || { success: false };
-  } catch (_) {}
-
-  return { success: false };
+  return invokeImporter<any>({
+    action: 'retry_download',
+    productId,
+    sourceUrl,
+  });
 }
 
 export async function extractSingleDownload(productId: string, sourceUrl: string): Promise<any> {
@@ -315,7 +317,7 @@ export async function extractSingleDownload(productId: string, sourceUrl: string
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ productId, sourceUrl }),
   });
-  if (local && local.success) return local;
+  if (local && (local.success || local.finalDownloadUrl)) return local;
 
   // 2. Try Supabase Edge Function fallback
   return invokeImporter<any>({

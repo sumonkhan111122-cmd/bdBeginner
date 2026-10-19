@@ -237,7 +237,7 @@ if ($endpoint === 'queue-status') {
     exit;
 }
 
-if ($endpoint === 'extract-single' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+if (($endpoint === 'extract-single' || $endpoint === 'extract_single' || $endpoint === 'retry-download' || $endpoint === 'retry_download') && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $productId = $body['productId'] ?? '';
     $sourceUrl = $body['sourceUrl'] ?? '';
     if (!$productId || !$sourceUrl) {
@@ -247,7 +247,7 @@ if ($endpoint === 'extract-single' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $result = extractDownloadLink($sourceUrl);
-    if ($result['success']) {
+    if ($result['success'] && !empty($result['finalDownloadUrl'])) {
         // Save to product_download_links
         supabaseRequest("$supabaseUrl/rest/v1/product_download_links", 'POST', [
             'product_id' => $productId,
@@ -257,15 +257,25 @@ if ($endpoint === 'extract-single' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             'sort_order' => 0
         ], $supabaseKey);
 
-        echo json_encode(['success' => true, 'result' => $result]);
+        echo json_encode([
+            'success' => true,
+            'result' => $result,
+            'finalDownloadUrl' => $result['finalDownloadUrl'],
+            'downloadPageUrl' => $result['downloadPageUrl'],
+            'packageName' => $result['packageName'],
+        ]);
     } else {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'error' => $result['error']]);
+        echo json_encode([
+            'success' => false,
+            'error' => $result['error'] ?? 'Extraction failed',
+            'finalDownloadUrl' => null,
+            'result' => $result,
+        ]);
     }
     exit;
 }
 
-if ($endpoint === 'recover-downloads' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+if (($endpoint === 'recover-downloads' || $endpoint === 'recover_downloads') && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $batchSize = max(1, min(10, (int)($body['batchSize'] ?? 5)));
     $res = supabaseRequest("$supabaseUrl/rest/v1/product_source_imports?select=id,product_id,source_url,source_title,metadata&order=created_at.desc", 'GET', null, $supabaseKey);
     $items = $res['data'] ?: [];
@@ -283,7 +293,7 @@ if ($endpoint === 'recover-downloads' && $_SERVER['REQUEST_METHOD'] === 'POST') 
 
     foreach ($batch as $item) {
         $res = extractDownloadLink($item['source_url']);
-        if ($res['success']) {
+        if ($res['success'] && !empty($res['finalDownloadUrl'])) {
             supabaseRequest("$supabaseUrl/rest/v1/product_download_links", 'POST', [
                 'product_id' => $item['product_id'],
                 'title' => $res['packageName'],
@@ -291,9 +301,14 @@ if ($endpoint === 'recover-downloads' && $_SERVER['REQUEST_METHOD'] === 'POST') 
                 'is_active' => true,
                 'sort_order' => 0
             ], $supabaseKey);
-            $results[] = ['productId' => $item['product_id'], 'status' => 'success', 'downloadUrl' => $res['finalDownloadUrl']];
+            $results[] = [
+                'productId' => $item['product_id'],
+                'status' => 'success',
+                'downloadUrl' => $res['finalDownloadUrl'],
+                'packageName' => $res['packageName'],
+            ];
         } else {
-            $results[] = ['productId' => $item['product_id'], 'status' => 'failed', 'error' => $res['error']];
+            $results[] = ['productId' => $item['product_id'], 'status' => 'failed', 'error' => $res['error'] ?? 'Extraction failed'];
         }
         sleep(2);
     }
@@ -305,6 +320,48 @@ if ($endpoint === 'recover-downloads' && $_SERVER['REQUEST_METHOD'] === 'POST') 
         'totalRemaining' => count($pending),
         'results' => $results
     ]);
+    exit;
+}
+
+// Fallback: Proxy any other endpoint to Supabase Edge Function
+$edgeUrl = "$supabaseUrl/functions/v1/weadown-import";
+$ch = curl_init($edgeUrl);
+$proxyHeaders = ['Content-Type: application/json'];
+if ($supabaseKey) {
+    $proxyHeaders[] = "Authorization: Bearer $supabaseKey";
+    $proxyHeaders[] = "apikey: $supabaseKey";
+}
+if (!empty($_SERVER['HTTP_AUTHORIZATION'])) {
+    $proxyHeaders[] = 'Authorization: ' . $_SERVER['HTTP_AUTHORIZATION'];
+}
+
+$payload = $body;
+if (empty($payload['action'])) {
+    if ($endpoint === 'preview') $payload['action'] = 'preview';
+    else if ($endpoint === 'check-updates' || $endpoint === 'check_updates') $payload['action'] = 'check_updates';
+    else if ($endpoint === 'import') $payload['action'] = 'import';
+    else if ($endpoint === 'queue-status' || $endpoint === 'queue_status') $payload['action'] = 'queue_status';
+    else if ($endpoint === 'extract-single' || $endpoint === 'extract_single') $payload['action'] = 'extract_single';
+    else if ($endpoint === 'recover-downloads' || $endpoint === 'recover_downloads') $payload['action'] = 'recover_downloads';
+}
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    if (empty($payload['sourceUrl']) && !empty($_GET['url'])) $payload['sourceUrl'] = $_GET['url'];
+    if (empty($payload['limit']) && !empty($_GET['limit'])) $payload['limit'] = (int)$_GET['limit'];
+    if (empty($payload['page']) && !empty($_GET['page'])) $payload['page'] = (int)$_GET['page'];
+}
+
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+curl_setopt($ch, CURLOPT_HTTPHEADER, $proxyHeaders);
+curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+$edgeResponse = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+
+if ($edgeResponse !== false && $httpCode >= 200 && $httpCode < 500) {
+    http_response_code($httpCode);
+    echo $edgeResponse;
     exit;
 }
 
