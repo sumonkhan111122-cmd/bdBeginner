@@ -256,14 +256,28 @@ async function importSingleProduct(sourceUrl, options = {}) {
     updated_at: new Date().toISOString()
   }, { onConflict: 'source_url' });
 
+  // 6. Automatically queue download link extraction for newly imported or updated products
+  const autoExtract = options.autoExtract !== false;
+  let extractionJob = null;
+  if (autoExtract && productId) {
+    try {
+      const { extractionQueue } = require('./extractionQueue.cjs');
+      extractionJob = extractionQueue.enqueue(productId, parsed.sourceUrl, parsed.title);
+    } catch (qErr) {
+      console.warn(`[AUTO-IMPORT] Extraction enqueue warning:`, qErr.message);
+    }
+  }
+
   return {
     sourceUrl: parsed.sourceUrl,
     productId,
     title: parsed.title,
     version: parsed.version,
-    isUpdate
+    isUpdate,
+    extractionQueued: Boolean(extractionJob)
   };
 }
+
 
 async function main() {
   const args = process.argv.slice(2);

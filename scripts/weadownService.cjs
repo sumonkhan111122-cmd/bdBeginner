@@ -95,12 +95,16 @@ async function previewProducts(sourceUrl, limit = 30, pageNum = 1) {
   const urls = await getProductUrls(sourceUrl, limit, pageNum);
   if (urls.length === 0) return { items: [], count: 0 };
 
+  const { extractionQueue } = require('./extractionQueue.cjs');
+  const queueStatus = extractionQueue.getStatus();
+  const queueItems = extractionQueue.queue;
+
   // Fetch existing imports from Supabase
   let existingMap = new Map();
   if (supabase) {
     const { data } = await supabase
       .from('product_source_imports')
-      .select('product_id, source_url, source_version, source_modified_at, license_status')
+      .select('product_id, source_url, source_version, source_modified_at, license_status, metadata')
       .in('source_url', urls);
     if (data) {
       data.forEach(row => existingMap.set(row.source_url, row));
@@ -124,6 +128,27 @@ async function previewProducts(sourceUrl, limit = 30, pageNum = 1) {
           importStatus = (versionDiff || modifiedDiff) ? 'update_available' : 'up_to_date';
         }
 
+        // Determine download extraction status
+        const flow = existing?.metadata?.download_flow;
+        let downloadStatus = 'missing';
+        let downloadUrl = null;
+        let downloadPageUrl = null;
+        let downloadError = null;
+        let downloadPackageName = null;
+
+        if (flow) {
+          downloadStatus = flow.status || 'missing';
+          downloadUrl = flow.final_download_url || null;
+          downloadPageUrl = flow.download_page_url || null;
+          downloadError = flow.last_error || null;
+          downloadPackageName = flow.package_name || null;
+        }
+
+        const inQueue = queueItems.find(q => q.sourceUrl === url || (existing?.product_id && q.productId === existing.product_id));
+        if (inQueue) {
+          downloadStatus = inQueue.status === 'processing' ? 'processing' : (inQueue.status === 'retry' ? 'retry' : 'in_queue');
+        }
+
         return {
           sourceUrl: parsed.sourceUrl,
           sourceModifiedAt: parsed.publishedAt,
@@ -138,7 +163,12 @@ async function previewProducts(sourceUrl, limit = 30, pageNum = 1) {
           importStatus,
           productId: existing?.product_id || null,
           currentVersion: existing?.source_version || null,
-          licenseStatus: existing?.license_status || 'unverified'
+          licenseStatus: existing?.license_status || 'unverified',
+          downloadStatus,
+          downloadUrl,
+          downloadPageUrl,
+          downloadError,
+          downloadPackageName
         };
       } catch (err) {
         console.error(`Error parsing ${url}:`, err.message);
@@ -150,19 +180,23 @@ async function previewProducts(sourceUrl, limit = 30, pageNum = 1) {
     results.filter(Boolean).forEach(item => items.push(item));
   }
 
-  return { items, count: items.length };
+  return { items, count: items.length, queueStatus };
 }
 
 async function checkUpdatesForAllImported(limit = 30) {
   if (!supabase) return { items: [], count: 0 };
 
+  const { extractionQueue } = require('./extractionQueue.cjs');
+  const queueStatus = extractionQueue.getStatus();
+  const queueItems = extractionQueue.queue;
+
   const { data: imported } = await supabase
     .from('product_source_imports')
-    .select('product_id, source_url, source_version, source_modified_at, source_title')
+    .select('product_id, source_url, source_version, source_modified_at, source_title, metadata')
     .order('last_checked_at', { ascending: true })
     .limit(limit);
 
-  if (!imported || imported.length === 0) return { items: [], count: 0 };
+  if (!imported || imported.length === 0) return { items: [], count: 0, queueStatus };
 
   const updatedItems = [];
   for (const item of imported) {
@@ -172,6 +206,27 @@ async function checkUpdatesForAllImported(limit = 30) {
       const modifiedDiff = parsed.publishedAt && item.source_modified_at && Date.parse(parsed.publishedAt) > Date.parse(item.source_modified_at);
       
       const isUpdated = versionDiff || modifiedDiff;
+
+      const flow = item.metadata?.download_flow;
+      let downloadStatus = 'missing';
+      let downloadUrl = null;
+      let downloadPageUrl = null;
+      let downloadError = null;
+      let downloadPackageName = null;
+
+      if (flow) {
+        downloadStatus = flow.status || 'missing';
+        downloadUrl = flow.final_download_url || null;
+        downloadPageUrl = flow.download_page_url || null;
+        downloadError = flow.last_error || null;
+        downloadPackageName = flow.package_name || null;
+      }
+
+      const inQueue = queueItems.find(q => q.sourceUrl === item.source_url || q.productId === item.product_id);
+      if (inQueue) {
+        downloadStatus = inQueue.status === 'processing' ? 'processing' : (inQueue.status === 'retry' ? 'retry' : 'in_queue');
+      }
+
       updatedItems.push({
         sourceUrl: item.source_url,
         sourceModifiedAt: parsed.publishedAt,
@@ -186,14 +241,19 @@ async function checkUpdatesForAllImported(limit = 30) {
         importStatus: isUpdated ? 'update_available' : 'up_to_date',
         productId: item.product_id,
         currentVersion: item.source_version,
-        licenseStatus: 'unverified'
+        licenseStatus: 'unverified',
+        downloadStatus,
+        downloadUrl,
+        downloadPageUrl,
+        downloadError,
+        downloadPackageName
       });
     } catch (e) {
       console.error(`Check update failed for ${item.source_url}:`, e.message);
     }
   }
 
-  return { items: updatedItems, count: updatedItems.length };
+  return { items: updatedItems, count: updatedItems.length, queueStatus };
 }
 
 async function importMultipleProducts(sourceUrls, options = {}) {
@@ -211,7 +271,8 @@ async function importMultipleProducts(sourceUrls, options = {}) {
       results.imported.push({
         sourceUrl: url,
         productId: res.productId,
-        result: res.isUpdate ? 'updated' : 'created'
+        result: res.isUpdate ? 'updated' : 'created',
+        extractionQueued: res.extractionQueued
       });
       if (res.isUpdate) results.updated++;
       else results.created++;
@@ -226,10 +287,35 @@ async function importMultipleProducts(sourceUrls, options = {}) {
   return results;
 }
 
+function getExtractionQueueStatus() {
+  const { extractionQueue } = require('./extractionQueue.cjs');
+  return extractionQueue.getStatus();
+}
+
+async function recoverMissingDownloadLinks(limit = 30) {
+  const { extractionQueue } = require('./extractionQueue.cjs');
+  return extractionQueue.recoverMissingLinks(limit);
+}
+
+async function retryFailedDownloadLink(productId, sourceUrl) {
+  const { extractionQueue } = require('./extractionQueue.cjs');
+  return extractionQueue.enqueue(productId, sourceUrl);
+}
+
+async function extractSingleProductDownload(productId, sourceUrl) {
+  const { extractionQueue } = require('./extractionQueue.cjs');
+  return extractionQueue.extractSingleProduct(productId, sourceUrl);
+}
+
 module.exports = {
   getProductUrls,
   previewProducts,
   checkUpdatesForAllImported,
   importMultipleProducts,
+  getExtractionQueueStatus,
+  recoverMissingDownloadLinks,
+  retryFailedDownloadLink,
+  extractSingleProductDownload,
   CATEGORIES
 };
+

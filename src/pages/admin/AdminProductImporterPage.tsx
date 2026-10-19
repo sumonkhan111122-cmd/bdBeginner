@@ -1,21 +1,28 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   AlertCircle,
   ArrowUpCircle,
   Check,
+  CheckCircle,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  Clock,
+  Download,
   ExternalLink,
+  FileDown,
   Filter,
   Globe,
   Layers,
   Loader2,
   Package,
   RefreshCw,
+  RotateCw,
   Search,
+  ShieldCheck,
   Sparkles,
   UploadCloud,
+  XCircle,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
@@ -24,9 +31,15 @@ import {
   importSourceProducts,
   previewLatestSourceProducts,
   previewSourceProduct,
+  fetchExtractionQueueStatus,
+  recoverMissingDownloadLinks,
+  retryProductDownloadLink,
+  extractSingleDownload,
   type ProductImportPreviewItem,
   type ProductImportResult,
+  type ProductExtractionQueueStatus,
 } from '@/services/productImporter';
+
 
 const DEFAULT_PRICE = 99;
 const LIMIT_PRESETS = [10, 20, 30, 50, 100, 200, 500, 1000];
@@ -65,10 +78,131 @@ export function AdminProductImporterPage() {
   const [previewing, setPreviewing] = useState(false);
   const [checkingUpdates, setCheckingUpdates] = useState(false);
   const [importing, setImporting] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'update_available' | 'new' | 'up_to_date'>('all');
+  type FilterType =
+    | 'all'
+    | 'update_available'
+    | 'new'
+    | 'up_to_date'
+    | 'download_success'
+    | 'download_failed'
+    | 'download_retry'
+    | 'download_missing';
+
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [queueStatus, setQueueStatus] = useState<ProductExtractionQueueStatus | null>(null);
+  const [recovering, setRecovering] = useState(false);
+  const [extractingMap, setExtractingMap] = useState<Record<string, boolean>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ProductImportResult | null>(null);
+
+  const refreshQueueStatus = async () => {
+    try {
+      const q = await fetchExtractionQueueStatus();
+      if (q) setQueueStatus(q);
+    } catch (e) {}
+  };
+
+  useEffect(() => {
+    void refreshQueueStatus();
+    const interval = setInterval(() => {
+      void refreshQueueStatus();
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleRecoverLinks = async () => {
+    setRecovering(true);
+    setError(null);
+    try {
+      let totalRecovered = 0;
+      let hasMore = true;
+      let passes = 0;
+
+      while (hasMore && passes < 10) {
+        passes++;
+        const res = await recoverMissingDownloadLinks(5);
+        await refreshQueueStatus();
+
+        if (res.processed !== undefined) {
+          totalRecovered += res.processed || 0;
+          if ((res.remaining || 0) === 0 || res.processed === 0) {
+            hasMore = false;
+          }
+        } else if (res.count !== undefined) {
+          totalRecovered = res.count;
+          hasMore = false;
+        } else {
+          hasMore = false;
+        }
+      }
+
+      if (totalRecovered > 0) {
+        alert(`${totalRecovered} টি প্রোডাক্টের ডাউনলোড লিংক সফলভাবে রিকভার হয়েছে / কিউতে প্রসেস হচ্ছে!`);
+      } else {
+        alert('সকল প্রোডাক্টের ডাউনলোড লিংক ইতিমধ্যেই আপ-টু-ডেট আছে!');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Recovery failed');
+    } finally {
+      setRecovering(false);
+    }
+  };
+
+  const handleRetryDownload = async (productId: string, sourceUrl: string) => {
+    setExtractingMap((prev) => ({ ...prev, [productId]: true }));
+    try {
+      await retryProductDownloadLink(productId, sourceUrl);
+      setItems((prev) =>
+        prev.map((i) => (i.productId === productId ? { ...i, downloadStatus: 'in_queue' } : i))
+      );
+      await refreshQueueStatus();
+    } catch (err: any) {
+      setError(err.message || 'Retry failed');
+    } finally {
+      setExtractingMap((prev) => ({ ...prev, [productId]: false }));
+    }
+  };
+
+  const handleExtractSingle = async (productId: string, sourceUrl: string) => {
+    setExtractingMap((prev) => ({ ...prev, [productId]: true }));
+    try {
+      const res = await extractSingleDownload(productId, sourceUrl);
+      if (res && res.success && res.finalDownloadUrl) {
+        setItems((prev) =>
+          prev.map((i) =>
+            i.productId === productId
+              ? {
+                  ...i,
+                  downloadStatus: 'success',
+                  downloadUrl: res.finalDownloadUrl,
+                  downloadPageUrl: res.downloadPageUrl,
+                  downloadPackageName: res.packageName,
+                }
+              : i
+          )
+        );
+      } else {
+        setItems((prev) =>
+          prev.map((i) =>
+            i.productId === productId
+              ? {
+                  ...i,
+                  downloadStatus: 'failed',
+                  downloadError: res?.error || 'Extraction failed',
+                }
+              : i
+          )
+        );
+      }
+      await refreshQueueStatus();
+    } catch (err: any) {
+      setError(err.message || 'Extraction failed');
+    } finally {
+      setExtractingMap((prev) => ({ ...prev, [productId]: false }));
+    }
+  };
+
 
   // Load products from entered URL or default with pagination
   const handleFetchPreview = async (
@@ -155,13 +289,21 @@ export function AdminProductImporterPage() {
   // Select all or deselect visible items
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
-      if (activeFilter !== 'all' && item.importStatus !== activeFilter) return false;
+      if (activeFilter === 'update_available' && item.importStatus !== 'update_available') return false;
+      if (activeFilter === 'new' && item.importStatus !== 'new') return false;
+      if (activeFilter === 'up_to_date' && item.importStatus !== 'up_to_date') return false;
+      if (activeFilter === 'download_success' && item.downloadStatus !== 'success') return false;
+      if (activeFilter === 'download_failed' && item.downloadStatus !== 'failed') return false;
+      if (activeFilter === 'download_retry' && item.downloadStatus !== 'retry' && item.downloadStatus !== 'in_queue' && item.downloadStatus !== 'processing') return false;
+      if (activeFilter === 'download_missing' && item.downloadStatus && item.downloadStatus !== 'missing') return false;
+
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         return (
           item.title.toLowerCase().includes(q) ||
           item.slug.toLowerCase().includes(q) ||
-          (item.version && item.version.toLowerCase().includes(q))
+          (item.version && item.version.toLowerCase().includes(q)) ||
+          (item.downloadPackageName && item.downloadPackageName.toLowerCase().includes(q))
         );
       }
       return true;
@@ -222,6 +364,7 @@ export function AdminProductImporterPage() {
         setItems(preview.items);
       }
       setSelected(new Set());
+      await refreshQueueStatus();
     } catch (err) {
       console.error('Source import failed', err);
       setError(err instanceof Error ? err.message : 'The selected products could not be imported.');
@@ -233,6 +376,15 @@ export function AdminProductImporterPage() {
   const newCount = items.filter((item) => item.importStatus === 'new').length;
   const updateCount = items.filter((item) => item.importStatus === 'update_available').length;
   const currentCount = items.filter((item) => item.importStatus === 'up_to_date').length;
+  const dlSuccessCount = items.filter((item) => item.downloadStatus === 'success').length;
+  const dlFailedCount = items.filter((item) => item.downloadStatus === 'failed').length;
+  const dlRetryCount = items.filter(
+    (item) =>
+      item.downloadStatus === 'retry' ||
+      item.downloadStatus === 'in_queue' ||
+      item.downloadStatus === 'processing'
+  ).length;
+
 
   return (
     <div className="px-4 py-8 sm:px-6 lg:px-8">
@@ -269,6 +421,22 @@ export function AdminProductImporterPage() {
             <span>{checkingUpdates ? 'আপডেট চেক হচ্ছে...' : 'রিলোড / আপডেট চেক'}</span>
           </button>
 
+          {/* Recover Missing Links Button */}
+          <button
+            type="button"
+            onClick={handleRecoverLinks}
+            disabled={previewing || checkingUpdates || importing || recovering}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 text-sm font-semibold text-emerald-800 shadow-sm transition-all hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
+            title="পূর্বে ইম্পোর্ট করা প্রোডাক্টের মিসিং ডাউনলোড লিংক ব্যাকগ্রাউন্ডে উদ্ধার করুন"
+          >
+            {recovering ? (
+              <Loader2 size={16} className="animate-spin text-emerald-600" />
+            ) : (
+              <FileDown size={16} className="text-emerald-600" />
+            )}
+            <span>{recovering ? 'রিকভার হচ্ছে...' : 'মিসিং লিংক রিকভার করুন'}</span>
+          </button>
+
           {/* Fetch Source Button */}
           <button
             type="button"
@@ -282,8 +450,47 @@ export function AdminProductImporterPage() {
         </div>
       </div>
 
+      {/* Background Extraction Queue Live Banner */}
+      {queueStatus && queueStatus.totalQueued > 0 && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 text-sm text-amber-900 shadow-xs">
+          <div className="flex items-center gap-3">
+            <Loader2 size={20} className="animate-spin text-amber-600 shrink-0" />
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold">Playwright ডাউনলোড এক্সট্রাক্টর ব্যাকগ্রাউন্ডে চলছে</span>
+                <span className="rounded-full bg-amber-200/80 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                  {queueStatus.processing > 0 ? 'প্রসেসিং হচ্ছে' : 'কিউ রেডি'}
+                </span>
+              </div>
+              <p className="mt-0.5 text-xs text-amber-800">
+                {queueStatus.currentJob?.sourceTitle ? `বর্তমান টাস্ক: ${queueStatus.currentJob.sourceTitle} — ` : ''}
+                {queueStatus.pending} টি অপেক্ষমাণ, {queueStatus.retry} টি রিট্রাই লিস্টে।
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-xs">
+            <span className="rounded-full bg-emerald-100 px-2.5 py-1 font-bold text-emerald-800">
+              ✓ {queueStatus.success} সফল
+            </span>
+            {queueStatus.failed > 0 && (
+              <span className="rounded-full bg-rose-100 px-2.5 py-1 font-bold text-rose-800">
+                ✕ {queueStatus.failed} ফেইল্ড
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={refreshQueueStatus}
+              className="inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-white px-2 py-1 font-semibold text-amber-800 hover:bg-amber-100/50"
+            >
+              <RotateCw size={12} /> রিফ্রেশ
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* URL Input Box & Presets */}
       <div className="mt-6 rounded-2xl border border-ink-100 bg-white p-4 shadow-soft sm:p-6">
+
         <label className="block text-xs font-semibold uppercase tracking-wider text-ink-600">
           Source Website / Category / Product URL
         </label>
@@ -704,7 +911,7 @@ export function AdminProductImporterPage() {
             </div>
 
             {/* Filter Badges */}
-            <div className="flex items-center gap-1 border-b border-ink-100 bg-ink-50/50 px-4 py-2 text-xs">
+            <div className="flex flex-wrap items-center gap-1 border-b border-ink-100 bg-ink-50/50 px-4 py-2 text-xs">
               <Filter size={13} className="text-ink-400" />
               <button
                 type="button"
@@ -748,10 +955,46 @@ export function AdminProductImporterPage() {
               >
                 ✓ Up to date ({currentCount})
               </button>
+              <button
+                type="button"
+                onClick={() => setActiveFilter('download_success')}
+                className={`rounded-lg px-2.5 py-1 font-semibold ${
+                  activeFilter === 'download_success'
+                    ? 'bg-emerald-100 text-emerald-800 shadow-xs'
+                    : 'text-emerald-700 hover:bg-emerald-50'
+                }`}
+              >
+                🟢 Extracted ({dlSuccessCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveFilter('download_failed')}
+                className={`rounded-lg px-2.5 py-1 font-semibold ${
+                  activeFilter === 'download_failed'
+                    ? 'bg-rose-100 text-rose-800 shadow-xs'
+                    : 'text-rose-700 hover:bg-rose-50'
+                }`}
+              >
+                🔴 Failed ({dlFailedCount})
+              </button>
+              {dlRetryCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setActiveFilter('download_retry')}
+                  className={`rounded-lg px-2.5 py-1 font-semibold ${
+                    activeFilter === 'download_retry'
+                      ? 'bg-amber-100 text-amber-800 shadow-xs'
+                      : 'text-amber-700 hover:bg-amber-50'
+                  }`}
+                >
+                  🟡 In Queue ({dlRetryCount})
+                </button>
+              )}
             </div>
 
             {/* Products List */}
             <div className="divide-y divide-ink-100">
+
               {filteredItems.map((item) => {
                 const isSelected = selected.has(item.sourceUrl);
                 const isUpdate = item.importStatus === 'update_available';
@@ -818,7 +1061,103 @@ export function AdminProductImporterPage() {
                         </div>
                       </div>
 
+
+                      {/* Multi-Step Download Link Extractor Status */}
+                      <div className="mt-2.5 flex flex-wrap items-center gap-2 rounded-xl bg-ink-50/70 p-2.5 text-xs">
+                        <span className="flex items-center gap-1 font-semibold text-ink-600">
+                          <Download size={13} className="text-brand-600" />
+                          ডাউনলোড লিংক:
+                        </span>
+
+                        {item.downloadStatus === 'success' && (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="inline-flex items-center gap-1 rounded-md bg-emerald-100 px-2 py-0.5 font-bold text-emerald-800">
+                              <CheckCircle size={11} className="text-emerald-600" />
+                              Success
+                            </span>
+                            {item.downloadPackageName && (
+                              <span className="font-mono text-[11px] font-medium text-ink-600">
+                                {item.downloadPackageName}
+                              </span>
+                            )}
+                            {item.downloadUrl && (
+                              <a
+                                href={item.downloadUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 font-semibold text-emerald-700 underline underline-offset-2 hover:text-emerald-800"
+                                title="এক্সট্র্যাক্ট করা ফাইল হোস্টিং লিংক টেস্ট করুন"
+                              >
+                                টেস্ট লিংক <ExternalLink size={10} />
+                              </a>
+                            )}
+                          </div>
+                        )}
+
+                        {item.downloadStatus === 'failed' && (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span
+                              className="inline-flex items-center gap-1 rounded-md bg-rose-100 px-2 py-0.5 font-bold text-rose-800"
+                              title={item.downloadError || 'এক্সট্র্যাকশন ফেইল করেছে'}
+                            >
+                              <XCircle size={11} className="text-rose-600" />
+                              Failed
+                            </span>
+                            {item.downloadError && (
+                              <span className="max-w-xs text-[11px] text-rose-600 line-clamp-1" title={item.downloadError}>
+                                {item.downloadError}
+                              </span>
+                            )}
+                            {item.productId && (
+                              <button
+                                type="button"
+                                onClick={() => handleRetryDownload(item.productId!, item.sourceUrl)}
+                                disabled={extractingMap[item.productId!]}
+                                className="inline-flex items-center gap-1 rounded bg-rose-200/80 px-2.5 py-0.5 font-bold text-rose-900 transition-colors hover:bg-rose-300"
+                              >
+                                {extractingMap[item.productId!] ? <Loader2 size={11} className="animate-spin" /> : <RotateCw size={11} />}
+                                Retry
+                              </button>
+                            )}
+                          </div>
+                        )}
+
+                        {(item.downloadStatus === 'retry' || item.downloadStatus === 'in_queue') && (
+                          <span className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-0.5 font-bold text-amber-800">
+                            <Clock size={11} className="text-amber-600" />
+                            {item.downloadStatus === 'retry' ? 'Retrying in Queue...' : 'In Queue'}
+                          </span>
+                        )}
+
+                        {item.downloadStatus === 'processing' && (
+                          <span className="inline-flex items-center gap-1 rounded-md bg-sky-100 px-2 py-0.5 font-bold text-sky-800">
+                            <Loader2 size={11} className="animate-spin text-sky-600" />
+                            Playwright দিয়ে প্রসেসিং হচ্ছে...
+                          </span>
+                        )}
+
+                        {(!item.downloadStatus || item.downloadStatus === 'missing') && (
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center gap-1 rounded-md bg-ink-200/80 px-2 py-0.5 text-[11px] font-medium text-ink-700">
+                              Missing / Not Extracted
+                            </span>
+                            {item.productId && (
+                              <button
+                                type="button"
+                                onClick={() => handleExtractSingle(item.productId!, item.sourceUrl)}
+                                disabled={extractingMap[item.productId!]}
+                                className="inline-flex items-center gap-1 rounded bg-brand-50 px-2.5 py-0.5 font-bold text-brand-700 transition-colors hover:bg-brand-100"
+                              >
+                                {extractingMap[item.productId!] ? <Loader2 size={11} className="animate-spin" /> : <Download size={11} />}
+                                Extract Link
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
                       {/* Meta Footer */}
+
                       <div className="mt-2.5 flex flex-wrap items-center gap-3 text-xs text-ink-500">
                         <span className="inline-flex items-center gap-1 font-medium text-ink-600">
                           <Layers size={12} className="text-ink-400" />

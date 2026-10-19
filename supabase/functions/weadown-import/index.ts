@@ -559,29 +559,79 @@ async function importOne(
     }
   }
 
-  const demoUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/demo-product-download?product=${encodeURIComponent(productId)}`;
-  const { data: existingLink } = await supabase
-    .from("product_download_links")
-    .select("id")
-    .eq("product_id", productId)
-    .eq("title", "Research demo manifest")
-    .maybeSingle();
-  if (existingLink?.id) {
-    const { error } = await supabase
+  // Attempt download link extraction for newly imported product
+  let finalDownloadUrl: string | null = null;
+  let packageName: string | null = null;
+  let extractionFlow: Record<string, unknown> | null = null;
+
+  try {
+    const ext = await extractDownloadLinkDeno(product.sourceUrl);
+    if (ext.success && ext.finalDownloadUrl) {
+      finalDownloadUrl = ext.finalDownloadUrl;
+      packageName = ext.packageName || product.title;
+      extractionFlow = {
+        source_post_url: product.sourceUrl,
+        download_page_url: ext.downloadPageUrl,
+        final_download_url: ext.finalDownloadUrl,
+        package_name: ext.packageName,
+        status: "success",
+        extracted_at: new Date().toISOString(),
+      };
+    }
+  } catch (_) {
+    // Non-fatal
+  }
+
+  if (finalDownloadUrl) {
+    const { data: existingLink } = await supabase
       .from("product_download_links")
-      .update({ download_url: demoUrl, version: product.version, is_active: true })
-      .eq("id", existingLink.id);
-    if (error) throw error;
+      .select("id")
+      .eq("product_id", productId)
+      .maybeSingle();
+
+    if (existingLink?.id) {
+      await supabase
+        .from("product_download_links")
+        .update({
+          title: packageName || product.title,
+          download_url: finalDownloadUrl,
+          version: product.version,
+          is_active: true,
+        })
+        .eq("id", existingLink.id);
+    } else {
+      await supabase.from("product_download_links").insert({
+        product_id: productId,
+        title: packageName || product.title,
+        download_url: finalDownloadUrl,
+        version: product.version,
+        sort_order: 0,
+        is_active: true,
+      });
+    }
   } else {
-    const { error } = await supabase.from("product_download_links").insert({
-      product_id: productId,
-      title: "Research demo manifest",
-      download_url: demoUrl,
-      version: product.version,
-      sort_order: 0,
-      is_active: true,
-    });
-    if (error) throw error;
+    const demoUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/demo-product-download?product=${encodeURIComponent(productId)}`;
+    const { data: existingLink } = await supabase
+      .from("product_download_links")
+      .select("id")
+      .eq("product_id", productId)
+      .eq("title", "Research demo manifest")
+      .maybeSingle();
+    if (existingLink?.id) {
+      await supabase
+        .from("product_download_links")
+        .update({ download_url: demoUrl, version: product.version, is_active: true })
+        .eq("id", existingLink.id);
+    } else {
+      await supabase.from("product_download_links").insert({
+        product_id: productId,
+        title: "Research demo manifest",
+        download_url: demoUrl,
+        version: product.version,
+        sort_order: 0,
+        is_active: true,
+      });
+    }
   }
 
   const mappingPayload = {
@@ -596,7 +646,12 @@ async function importOne(
       excerpt: product.excerpt,
       image_url: product.imageUrl,
       source_category: product.sourceCategory,
-      import_mode: "metadata_demo",
+      import_mode: finalDownloadUrl ? "live_package" : "metadata_demo",
+      download_flow: extractionFlow || {
+        source_post_url: product.sourceUrl,
+        status: "pending",
+        extracted_at: new Date().toISOString(),
+      },
     },
     last_checked_at: new Date().toISOString(),
     last_imported_at: new Date().toISOString(),
@@ -608,6 +663,133 @@ async function importOne(
   if (upsertError) throw upsertError;
 
   return { sourceUrl: product.sourceUrl, productId, result };
+}
+
+function generateRequestId(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function extractDownloadLinkDeno(sourcePostUrl: string): Promise<{
+  success: boolean;
+  sourcePostUrl: string;
+  downloadPageUrl?: string;
+  finalDownloadUrl?: string;
+  packageName?: string;
+  error?: string;
+}> {
+  try {
+    const postRes = await fetch(sourcePostUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+    if (!postRes.ok) throw new Error(`Product page HTTP ${postRes.status}`);
+    const postHtml = await postRes.text();
+    const fileLinkMatch = postHtml.match(/href=["'](https?:\/\/weadown\.com\/files\/[^"']+)["']/i);
+    if (!fileLinkMatch) throw new Error("No files page link found");
+    const downloadPageUrl = fileLinkMatch[1];
+
+    const filePageRes = await fetch(downloadPageUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Referer": sourcePostUrl,
+      },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+    if (!filePageRes.ok) throw new Error(`Download page HTTP ${filePageRes.status}`);
+    const setCookie = filePageRes.headers.get("set-cookie") || "";
+    const cookieHeader = setCookie.split(";")[0] || "";
+    const fileHtml = await filePageRes.text();
+
+    const slugMatch = fileHtml.match(/data-slug="([^"]+)"/i);
+    if (!slugMatch) throw new Error("data-slug not found");
+    const slug = slugMatch[1];
+
+    const startPayload = new URLSearchParams({
+      request_id: generateRequestId(),
+      slugs: slug,
+    }).toString();
+
+    const startRes = await fetch("https://weadown.com/zmk/start/?link_type=file", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Referer": downloadPageUrl,
+        "Origin": "https://weadown.com",
+        "X-Requested-With": "XMLHttpRequest",
+        "Cookie": cookieHeader,
+      },
+      body: startPayload,
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+
+    const startData = await startRes.json();
+    if (!startData.items || !startData.items[0] || !startData.items[0].token) {
+      throw new Error("Start session rejected: " + (startData.message || "Unknown"));
+    }
+
+    const token = startData.items[0].token;
+    const waitSeconds = Math.max(1, Math.min(15, parseInt(startData.items[0].wait_seconds || 10, 10)));
+    await new Promise((r) => setTimeout(r, (waitSeconds + 1) * 1000));
+
+    const completePayload = new URLSearchParams({ tokens: token }).toString();
+    const completeRes = await fetch("https://weadown.com/zmk/complete/?link_type=file", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Referer": downloadPageUrl,
+        "Origin": "https://weadown.com",
+        "X-Requested-With": "XMLHttpRequest",
+        "Cookie": cookieHeader,
+      },
+      body: completePayload,
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+
+    const completeData = await completeRes.json();
+    if (!completeData.items || !completeData.items[0] || !completeData.items[0].go_url) {
+      throw new Error("Complete session rejected: " + (completeData.message || "Unknown"));
+    }
+
+    const goUrl = completeData.items[0].go_url;
+    const goRes = await fetch(goUrl, {
+      method: "GET",
+      redirect: "manual",
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Referer": downloadPageUrl,
+        "Cookie": cookieHeader,
+      },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+
+    const finalDownloadUrl = goRes.headers.get("location") || goUrl;
+    let packageName = "download-package.zip";
+    try {
+      const parts = new URL(finalDownloadUrl).pathname.split("/").filter(Boolean);
+      if (parts.length > 0) packageName = parts[parts.length - 1];
+    } catch (_) {}
+
+    return {
+      success: true,
+      sourcePostUrl,
+      downloadPageUrl,
+      finalDownloadUrl,
+      packageName,
+    };
+  } catch (err) {
+    return {
+      success: false,
+      sourcePostUrl,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
 }
 
 Deno.serve(async (req) => {
@@ -625,6 +807,160 @@ Deno.serve(async (req) => {
 
     const body = (await req.json()) as Record<string, unknown>;
     const action = typeof body.action === "string" ? body.action : "preview";
+
+    if (action === "queue_status") {
+      const { data: allImports, error } = await supabase
+        .from("product_source_imports")
+        .select("id, product_id, source_url, source_title, metadata, created_at")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+
+      let successCount = 0;
+      let failedCount = 0;
+      let pendingCount = 0;
+      const history: Array<Record<string, unknown>> = [];
+
+      (allImports || []).forEach((imp) => {
+        const flow = (imp.metadata as Record<string, any>)?.download_flow;
+        if (flow && flow.status === "success" && flow.final_download_url) {
+          successCount++;
+          if (history.length < 10) {
+            history.push({
+              productId: imp.product_id,
+              sourceTitle: imp.source_title,
+              sourceUrl: imp.source_url,
+              status: "success",
+              result: {
+                finalDownloadUrl: flow.final_download_url,
+                downloadPageUrl: flow.download_page_url,
+                packageName: flow.package_name,
+              },
+              finishedAt: flow.extracted_at,
+            });
+          }
+        } else if (flow && flow.status === "failed") {
+          failedCount++;
+        } else {
+          pendingCount++;
+        }
+      });
+
+      return jsonResponse({
+        success: true,
+        pending: pendingCount,
+        processing: 0,
+        retry: 0,
+        successCount,
+        failedCount,
+        totalCount: (allImports || []).length,
+        recentHistory: history,
+      });
+    }
+
+    if (action === "extract_single") {
+      const productId = typeof body.productId === "string" ? body.productId : "";
+      const sourceUrl = typeof body.sourceUrl === "string" ? body.sourceUrl : "";
+      if (!productId || !sourceUrl) return jsonResponse({ error: "Missing productId or sourceUrl" }, 400);
+
+      const ext = await extractDownloadLinkDeno(sourceUrl);
+      if (ext.success && ext.finalDownloadUrl) {
+        // Save to product_download_links
+        await supabase.from("product_download_links").upsert({
+          product_id: productId,
+          title: ext.packageName || "Download Package",
+          download_url: ext.finalDownloadUrl,
+          is_active: true,
+          sort_order: 0,
+        }, { onConflict: "product_id" });
+
+        // Update import metadata
+        const { data: imp } = await supabase
+          .from("product_source_imports")
+          .select("id, metadata")
+          .eq("product_id", productId)
+          .maybeSingle();
+
+        if (imp) {
+          const meta = (imp.metadata as Record<string, any>) || {};
+          meta.download_flow = {
+            source_post_url: sourceUrl,
+            download_page_url: ext.downloadPageUrl,
+            final_download_url: ext.finalDownloadUrl,
+            package_name: ext.packageName,
+            status: "success",
+            extracted_at: new Date().toISOString(),
+          };
+          await supabase.from("product_source_imports").update({ metadata: meta }).eq("id", imp.id);
+        }
+
+        return jsonResponse({ success: true, result: ext });
+      } else {
+        return jsonResponse({ success: false, error: ext.error || "Extraction failed" }, 500);
+      }
+    }
+
+    if (action === "recover_downloads") {
+      const batchSize = Math.max(1, Math.min(10, Number(body.batchSize ?? 5)));
+      const { data: allImports, error: fetchErr } = await supabase
+        .from("product_source_imports")
+        .select("id, product_id, source_url, source_title, metadata")
+        .order("created_at", { ascending: false });
+
+      if (fetchErr) throw fetchErr;
+
+      const pending = (allImports || []).filter((imp) => {
+        const flow = (imp.metadata as Record<string, any>)?.download_flow;
+        return !flow || flow.status !== "success" || !flow.final_download_url;
+      });
+
+      const batch = pending.slice(0, batchSize);
+      const results: Array<Record<string, unknown>> = [];
+
+      for (const item of batch) {
+        try {
+          const res = await extractDownloadLinkDeno(item.source_url);
+          if (res.success && res.finalDownloadUrl) {
+            await supabase.from("product_download_links").upsert({
+              product_id: item.product_id,
+              title: res.packageName || item.source_title,
+              download_url: res.finalDownloadUrl,
+              is_active: true,
+              sort_order: 0,
+            }, { onConflict: "product_id" });
+
+            const meta = (item.metadata as Record<string, any>) || {};
+            meta.download_flow = {
+              source_post_url: item.source_url,
+              download_page_url: res.downloadPageUrl,
+              final_download_url: res.finalDownloadUrl,
+              package_name: res.packageName,
+              status: "success",
+              extracted_at: new Date().toISOString(),
+            };
+            await supabase.from("product_source_imports").update({ metadata: meta }).eq("id", item.id);
+
+            results.push({
+              productId: item.product_id,
+              status: "success",
+              downloadUrl: res.finalDownloadUrl,
+            });
+          } else {
+            results.push({ productId: item.product_id, status: "failed", error: res.error });
+          }
+        } catch (e) {
+          results.push({ productId: item.product_id, status: "failed", error: String(e) });
+        }
+        await new Promise((r) => setTimeout(r, 2000));
+      }
+
+      return jsonResponse({
+        success: true,
+        processed: results.length,
+        remaining: Math.max(0, pending.length - batch.length),
+        totalRemaining: pending.length,
+        results,
+      });
+    }
 
     if (action === "preview") {
       const sourceUrl = typeof body.sourceUrl === "string" && body.sourceUrl.trim()

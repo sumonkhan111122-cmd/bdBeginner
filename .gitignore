@@ -27,3 +27,4 @@ dist-ssr
 *.local
 .netlify/
 supabase/.temp/
+.extraction-queue.json

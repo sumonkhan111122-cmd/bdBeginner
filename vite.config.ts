@@ -28,8 +28,74 @@ function weadownApiPlugin() {
           const {
             previewProducts,
             checkUpdatesForAllImported,
-            importMultipleProducts
+            importMultipleProducts,
+            getExtractionQueueStatus,
+            recoverMissingDownloadLinks,
+            retryFailedDownloadLink,
+            extractSingleProductDownload
           } = require('./scripts/weadownService.cjs');
+
+          if (pathname === '/queue-status') {
+            const status = getExtractionQueueStatus();
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(status));
+            return;
+          }
+
+          if (pathname === '/recover-downloads' && req.method === 'POST') {
+            let body = '';
+            req.on('data', (chunk: any) => { body += chunk; });
+            req.on('end', async () => {
+              try {
+                const parsed = JSON.parse(body || '{}');
+                const limit = Number(parsed.limit) || 30;
+                const result = await recoverMissingDownloadLinks(limit);
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify(result));
+              } catch (err: any) {
+                res.statusCode = 500;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ error: err.message }));
+              }
+            });
+            return;
+          }
+
+          if (pathname === '/retry-download' && req.method === 'POST') {
+            let body = '';
+            req.on('data', (chunk: any) => { body += chunk; });
+            req.on('end', async () => {
+              try {
+                const parsed = JSON.parse(body || '{}');
+                const result = await retryFailedDownloadLink(parsed.productId, parsed.sourceUrl);
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ success: true, job: result }));
+              } catch (err: any) {
+                res.statusCode = 500;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ error: err.message }));
+              }
+            });
+            return;
+          }
+
+          if (pathname === '/extract-single' && req.method === 'POST') {
+            let body = '';
+            req.on('data', (chunk: any) => { body += chunk; });
+            req.on('end', async () => {
+              try {
+                const parsed = JSON.parse(body || '{}');
+                const result = await extractSingleProductDownload(parsed.productId, parsed.sourceUrl);
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify(result));
+              } catch (err: any) {
+                res.statusCode = 500;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ error: err.message }));
+              }
+            });
+            return;
+          }
 
           if (pathname === '/preview' || pathname === '') {
             const sourceUrl = urlObj.searchParams.get('url') || 'https://weadown.com/wordpress-theme/';
@@ -71,6 +137,7 @@ function weadownApiPlugin() {
             });
             return;
           }
+
 
           next();
         } catch (err: any) {
