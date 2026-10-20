@@ -28,14 +28,14 @@ export function CategoryExplorer() {
 
         {loading ? (
           <div className="mt-12">
-            <ProductGridSkeleton count={6} />
+            <ProductGridSkeleton count={8} />
           </div>
         ) : error ? (
           <div className="mt-12">
             <CatalogError onRetry={retry} />
           </div>
         ) : categories.length > 0 ? (
-          <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
+          <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
             {categories.map((category) => (
               <CategoryCard key={category.slug} category={category} />
             ))}

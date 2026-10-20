@@ -9,6 +9,7 @@ import { FaqSection } from '@/components/home/FaqSection';
 import { Newsletter } from '@/components/Newsletter';
 import { Layout } from '@/components/layout/Layout';
 import { RecentlyViewedSection } from '@/components/discovery/RecentlyViewedSection';
+import { MembershipSection } from '@/components/home/MembershipSection';
 
 export function HomePage() {
   return (
@@ -16,6 +17,7 @@ export function HomePage() {
       <Hero />
       <CategoryExplorer />
       <FeaturedProducts />
+      <MembershipSection />
       <RecentlyViewedSection />
       <HowItWorks />
       <WhyBdBeginner />

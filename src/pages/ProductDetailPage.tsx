@@ -16,12 +16,17 @@ import {
   HelpCircle,
   Package,
   Info,
+  Crown,
+  Sparkles,
+  ArrowRight,
+  Loader2,
 } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { PriceDisplay } from '@/components/ui/PriceDisplay';
+import { useMembership } from '@/context/MembershipContext';
 import { ProductReviewsSection } from '@/components/reviews/ProductReviewsSection';
 import { WishlistButton } from '@/components/discovery/WishlistButton';
 import { RecommendationsSection } from '@/components/discovery/RecommendationsSection';
@@ -177,7 +182,41 @@ function ProductDetailPage() {
   const { seoSettings } = useSiteSettings();
   const formatPrice = useCurrencyFormatter();
 
+  const { isVip, status: vipStatus, claimDownload } = useMembership();
+  const [vipDownloading, setVipDownloading] = useState(false);
+  const [vipNotice, setVipNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
   const { data: product, loading, error, retry } = useProduct(slug);
+
+  const isMembershipProduct = product?.slug?.startsWith('membership-');
+
+  const handleVipDownload = async () => {
+    if (!product) return;
+    setVipDownloading(true);
+    setVipNotice(null);
+    try {
+      const res = await claimDownload({ id: product.id, name: product.name });
+      if (res.success && res.url) {
+        setVipNotice({
+          type: 'success',
+          message: 'ডাউনলোড লিঙ্ক সফলভাবে তৈরি হয়েছে এবং ওপেন হয়েছে! আপনার অ্যাকাউন্টেও ফাইলটি যুক্ত হয়েছে।',
+        });
+        window.open(res.url, '_blank');
+      } else {
+        setVipNotice({
+          type: 'error',
+          message: res.error || 'ডাউনলোড লিঙ্ক তৈরি করতে ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।',
+        });
+      }
+    } catch (err: any) {
+      setVipNotice({
+        type: 'error',
+        message: err?.message || 'ডাউনলোডে সমস্যা দেখা দিয়েছে।',
+      });
+    } finally {
+      setVipDownloading(false);
+    }
+  };
 
   const { addRecentlyViewed } = useDiscovery();
 
@@ -335,6 +374,60 @@ function ProductDetailPage() {
               </span>
             </div>
 
+            {/* VIP Member Download Box */}
+            {isVip && !isMembershipProduct && (
+              <div className="mt-6 rounded-2xl border-2 border-amber-400/60 bg-gradient-to-br from-amber-500/15 via-yellow-500/10 to-amber-600/15 p-5 shadow-lg shadow-amber-500/10">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 text-ink-950 shadow-sm">
+                    <Crown size={20} className="fill-ink-950" />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-display text-sm font-bold text-ink-900">VIP মেম্বারশিপ সক্রিয়</span>
+                      <span className="rounded-full bg-amber-400/30 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                        {vipStatus.planName || 'VIP All-Access'}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-xs text-ink-600">
+                      আপনার VIP মেম্বারশিপের অধীনে এই ফাইলটি সম্পূর্ণ ফ্রিতে আনলক করা হয়েছে।
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <button
+                    onClick={handleVipDownload}
+                    disabled={vipDownloading}
+                    className="w-full flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-xl font-bold text-ink-950 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 hover:brightness-105 active:scale-[0.99] shadow-md shadow-amber-500/25 transition-all disabled:opacity-70"
+                  >
+                    {vipDownloading ? (
+                      <>
+                        <Loader2 size={18} className="animate-spin" />
+                        ডাউনলোড প্রস্তুত হচ্ছে...
+                      </>
+                    ) : (
+                      <>
+                        <Download size={18} className="stroke-[2.5]" />
+                        ফ্রি VIP ডাউনলোড করুন
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {vipNotice && (
+                  <div
+                    className={`mt-3 rounded-lg p-3 text-xs leading-relaxed ${
+                      vipNotice.type === 'success'
+                        ? 'border border-emerald-200 bg-emerald-50 text-emerald-800'
+                        : 'border border-rose-200 bg-rose-50 text-rose-800'
+                    }`}
+                  >
+                    {vipNotice.message}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Price + CTAs */}
             <div className="mt-6 rounded-2xl border border-ink-100 bg-ink-50/50 p-5">
               <PriceDisplay
@@ -371,6 +464,36 @@ function ProductDetailPage() {
               <div className="mt-3 sm:hidden">
                 <WishlistButton productId={product.id} variant="labeled" className="w-full justify-center" />
               </div>
+
+              {/* VIP Membership Upsell Callout */}
+              {!isVip && !isMembershipProduct && (
+                <div className="mt-4 rounded-xl border border-amber-300/60 bg-gradient-to-br from-amber-500/10 via-amber-400/5 to-yellow-500/10 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 text-ink-950 shadow-sm">
+                      <Crown size={18} className="fill-ink-950" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-display text-xs font-bold uppercase tracking-wider text-amber-900">
+                          সব ৩,০০০+ প্রোডাক্ট ফ্রিতে চান?
+                        </span>
+                        <span className="rounded-full bg-amber-400/30 px-1.5 py-0.5 text-[9px] font-bold text-amber-800">
+                          BEST VALUE
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs leading-relaxed text-ink-700">
+                        প্রতিটি আলাদা না কিনে মাত্র <strong>৳৪৯৯</strong> থেকে VIP মেম্বারশিপ নিয়ে সাইটের সব প্রোডাক্ট ফ্রিতে ডাউনলোড করুন! লাইফটাইম অ্যাক্সেস মাত্র <strong>৳৯৯৯</strong>।
+                      </p>
+                      <Link
+                        to="/membership"
+                        className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 hover:text-amber-900 hover:underline"
+                      >
+                        VIP মেম্বারশিপ প্ল্যান দেখুন <ArrowRight size={13} />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Transparency box */}
               <div className="mt-5 rounded-xl border border-ink-100 bg-white p-4">

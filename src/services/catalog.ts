@@ -32,21 +32,25 @@ type ProductRelations = {
 };
 
 const iconByCategory: Record<string, string> = {
-  wordpress: 'ShoppingBag',
-  software: 'Code2',
+  wordpress: 'Layers',
+  plugins: 'Puzzle',
+  software: 'Laptop',
   'ai-tools': 'Sparkles',
-  courses: 'GraduationCap',
-  'digital-resources': 'LayoutDashboard',
   'web-services': 'Globe',
+  courses: 'GraduationCap',
+  'digital-resources': 'FolderArchive',
+  scripts: 'FileCode',
 };
 
 const accentByCategory: Record<string, string> = {
   wordpress: 'brand',
+  plugins: 'accent',
   software: 'ink',
   'ai-tools': 'accent',
+  'web-services': 'brand',
   courses: 'success',
   'digital-resources': 'warning',
-  'web-services': 'brand',
+  scripts: 'brand',
 };
 
 function asCategory(value: ProductRecord['categories']): CategoryRow | null {
@@ -139,9 +143,13 @@ function mapProduct(record: ProductRecord, relations: Partial<ProductRelations> 
     price: Number(record.price),
     compareAtPrice: record.compare_at_price === null ? (staticData?.compareAtPrice ?? undefined) : Number(record.compare_at_price),
     previousPrice: record.compare_at_price === null ? (staticData?.previousPrice ?? undefined) : Number(record.compare_at_price),
-    featured: record.featured || !!staticData?.featured,
-    newProduct: record.new_product || !!staticData?.newProduct,
-    badge: record.featured ? 'featured' : record.new_product ? 'new' : staticData?.badge,
+    featured: record.featured ?? !!staticData?.featured,
+    newProduct: record.new_product ?? !!staticData?.newProduct,
+    badge: (record.featured ?? !!staticData?.featured)
+      ? 'featured'
+      : (record.new_product ?? !!staticData?.newProduct)
+        ? 'new'
+        : staticData?.badge,
     icon: iconByCategory[categorySlug] ?? staticData?.icon ?? 'Package',
     accent,
     descriptor,

@@ -1,8 +1,9 @@
 import { ReactNode } from 'react';
 import { Navigate, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { User, Shield, LogOut, ChevronRight, LayoutDashboard, Package, DownloadCloud, Heart, Star } from 'lucide-react';
+import { User, Shield, LogOut, ChevronRight, LayoutDashboard, Package, DownloadCloud, Heart, Star, Crown } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
+import { useMembership } from '@/context/MembershipContext';
 
 interface AccountLayoutProps {
   children: ReactNode;
@@ -10,6 +11,7 @@ interface AccountLayoutProps {
 
 export function AccountLayout({ children }: AccountLayoutProps) {
   const { session, loading, logout } = useCustomerAuth();
+  const { isVip, status } = useMembership();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -72,6 +74,43 @@ export function AccountLayout({ children }: AccountLayoutProps) {
                   })}
 
                   <div className="my-2 h-px bg-ink-100 mx-2" />
+
+                  {/* VIP Membership status widget */}
+                  <div className="mx-2 my-2">
+                    {isVip ? (
+                      <div className="rounded-xl border border-amber-300 bg-gradient-to-br from-amber-500/10 via-amber-400/10 to-yellow-500/10 p-3">
+                        <div className="flex items-center gap-2">
+                          <Crown size={16} className="text-amber-600 fill-amber-500" />
+                          <span className="text-xs font-bold text-amber-900">VIP Member</span>
+                        </div>
+                        <p className="mt-1 text-[11px] font-medium text-amber-800">
+                          {status.planName || 'All-Access Pass'}
+                        </p>
+                        <NavLink
+                          to="/account/downloads"
+                          className="mt-2 block text-center rounded-lg bg-amber-500 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-amber-600"
+                        >
+                          ডাউনলোড হাব
+                        </NavLink>
+                      </div>
+                    ) : (
+                      <NavLink
+                        to="/membership"
+                        className="group block rounded-xl border border-amber-200 bg-gradient-to-br from-amber-500/10 to-yellow-500/5 p-3 hover:border-amber-300 transition-all"
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <Crown size={14} className="text-amber-600" />
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800">VIP অল-অ্যাক্সেস</span>
+                        </div>
+                        <p className="mt-1 text-xs font-semibold text-ink-900 group-hover:text-amber-800">
+                          সব ৩,০০০+ ফাইল ফ্রি নিন
+                        </p>
+                        <span className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 group-hover:translate-x-0.5 transition-transform">
+                          ৳৪৯৯ থেকে প্ল্যান দেখুন →
+                        </span>
+                      </NavLink>
+                    )}
+                  </div>
 
                   <button
                     onClick={handleLogout}

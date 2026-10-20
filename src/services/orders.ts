@@ -244,12 +244,18 @@ const customerOrderColumns = [
   'created_at',
 ].join(',');
 
-async function fetchCustomerOrderRows(userId: string): Promise<OrderRow[]> {
-  const runQuery = (statusColumn: 'order_status' | 'status') => getSupabase()
-    .from('orders')
-    .select(`${customerOrderColumns},${statusColumn},order_items(id,quantity,product_id)`)
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+async function fetchCustomerOrderRows(userId: string, userEmail?: string): Promise<OrderRow[]> {
+  const runQuery = (statusColumn: 'order_status' | 'status') => {
+    let q = getSupabase()
+      .from('orders')
+      .select(`${customerOrderColumns},${statusColumn},order_items(*)`);
+    if (userEmail) {
+      q = q.or(`user_id.eq.${userId},customer_email.eq.${userEmail}`);
+    } else {
+      q = q.eq('user_id', userId);
+    }
+    return q.order('created_at', { ascending: false });
+  };
 
   const primary = await runQuery('order_status');
   if (!primary.error) return (primary.data ?? []) as unknown as OrderRow[];
@@ -263,13 +269,20 @@ async function fetchCustomerOrderRecord(
   field: 'id' | 'order_number',
   value: string,
   userId: string,
+  userEmail?: string,
 ): Promise<OrderRow | null> {
-  const runQuery = (statusColumn: 'order_status' | 'status') => getSupabase()
-    .from('orders')
-    .select(`${customerOrderColumns},${statusColumn}`)
-    .eq(field, value)
-    .eq('user_id', userId)
-    .maybeSingle();
+  const runQuery = (statusColumn: 'order_status' | 'status') => {
+    let q = getSupabase()
+      .from('orders')
+      .select(`${customerOrderColumns},${statusColumn}`)
+      .eq(field, value);
+    if (userEmail) {
+      q = q.or(`user_id.eq.${userId},customer_email.eq.${userEmail}`);
+    } else {
+      q = q.eq('user_id', userId);
+    }
+    return q.maybeSingle();
+  };
 
   const primary = await runQuery('order_status');
   if (!primary.error) return (primary.data as OrderRow | null) ?? null;
@@ -313,15 +326,16 @@ async function fetchCustomerOrderRelations(orderId: string): Promise<{
   };
 }
 
-export async function getCustomerOrders(userId: string): Promise<OrderRow[]> {
-  return fetchCustomerOrderRows(userId);
+export async function getCustomerOrders(userId: string, userEmail?: string): Promise<OrderRow[]> {
+  return fetchCustomerOrderRows(userId, userEmail);
 }
 
 export async function getCustomerOrderById(
   id: string,
   userId: string,
+  userEmail?: string,
 ): Promise<OrderWithDetails | null> {
-  const order = await fetchCustomerOrderRecord('id', id, userId);
+  const order = await fetchCustomerOrderRecord('id', id, userId, userEmail);
   if (!order) return null;
   const relations = await fetchCustomerOrderRelations(id);
   return { order, ...relations };
@@ -330,8 +344,9 @@ export async function getCustomerOrderById(
 export async function getCustomerOrderByNumber(
   orderNumber: string,
   userId: string,
+  userEmail?: string,
 ): Promise<OrderWithDetails | null> {
-  const order = await fetchCustomerOrderRecord('order_number', orderNumber, userId);
+  const order = await fetchCustomerOrderRecord('order_number', orderNumber, userId, userEmail);
   if (!order) return null;
   const relations = await fetchCustomerOrderRelations(order.id);
   return { order, ...relations };

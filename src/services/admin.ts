@@ -346,7 +346,7 @@ export type ProductInput = {
   price: number;
   compare_at_price: number | null;
   thumbnail_url: string | null;
-  icon: string | null;
+  icon?: string | null;
   product_type: string;
   delivery_type: string;
   status: string;
@@ -363,15 +363,53 @@ export type ProductInput = {
   sort_order: number;
 };
 
+export const ALLOWED_PRODUCT_COLUMNS = new Set([
+  'category_id',
+  'name',
+  'slug',
+  'sku',
+  'short_description',
+  'description',
+  'price',
+  'compare_at_price',
+  'thumbnail_url',
+  'product_type',
+  'delivery_type',
+  'status',
+  'featured',
+  'new_product',
+  'version',
+  'compatibility',
+  'requirements',
+  'support_period',
+  'update_policy',
+  'delivery_description',
+  'seo_title',
+  'seo_description',
+  'sort_order',
+  'published_at',
+]);
+
+export function sanitizeProductPayload<T extends Record<string, unknown>>(input: T): Record<string, unknown> {
+  const payload: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(input)) {
+    if (ALLOWED_PRODUCT_COLUMNS.has(key)) {
+      payload[key] = value;
+    }
+  }
+  return payload;
+}
+
 export async function createProduct(
   input: ProductInput,
 ): Promise<ProductRow> {
   const sb = getSupabase();
-  const payload = {
+  const rawPayload: Record<string, unknown> = {
     ...input,
     published_at:
       input.status === 'published' ? new Date().toISOString() : null,
   };
+  const payload = sanitizeProductPayload(rawPayload);
   const { data, error } = await sb
     .from('products')
     .insert(payload)
@@ -394,10 +432,11 @@ export async function updateProduct(
   if (existing.error) throw existing.error;
   const prev = existing.data as { status: string; published_at: string | null } | null;
 
-  const payload: Record<string, unknown> = { ...input };
+  const rawPayload: Record<string, unknown> = { ...input };
   if (input.status === 'published' && !prev?.published_at) {
-    payload.published_at = new Date().toISOString();
+    rawPayload.published_at = new Date().toISOString();
   }
+  const payload = sanitizeProductPayload(rawPayload);
   const { data, error } = await sb
     .from('products')
     .update(payload)
@@ -439,7 +478,7 @@ export async function duplicateProduct(
     price: full.price,
     compare_at_price: full.compare_at_price,
     thumbnail_url: full.thumbnail_url,
-    icon: full.icon,
+    icon: full.icon ?? null,
     product_type: full.product_type,
     delivery_type: full.delivery_type,
     status: 'draft',
@@ -911,7 +950,7 @@ export async function syncDownloadLinks(
     if (l.id && existingIds.has(l.id)) {
       await updateProductDownloadLink(l.id, payload);
     } else {
-      createProductDownloadLink(payload);
+      await createProductDownloadLink(payload);
     }
   }
 }

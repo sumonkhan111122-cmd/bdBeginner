@@ -21,7 +21,7 @@ export type ProductRow = {
   price: number;
   compare_at_price: number | null;
   thumbnail_url: string | null;
-  icon: string | null;
+  icon?: string | null;
   product_type: string;
   delivery_type: string;
   status: string;

@@ -19,6 +19,7 @@ import {
   fetchAllCategories,
   archiveProduct,
   duplicateProduct,
+  updateProduct,
   deleteProducts,
   type AdminProduct,
 } from '@/services/admin';
@@ -213,6 +214,38 @@ export function AdminProductsPage() {
     } catch (err: unknown) {
       console.error('Duplicate failed', err);
       setActionError('Failed to duplicate product. Please try again.');
+    }
+  };
+
+  // Toggle featured handler
+  const [togglingFeaturedId, setTogglingFeaturedId] = useState<string | null>(null);
+
+  const handleToggleFeatured = async (product: AdminProduct) => {
+    setTogglingFeaturedId(product.id);
+    setActionError(null);
+    setSuccessMessage(null);
+    try {
+      const nextFeatured = !product.featured;
+      await updateProduct(product.id, { featured: nextFeatured });
+      setProducts((prev) =>
+        prev.map((p) => (p.id === product.id ? { ...p, featured: nextFeatured } : p))
+      );
+      setSuccessMessage(
+        nextFeatured
+          ? `"${product.name}" marked as featured.`
+          : `"${product.name}" removed from featured.`
+      );
+    } catch (err: unknown) {
+      console.error('Failed to toggle featured status', err);
+      const msg =
+        err instanceof Error
+          ? err.message
+          : typeof err === 'object' && err !== null && 'message' in err
+            ? String((err as { message: unknown }).message)
+            : 'Failed to update featured status.';
+      setActionError(msg);
+    } finally {
+      setTogglingFeaturedId(null);
     }
   };
 
@@ -606,11 +639,21 @@ export function AdminProductsPage() {
 
                       {/* Featured */}
                       <td className="px-4 py-3.5">
-                        {p.featured ? (
-                          <Star size={16} className="fill-warning-400 text-warning-500" />
-                        ) : (
-                          <span className="text-ink-300">—</span>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleToggleFeatured(p)}
+                          disabled={togglingFeaturedId === p.id}
+                          title={p.featured ? 'Click to remove from featured' : 'Click to mark as featured'}
+                          className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors hover:bg-ink-100 disabled:opacity-50"
+                        >
+                          {togglingFeaturedId === p.id ? (
+                            <Loader2 size={15} className="animate-spin text-warning-500" />
+                          ) : p.featured ? (
+                            <Star size={16} className="fill-warning-400 text-warning-500" />
+                          ) : (
+                            <Star size={16} className="text-ink-300 transition-colors hover:text-warning-500" />
+                          )}
+                        </button>
                       </td>
 
                       {/* Updated date */}

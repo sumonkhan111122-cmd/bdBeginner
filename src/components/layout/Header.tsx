@@ -8,7 +8,15 @@ import {
   Menu,
   X,
   ChevronRight,
+  ChevronDown,
   Heart,
+  Crown,
+  Sparkles,
+  ExternalLink,
+  Layers,
+  Grid3x3,
+  FolderArchive,
+  Tag,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { AnnouncementBar } from './AnnouncementBar';
@@ -20,19 +28,12 @@ import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { useDiscovery } from '@/context/DiscoveryContext';
 import { safeHttpUrl } from '@/lib/urls';
 
-interface NavLinkItem {
-  label: string;
-  to: string;
-  external?: boolean;
-}
-
-const navLinks: NavLinkItem[] = [
-  { label: 'Products', to: '/products' },
-  { label: 'Services', to: '/services' },
-  { label: 'WordPress', to: '/wordpress' },
-  { label: 'Playflix Tool', to: 'https://www.bdbeginner.com/playflix', external: true },
-  { label: 'Resources', to: '/resources' },
-  { label: 'Deals', to: '/deals' },
+const exploreLinks = [
+  { label: 'WordPress Themes', to: '/wordpress', description: 'Curated premium WP themes', icon: Layers },
+  { label: 'WordPress Plugins', to: '/plugins', description: 'GPL plugins & dev tools', icon: Sparkles },
+  { label: 'Digital Resources', to: '/resources', description: 'Templates, scripts & assets', icon: FolderArchive },
+  { label: 'Special Deals', to: '/deals', description: 'Discounts & limited-time offers', icon: Tag },
+  { label: 'All Categories', to: '/categories', description: 'Browse complete catalog', icon: Grid3x3 },
 ];
 
 function FallbackLogo({ compact = false }: { compact?: boolean }) {
@@ -100,43 +101,105 @@ export function Header() {
       <header
         className={`sticky top-0 z-50 border-b transition-all duration-300 ${
           scrolled
-            ? 'border-ink-100 bg-white/85 backdrop-blur-lg shadow-soft'
+            ? 'border-ink-100 bg-white/90 backdrop-blur-lg shadow-soft'
             : 'border-transparent bg-white'
         }`}
       >
-        <div className="container-page flex h-16 items-center justify-between gap-4 lg:h-18">
+        <div className="container-page flex h-16 items-center justify-between gap-3 lg:h-18">
           {/* Logo */}
           <Link to="/" className="flex shrink-0 items-center gap-2.5" aria-label={`${siteSettings.site_name} home`}>
             <HeaderLogo />
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden items-center gap-1 lg:flex" aria-label="Main navigation">
-            {navLinks.map((link) =>
-              link.external ? (
-                <a
-                  key={link.to}
-                  href={link.to}
-                  className="rounded-lg px-3.5 py-2 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-50 hover:text-ink-900"
-                >
-                  {link.label}
-                </a>
-              ) : (
-                <NavLink
-                  key={link.to}
-                  to={link.to}
-                  className={({ isActive }) =>
-                    `rounded-lg px-3.5 py-2 text-sm font-medium transition-colors ${
-                      isActive
-                        ? 'text-brand-700 bg-brand-50'
-                        : 'text-ink-600 hover:text-ink-900 hover:bg-ink-50'
-                    }`
-                  }
-                >
-                  {link.label}
-                </NavLink>
-              )
-            )}
+          <nav className="hidden items-center gap-1 xl:gap-1.5 lg:flex" aria-label="Main navigation">
+            <NavLink
+              to="/products"
+              className={({ isActive }) =>
+                `whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                  isActive ? 'text-brand-700 bg-brand-50' : 'text-ink-700 hover:text-ink-950 hover:bg-ink-50'
+                }`
+              }
+            >
+              Products
+            </NavLink>
+
+            <NavLink
+              to="/services"
+              className={({ isActive }) =>
+                `whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                  isActive ? 'text-brand-700 bg-brand-50' : 'text-ink-700 hover:text-ink-950 hover:bg-ink-50'
+                }`
+              }
+            >
+              Services
+            </NavLink>
+
+            {/* VIP Membership - Always visible, never breaks */}
+            <NavLink
+              to="/membership"
+              className={({ isActive }) =>
+                `inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-bold transition-all shadow-xs ${
+                  isActive
+                    ? 'bg-amber-400 text-ink-950 shadow-sm ring-1 ring-amber-500'
+                    : 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-950 border border-amber-300 hover:bg-amber-100 hover:border-amber-400'
+                }`
+              }
+            >
+              <Crown size={14} className="text-amber-500 fill-amber-400 shrink-0" />
+              <span>VIP Membership</span>
+            </NavLink>
+
+            {/* Playflix Tool - Premium External Tool Badge */}
+            <a
+              href="https://www.bdbeginner.com/playflix"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-brand-200 bg-brand-50/70 px-3 py-1.5 text-xs font-bold text-brand-800 transition-all hover:bg-brand-100 hover:border-brand-300 shadow-xs"
+            >
+              <Sparkles size={13} className="text-brand-600 shrink-0 transition-transform group-hover:rotate-12" />
+              <span>Playflix Tool</span>
+              <span className="rounded-md bg-brand-600 px-1 py-0.2 text-[9px] font-extrabold uppercase tracking-wider text-white">
+                PRO
+              </span>
+              <ExternalLink size={11} className="text-brand-400 shrink-0 opacity-70 group-hover:opacity-100" />
+            </a>
+
+            {/* Explore Dropdown */}
+            <div className="relative group">
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold text-ink-700 transition-colors hover:bg-ink-50 hover:text-ink-950"
+              >
+                <span>Explore</span>
+                <ChevronDown size={14} className="text-ink-400 transition-transform duration-200 group-hover:rotate-180" />
+              </button>
+
+              <div className="absolute left-0 top-full pt-1.5 opacity-0 invisible translate-y-1 transition-all duration-200 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 z-50">
+                <div className="w-64 rounded-2xl border border-ink-100 bg-white p-2 shadow-floating">
+                  {exploreLinks.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        className="flex items-start gap-3 rounded-xl p-2.5 transition-colors hover:bg-ink-50 group/item"
+                      >
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-ink-50 text-ink-600 group-hover/item:bg-brand-50 group-hover/item:text-brand-600 transition-colors">
+                          <Icon size={16} />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold text-ink-900 group-hover/item:text-brand-700 transition-colors">
+                            {item.label}
+                          </div>
+                          <div className="text-[11px] text-ink-500 truncate">{item.description}</div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           </nav>
 
           {/* Desktop actions */}
@@ -293,36 +356,101 @@ export function Header() {
                 </div>
               </div>
 
-              {/* Nav links */}
-              <nav className="flex flex-col gap-1" aria-label="Mobile navigation">
-                {navLinks.map((link) =>
-                  link.external ? (
-                    <a
-                      key={link.to}
-                      href={link.to}
-                      className="flex items-center justify-between rounded-xl px-4 py-3.5 text-base font-medium text-ink-700 transition-colors hover:bg-ink-50"
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      {link.label}
-                      <ChevronRight size={18} className="text-ink-300" />
-                    </a>
-                  ) : (
+              {/* Primary Nav links */}
+              <nav className="flex flex-col gap-1.5" aria-label="Mobile navigation">
+                <NavLink
+                  to="/products"
+                  onClick={() => setMobileOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center justify-between rounded-xl px-4 py-3 text-base font-semibold transition-colors ${
+                      isActive ? 'bg-brand-50 text-brand-700' : 'text-ink-800 hover:bg-ink-50'
+                    }`
+                  }
+                >
+                  Products
+                  <ChevronRight size={18} className="text-ink-300" />
+                </NavLink>
+
+                <NavLink
+                  to="/services"
+                  onClick={() => setMobileOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center justify-between rounded-xl px-4 py-3 text-base font-semibold transition-colors ${
+                      isActive ? 'bg-brand-50 text-brand-700' : 'text-ink-800 hover:bg-ink-50'
+                    }`
+                  }
+                >
+                  Services
+                  <ChevronRight size={18} className="text-ink-300" />
+                </NavLink>
+
+                {/* VIP Membership in mobile */}
+                <NavLink
+                  to="/membership"
+                  onClick={() => setMobileOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center justify-between rounded-xl p-3.5 text-base font-bold transition-all shadow-xs ${
+                      isActive
+                        ? 'bg-amber-400 text-ink-950'
+                        : 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-950 border border-amber-300'
+                    }`
+                  }
+                >
+                  <span className="flex items-center gap-2">
+                    <Crown size={18} className="text-amber-500 fill-amber-400" />
+                    <span>VIP Membership</span>
+                  </span>
+                  <span className="rounded-full bg-amber-400/30 px-2 py-0.5 text-[10px] font-extrabold text-amber-900">
+                    ALL-ACCESS
+                  </span>
+                </NavLink>
+
+                {/* Playflix Tool in mobile */}
+                <a
+                  href="https://www.bdbeginner.com/playflix"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center justify-between rounded-xl border border-brand-200 bg-brand-50/70 p-3.5 text-base font-bold text-brand-800 transition-colors hover:bg-brand-100"
+                >
+                  <span className="flex items-center gap-2">
+                    <Sparkles size={16} className="text-brand-600" />
+                    <span>Playflix Tool</span>
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="rounded bg-brand-600 px-1.5 py-0.5 text-[9px] font-extrabold uppercase text-white">
+                      TOOL
+                    </span>
+                    <ExternalLink size={14} className="text-brand-400" />
+                  </div>
+                </a>
+              </nav>
+
+              <div className="my-4 h-px bg-ink-100" />
+
+              {/* Explore Catalog */}
+              <div className="mb-2 px-1 text-xs font-bold uppercase tracking-wider text-ink-400">
+                Explore Catalog
+              </div>
+              <nav className="flex flex-col gap-1">
+                {exploreLinks.map((item) => {
+                  const Icon = item.icon;
+                  return (
                     <NavLink
-                      key={link.to}
-                      to={link.to}
+                      key={item.to}
+                      to={item.to}
+                      onClick={() => setMobileOpen(false)}
                       className={({ isActive }) =>
-                        `flex items-center justify-between rounded-xl px-4 py-3.5 text-base font-medium transition-colors ${
-                          isActive
-                            ? 'bg-brand-50 text-brand-700'
-                            : 'text-ink-700 hover:bg-ink-50'
+                        `flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
+                          isActive ? 'bg-brand-50 text-brand-700' : 'text-ink-700 hover:bg-ink-50 hover:text-ink-900'
                         }`
                       }
                     >
-                      {link.label}
-                      <ChevronRight size={18} className="text-ink-300" />
+                      <Icon size={16} className="text-ink-400" />
+                      <span>{item.label}</span>
                     </NavLink>
-                  )
-                )}
+                  );
+                })}
               </nav>
 
               <div className="my-5 h-px bg-ink-100" />

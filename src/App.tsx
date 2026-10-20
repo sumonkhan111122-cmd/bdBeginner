@@ -7,6 +7,7 @@ import { CustomerAuthProvider } from '@/context/CustomerAuthContext';
 import { SiteSettingsProvider } from '@/context/SiteSettingsContext';
 import { SeoController } from '@/components/SeoController';
 import { DiscoveryProvider } from '@/context/DiscoveryContext';
+import { MembershipProvider } from '@/context/MembershipContext';
 
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
 
@@ -30,6 +31,7 @@ const CheckoutPage = lazyPage(() => import('@/pages/CheckoutPage'), 'CheckoutPag
 const PaymentResultPage = lazyPage(() => import('@/pages/PaymentResultPage'), 'PaymentResultPage');
 const OrderSuccessPage = lazyPage(() => import('@/pages/OrderSuccessPage'), 'OrderSuccessPage');
 const WishlistPage = lazyPage(() => import('@/pages/discovery/WishlistPage'), 'WishlistPage');
+const MembershipPage = lazyPage(() => import('@/pages/MembershipPage'), 'MembershipPage');
 const AccountWishlistPage = lazyPage(() => import('@/pages/account/AccountWishlistPage'), 'AccountWishlistPage');
 const AccountOverviewPage = lazyPage(() => import('@/pages/account/AccountOverviewPage'), 'AccountOverviewPage');
 const AccountOrdersPage = lazyPage(() => import('@/pages/account/AccountOrdersPage'), 'AccountOrdersPage');
@@ -100,18 +102,23 @@ export default function App() {
         <SiteSettingsProvider>
           <AdminAuthProvider>
             <CustomerAuthProvider>
-              <DiscoveryProvider>
-              <ScrollToTop />
-              <SeoController />
-              <Suspense fallback={<RouteFallback />}>
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-        <Route path="/products" element={<ProductsPage />} />
+              <MembershipProvider>
+                <DiscoveryProvider>
+                <ScrollToTop />
+                <SeoController />
+                <Suspense fallback={<RouteFallback />}>
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+          <Route path="/membership" element={<MembershipPage />} />
+          <Route path="/pricing" element={<MembershipPage />} />
+          <Route path="/vip" element={<MembershipPage />} />
+          <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:slug" element={<ProductDetailPage />} />
         <Route path="/categories" element={<CategoriesPage />} />
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/services/:slug" element={<ServiceDetailPage />} />
         <Route path="/wordpress" element={<ProductsPage initialCategory="WordPress" />} />
+        <Route path="/plugins" element={<ProductsPage initialCategory="WordPress" />} />
         <Route path="/playflix" element={<PlayflixRedirect />} />
         <Route
           path="/resources"
@@ -196,6 +203,7 @@ export default function App() {
           </Routes>
               </Suspense>
               </DiscoveryProvider>
+              </MembershipProvider>
             </CustomerAuthProvider>
           </AdminAuthProvider>
         </SiteSettingsProvider>

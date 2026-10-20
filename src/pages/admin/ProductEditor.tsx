@@ -629,7 +629,12 @@ export function ProductEditor({ productId }: ProductEditorProps) {
           ),
         );
       }
-      const detail = err instanceof Error ? err.message : '';
+      const detail =
+        err instanceof Error
+          ? err.message
+          : typeof err === 'object' && err !== null && 'message' in err
+            ? String((err as { message: unknown }).message)
+            : '';
       setSaveError(
         detail || 'Failed to save product. Please check your input and try again.',
       );

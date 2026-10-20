@@ -84,8 +84,9 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Plus Jakarta Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['Plus Jakarta Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['Plus Jakarta Sans', 'Hind Siliguri', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['Plus Jakarta Sans', 'Hind Siliguri', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        bengali: ['Hind Siliguri', 'Plus Jakarta Sans', 'sans-serif'],
       },
       fontSize: {
         'display-xl': ['3.25rem', { lineHeight: '1.1', letterSpacing: '-0.025em', fontWeight: '700' }],
