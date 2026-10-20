@@ -2,7 +2,7 @@ import type { Product } from '@/types';
 
 export const allCatalogProducts: Product[] = [
   {
-    "id": "c198a150-6322-42d6-a44d-d826c5aabc6a",
+    "id": "56bffb3d-615e-4566-bd8a-aeee20ea47ab",
     "name": "Salient 18.4.1 - Creative Multipurpose & WooCommerce Theme",
     "slug": "salient-wordpress-theme",
     "shortDescription": "Salient which incorporates perfect blend of features and styles that helps users to best showcase business and personal projects.",
@@ -76,7 +76,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "b305dc15-8999-4473-9e14-2a880bb89426",
+    "id": "b7c861f7-3bf9-473e-9c42-bda349faac28",
     "name": "Kapee 1.7.5 - Modern Multipurpose WooCommerce Theme",
     "slug": "kapee-wordpress-theme",
     "shortDescription": "Kapee is fast, clean, highly customizable and responsive WordPress theme. Kapee Theme is a professional WordPress WooCommerce theme.",
@@ -150,7 +150,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "2a054432-b89f-4398-bc60-34910b00443b",
+    "id": "03872d06-76e6-4476-865a-d3da13b0cf96",
     "name": "Bricks 2.4.3 - Visual Site Builder for WordPress",
     "slug": "bricks-build-wordpress-sites",
     "shortDescription": "Bricks an innovative, community-driven, visual site builder theme for your self-hosted WordPress website. Empowering you to design unique, performant, and",
@@ -224,7 +224,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "beeaa408-d450-4184-9a25-4dd544b7b0a4",
+    "id": "84400c03-93b3-46d0-87db-bf3296cc39c7",
     "name": "Xtra 6.2 - Multipurpose WordPress & WooCommerce Theme + RTL",
     "slug": "xtra-wordpress-website-builder",
     "shortDescription": "XTRA is a creative, responsive, live drag and drop and easy-to-use WordPress theme for any kind of websites. XTRA Theme allows you to create sites for a wide",
@@ -298,7 +298,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "fae32b9b-ec25-4712-974a-0e36e0deff45",
+    "id": "8d6eb9cf-042c-4c9d-b509-74e3c21f35fd",
     "name": "Traveler 3.4 - Travel Booking WordPress Theme",
     "slug": "traveler-travel-booking-wordpress-theme",
     "shortDescription": "Traveler helps you Save Time, Save Money, Save Face, Save everything can Save to make online booking with fully customizable booking form, flexible online",
@@ -372,7 +372,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "f8c16eaf-d3b1-4ca2-a0ce-29c5382896cd",
+    "id": "00e2c6fb-060e-4224-a38e-7a773817f819",
     "name": "Divi 5.15.1 + 4.27.6 - The Essential Site Building Framework For WordPress",
     "slug": "divi-wordpress-theme",
     "shortDescription": "Divi Theme is the smartest, most flexible theme in our collection. With Divi, the sky’s the limit. Divi Pro is fast, lean, and packed with modern features to",
@@ -446,7 +446,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "ea956669-cae8-4b29-af71-5ea1c7eb0ac0",
+    "id": "9763e072-d8f8-402b-a69a-526c3b12d9a4",
     "name": "Finbiz 2.2.3 - Consulting Business WordPress Theme",
     "slug": "finbiz-wordpress-theme",
     "shortDescription": "Finbiz is a clean and minimalist design that is perfect for showcasing financial services, human resources, insurance, consulting, corporate, IT solutions,",
@@ -520,7 +520,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "b83b399b-94a4-47d6-9687-a4e28d19d291",
+    "id": "aeb65d21-9ca1-49af-add9-bb2c647402e5",
     "name": "Voxel 1.7.11 - Create WordPress Dynamic Sites",
     "slug": "voxel-create-wordpress-dynamic-sites",
     "shortDescription": "Voxel create WordPress Dynamic Sites, Directory & Listing sites and more with Voxel & Elementor page builder.",
@@ -594,7 +594,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "b51bed97-799d-43bc-9c15-b6dcc7fb2d21",
+    "id": "f32e8c52-caf5-4e36-88ef-913bbe53d152",
     "name": "Infinite 5.0.1 - Corporate Business WordPress Theme",
     "slug": "infinite-wordpress-theme",
     "shortDescription": "Infinite is well designed WordPress theme for multi-purpose. Featured with the latest version of super powerful & customizable framework by GoodLayers.",
@@ -667,7 +667,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "44ba0747-2b7c-490b-ba5a-0e7b2eef16a6",
+    "id": "58cfec3a-d0a1-4bf6-ad32-7756af93a2ed",
     "name": "Bellevue 4.2.24 - Hotel + Bed and Breakfast Booking Calendar Theme",
     "slug": "bellevue-hotel-wordpress-theme",
     "shortDescription": "Bellevue includes everything you would expect from a premium WordPress theme and it will help you to build an awesome Hotel or Bed and Breakfast website.",
@@ -740,7 +740,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "fb87dcf3-a559-47f2-896e-cd39fef73a3b",
+    "id": "fe0a8831-6122-4580-b761-d5dd98ec5bf9",
     "name": "Savoy 3.2.3 - Minimalist AJAX WooCommerce Theme",
     "slug": "savoy-woocommerce-theme",
     "shortDescription": "Savoy creates the basis for an amazing online store. Its modern minimalist design puts your products in focus, and our built-in AJAX functionality gives your",
@@ -813,7 +813,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "7a0f93d5-966d-409c-baca-699af8571514",
+    "id": "66a719fc-02bd-489b-8acb-dacd4d3ce601",
     "name": "Elessi 6.6.4.1 - WooCommerce AJAX WordPress Theme - RTL support",
     "slug": "elessi-wordpress-theme",
     "shortDescription": "Elessi is clean, modern, user-friendly WooCommerce Theme with many of functions theme just perfect for your eCommerce project.",
@@ -886,7 +886,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "a5a9f55e-970d-4474-8324-40c01b47b6a5",
+    "id": "bded2aa1-9242-4bb1-b4ec-9fa8a7fd4f69",
     "name": "Bridge 30.9 - Creative Elementor and WooCommerce WordPress Theme",
     "slug": "bridge-wordpress-theme",
     "shortDescription": "Bridge is a responsive retina multipurpose WordPress theme perfect for just about anyone. Whether you are a creative, a corporate team, a lawyer, a medical",
@@ -959,7 +959,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "d994ef6e-cdaf-4ef5-a98f-05140cc9b894",
+    "id": "65d2cd75-6970-4f1a-9d24-0c157a7f6064",
     "name": "Zota 1.3.21 - Elementor Multi-Purpose WooCommerce Theme",
     "slug": "zota-wordpress-theme",
     "shortDescription": "Zota is a flexible and customizable WooCommerce Multi-Purpose WordPress Theme that installs and changes any item in a matter of minutes via Powerful Theme",
@@ -1032,7 +1032,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "dc80ae85-5ef3-49ad-b803-34ec59dc3014",
+    "id": "3fb81769-7295-445a-a229-2467bfd02339",
     "name": "Ecom 1.3.2 - Multipurpose WooCommerce WordPress Theme",
     "slug": "ecom-multipurpose-woocommerce-wordpress-theme",
     "shortDescription": "Ecom is a conversion-focused WooCommerce theme built for modern online stores. Fully compatible with Elementor and WPBakery. Perfect for Fashion, Clothing,",
@@ -1105,7 +1105,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "e88a22ee-313e-4ecf-8112-d3f783aa45ae",
+    "id": "5670043a-1e5e-4906-86b1-6bd776323905",
     "name": "Trueman 1.5.0 - Resume WordPress Theme",
     "slug": "trueman-cv-resume-wordpress-theme",
     "shortDescription": "Trueman – CV Resume WordPress Theme is best suited for developer, designer, programmer, freelancer, artist, coder, photography or any other digital",
@@ -1178,7 +1178,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "57e62c0d-5c4e-4bfd-9c6d-55656c7b362b",
+    "id": "0c09da24-89b9-4876-b060-532c37c8cb79",
     "name": "Porto 7.9.5 - AI Powered WordPress Website & Shop Builder",
     "slug": "porto-wordpress-theme",
     "shortDescription": "Porto is extremely customizable, easy to use and fully responsive. Suitable for every type of business, portfolio, blog and ecommerce sites. Porto guarantees",
@@ -1251,7 +1251,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "4ebcc049-02cc-47fc-8b07-0ab3340ffff5",
+    "id": "62240576-ad48-4602-a56e-07489fe463e1",
     "name": "Hub 7.0 - Responsive Multi-Purpose WordPress Theme",
     "slug": "hub-wordpress-theme",
     "shortDescription": "Hub is the all-in-one builder with ultra high performance, an intuitive editor, exclusive features, and an award-winning design collection. It includes 80",
@@ -1324,7 +1324,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "16ed112a-289f-4d86-a1f1-29f68ce3e996",
+    "id": "d2890daf-ade6-4945-b81d-c733ff221823",
     "name": "Besa 2.3.24 - Elementor Marketplace WooCommerce Theme",
     "slug": "besa-elementor-marketplace-woocommerce-theme",
     "shortDescription": "Besa rocks a handy mobile menu which will take your shoppers to their desired product effortlessly. Besa in total, you receive a whopping three hundred pages",
@@ -1397,7 +1397,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "72f8bff7-0af4-4390-94c1-6d193e397ade",
+    "id": "38fe0606-84d1-4200-960f-5c06b49bb6ae",
     "name": "Machic 1.6.7 - Electronics Store WooCommerce Theme",
     "slug": "machic-wordpress-theme",
     "shortDescription": "Machic theme can help you to build your own electronics store, fashion store, accessories shop, phone store, mobile shop, electronics multivendor, electronics",
@@ -1470,7 +1470,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "9eaa912d-4b7a-4d45-8dd5-e6957241ea9e",
+    "id": "63b7ead6-f0e0-4714-a837-f34d7c64216e",
     "name": "XStore 9.7.9 - Multipurpose WooCommerce Theme",
     "slug": "xstore-wordpress-theme",
     "shortDescription": "XStore is carefully developed and includes that set of pages, tools and settings that will help you create a professional looking and trustworthy online shop.",
@@ -1543,7 +1543,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "d3c23ede-9163-4d57-827c-6a07068fdc6d",
+    "id": "f810754a-3fd0-45b6-98fe-5e27556c4543",
     "name": "Masterstudy 4.8.161 - Education WordPress Theme",
     "slug": "masterstudy-education-wordpress-theme",
     "shortDescription": "MasterStudy is the best solution for Online Coaching, Instructors, Tutors, Courses marketplace, Language schools, private schools, universities and colleges.",
@@ -1616,7 +1616,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "0a25d164-3bb4-4567-95a4-2ca231c6f173",
+    "id": "f3ab01a7-cd42-4b29-a463-8dce3104700a",
     "name": "BeTheme 29.0.2.1 - Responsive Multipurpose WordPress & WooCommerce Theme",
     "slug": "betheme-wordpress-theme",
     "shortDescription": "BeTheme is the best product we ever did. This is more than just WordPress theme. Such advanced options panel and Drag & Drop builder tool give unlimited",
@@ -1689,7 +1689,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "fce98fd7-d839-4229-8a0c-c8a3ba7408ad",
+    "id": "16272e28-7750-4fde-9db8-195bf5c9a52a",
     "name": "GreenMart 4.3.5 - Organic & Food WooCommerce WordPress Theme",
     "slug": "greenmart-wordpress-theme",
     "shortDescription": "GreenMart is an Organic & Food WooCommerce Theme that is flexible and customizable for setting and changing any elements within minutes via Powerful Theme",
@@ -1762,7 +1762,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "108cb608-d31d-44c5-add0-10c80b04ea70",
+    "id": "9bddfb07-2595-401d-8985-a9b97c5896d7",
     "name": "Yoast Seo Premium 28.7 – WordPress SEO Plugin",
     "slug": "yoast-seo-premium-plugin",
     "shortDescription": "Yoast SEO Premium ensures that your site meets the highest technical SEO standards. Yoast SEO for WordPress also gives...",
@@ -1836,7 +1836,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "0e14c91a-4e99-4956-aa43-9de79a68aabe",
+    "id": "30f35499-5ee1-4b68-8137-795162114223",
     "name": "Dokan Pro 5.3.1 + Booking 1.4.5 + Theme – Multivendor Marketplace Plugin for WordPress",
     "slug": "dokan-pro-wordpress-plugin",
     "shortDescription": "Dokan Pro enables you to build multi-seller or multi-vendor e-commerce solution with WordPress. Dokan Business can start your own...",
@@ -1910,7 +1910,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "816e96a9-4792-4c0d-a163-8f4977da0881",
+    "id": "ab0d5ab1-cb3a-476c-827e-6920def6ec30",
     "name": "Divi Supreme Pro 5.0.83 – Modules & Extensions Plugin",
     "slug": "divi-supreme-pro-plugin",
     "shortDescription": "Divi Supreme Pro design and create creative digital products and child themes for Divi. Take Divi to the next...",
@@ -1984,7 +1984,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "005e4992-f1a3-42ac-abcb-968742ae5b11",
+    "id": "4c5bb132-428c-4368-b502-0c610d2633eb",
     "name": "Ultimate Dashboard Pro 3.11.4 – Custom WordPress Dashboard Plugin",
     "slug": "ultimate-dashboard-pro",
     "shortDescription": "Ultimate Dashboard Pro you can completely change the look of the admin area.\r\nDemo Ultimate Dashboard Pro WordPress Plugin\r\n\r\nUltimate Dashboard...",
@@ -2058,7 +2058,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "5f630469-f9b0-436b-a02d-2fbb9a3d2849",
+    "id": "e544fb50-a565-4592-a364-37b5e898efd5",
     "name": "CheckoutWC 11.4.1 – Woocommerce Checkout Plugin",
     "slug": "checkoutwc-woocommerce-plugin",
     "shortDescription": "CheckoutWC is a plugin for WooCommerce that replaces your checkout page with a Shopify-style cart and checkout page. Proven to increase sales and...",
@@ -2132,7 +2132,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "dea7a6df-212b-447e-a631-279ec350c8dc",
+    "id": "836c3b8f-f272-477e-aabf-b88aa708c485",
     "name": "Unlimited Elements for Elementor Premium 2.0.24",
     "slug": "unlimited-elements-for-elementor",
     "shortDescription": "Unlimited Elements for Elementor Premium is the biggest and best elements library now available for both Elementor and WordPress,...",
@@ -2206,7 +2206,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "ab897a7f-42f3-4a73-a765-6bc8012c4312",
+    "id": "942455e8-84f7-472c-9e62-e3ab17e99cff",
     "name": "Slider Revolution Responsive WordPress Plugin 7.2.4 + RevSlider 6.7.58",
     "slug": "slider-revolution-wordpress-plugin",
     "shortDescription": "Slider Revolution is a new way to build rich & dynamic content for your websites. With our powerful visual...",
@@ -2279,7 +2279,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "2f1d4eb0-a1de-42ba-a244-66076557a821",
+    "id": "2bc6cd4d-9885-4d5a-ab52-30b10acd4eb5",
     "name": "MailPoet Pro 5.42.0 – Email Marketing Plugin for WordPress",
     "slug": "mailpoet-wordpress-plugin-5-14-0",
     "shortDescription": "MailPoet Pro Better Email for WordPress-Powered Websites. Send beautiful emails that reach inboxes every time, and create loyal subscribers.\r\nDemo...",
@@ -2352,7 +2352,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "bf10f39c-bb9e-4c17-a917-c3d7224be6c9",
+    "id": "a1c4d94c-2527-42d9-8fd6-e06349398d08",
     "name": "Element Pack 10.0.1 – Addon for Elementor Page Builder WordPress Plugin",
     "slug": "element-pack-pro-addon",
     "shortDescription": "Element Pack Free Download Latest Version ultimate essential addons for Elementor Page Builder with 185 of the most popular...",
@@ -2425,7 +2425,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "d8aa9655-f496-4a85-af48-8626fd40e765",
+    "id": "2cd42a41-daf1-41dd-8524-2bb4ee38c0f6",
     "name": "CrocoBuilder 1.0.1 – AI-Native Frontend Builder for WordPress",
     "slug": "crocobuilder-wordpress-builder-plugin",
     "shortDescription": "CrocoBuilder is an AI-native frontend builder for WordPress that provides developers with atomic DOM output, unified CSS control, and...",
@@ -2498,7 +2498,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "0eae177f-5c8d-4b2b-affb-8157b8182761",
+    "id": "cb8b979b-6a44-4442-a016-8a6d3425fcab",
     "name": "FluentCRM Pro 3.2.6 – Marketing Automation For WordPress Plugin",
     "slug": "fluentcrm-pro-wordpress-plugin",
     "shortDescription": "FluentCRM Pro is a Self Hosted Email Marketing Automation Plugin for WordPress. Manage your leads and customers, email campaigns,...",
@@ -2571,7 +2571,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "384a87f1-97c4-4489-a5d6-292425236a92",
+    "id": "8194a564-7d2a-4925-b753-8697d0426acd",
     "name": "Fluent Boards Pro 2.2.1 – Project Management Plugin for WordPress",
     "slug": "fluent-boards-pro-wordpress-plugin",
     "shortDescription": "Gain complete control over your projects with Fluent Boards Pro, the simplest solution specifically crafted for WordPress. Get it...",
@@ -2644,7 +2644,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "6908790c-deab-4023-adff-a9c377bd1a5e",
+    "id": "0678c52c-c4e0-4c7a-ac75-bfcac32584e2",
     "name": "JetEngine 3.9.0 + External Modules – WordPress Dynamic Content Plugin for Elementor",
     "slug": "jet-engine-plugin-elementor",
     "shortDescription": "JetEngine – Adding & Editing Dynamic Content with Elementor is a must-have plugin for Elementor Page Builder allowing to...",
@@ -2717,7 +2717,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "4a983b63-794d-4c0c-a9ae-014891488419",
+    "id": "53db855e-cf73-4d74-a277-dbdb67796593",
     "name": "Instagram Feed Pro WordPress Plugin 6.14.1",
     "slug": "instagram-feed-pro-plugin-full",
     "shortDescription": "Instagram Feed Pro Keep your website looking fresh with new Instagram content.\r\nDemo Instagram Feed Pro WordPress Plugin\r\n\r\nInstagram Feed Pro...",
@@ -2790,7 +2790,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "cbd06589-9a3b-4188-aba4-138c3d78f0e8",
+    "id": "3b5e7378-00a3-4e37-8f86-a017608b89cf",
     "name": "WP Funnels Pro 2.10.3 – Marketing Funnel Automation In WordPress",
     "slug": "wp-funnels-pro-wordpress-plugin",
     "shortDescription": "WPFunnels Pro to create high converting landing pages, sales funnels, and checkout flows in minutes. Drag & Drop Sales...",
@@ -2863,7 +2863,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "8fc116c7-3c9c-4c3c-a9aa-b18969e9d49f",
+    "id": "8177b027-0644-4da2-b246-29163fbffb60",
     "name": "WP Security Ninja Premium 5.305",
     "slug": "wp-security-ninja-premium",
     "shortDescription": "WP Security Ninja Pro steps in as your silent guardian. With its hassle-free setup and comprehensive coverage, you can...",
@@ -2936,7 +2936,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "de53733b-a2fd-4801-a774-8293298bdc1d",
+    "id": "2150f04a-ac69-4af4-8cb0-901c79328e29",
     "name": "PowerPack Pro for Elementor 3.1.1",
     "slug": "powerpack-for-elements",
     "shortDescription": "PowerPack Pro for Elementor  is extends the Elementor Page Builder plugin with custom widgets, features, and templates. Get access...",
@@ -3009,7 +3009,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "7072eaf1-b35f-440d-a1fc-7ab1e8740ea7",
+    "id": "b3186ace-13b2-4b54-a4ff-83e9ce788761",
     "name": "Elementor Pro 4.3.2 – WordPress Page Builder Plugin – Template Kits",
     "slug": "elementor-pro-builder-template-kits",
     "shortDescription": "Elementor Pro with your favorite or customized theme. Change themes and still keep all your designs. Landing pages, homepages, posts,...",
@@ -3082,7 +3082,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "989eb7d5-b23a-4a7e-a20b-7c8f03cfac56",
+    "id": "d2769e84-86e8-4a66-841e-6ab7f1507a3f",
     "name": "WP Courseware 4.18.4 – Course Builder for WordPress",
     "slug": "wp-courseware-plugin",
     "shortDescription": "WP Courseware 4.18.4 – Course Builder for WordPress",
@@ -3155,7 +3155,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "01f31bb5-8ac3-417f-ae81-03d72f4085ac",
+    "id": "b7149806-b726-4570-b591-a9d2b4c61295",
     "name": "FiboFilters Pro 1.13.1 – WooCommerce Product Filters Plugin",
     "slug": "fibofilters-pro-woocommerce-product-filters",
     "shortDescription": "FiboFilters Pro 1.13.1 – WooCommerce Product Filters Plugin",
@@ -3228,7 +3228,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "ce86197c-8343-4297-a5c1-7380cf6d818c",
+    "id": "9b468df0-bc1b-4450-985a-7588f805e30a",
     "name": "UPS Shipping Method for WooCommerce 3.9.18",
     "slug": "woocommerce-ups-shipping-method",
     "shortDescription": "UPS Shipping Method for WooCommerce 3.9.18",
@@ -3301,7 +3301,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "889677f4-1732-4a56-ada5-9ef11f5bc527",
+    "id": "6a6e381a-dc07-4ddc-b2f5-02c450fb8edf",
     "name": "FOX – WooCommerce Currency Switcher Professional – Multi Currency [WOOCS] 2.5.5",
     "slug": "fox-woocommerce-currency-switcher-professional-multi-currency-woocs",
     "shortDescription": "FOX – WooCommerce Currency Switcher Professional – Multi Currency [WOOCS] 2.5.5",
@@ -3374,7 +3374,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "9f049b26-d4e9-44b3-a195-4e585bfbddad",
+    "id": "ca4e8ae3-04a7-4bc2-b80e-bac1085c2e40",
     "name": "Media Cleaner Pro 7.3.1",
     "slug": "media-cleaner-pro",
     "shortDescription": "Media Cleaner Pro 7.3.1",
@@ -3447,7 +3447,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "bb45cd33-a935-4ddc-ace6-06ac4d88adc9",
+    "id": "8abf64a0-e745-4db7-9482-79b6f4441308",
     "name": "Flexible Shipping Pro 4.1.4 – Table Rate Shipping for WooCommerce",
     "slug": "flexible-shipping-pro-woocommerce",
     "shortDescription": "Flexible Shipping Pro 4.1.4 – Table Rate Shipping for WooCommerce",
@@ -3520,7 +3520,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "0564e78f-6134-48bc-af34-17d76b0ea15d",
+    "id": "bbf4e46c-a844-4b94-9e1f-585f6d92d129",
     "name": "Wallet for WooCommerce 6.8.0",
     "slug": "wallet-for-woocommerce",
     "shortDescription": "Wallet for WooCommerce 6.8.0",
@@ -3593,7 +3593,7 @@ export const allCatalogProducts: Product[] = [
     ]
   },
   {
-    "id": "4c5e7437-b9fb-42e3-a5a0-39afb0c7cc1a",
+    "id": "404efb3e-d194-4790-b2f2-19dd030547e8",
     "name": "WooCommerce Memberships 1.30.1",
     "slug": "woocommerce-memberships",
     "shortDescription": "WooCommerce Memberships 1.30.1",

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   Package,
   DownloadCloud,
+  Download,
   AlertCircle,
   Crown,
   Search,
@@ -32,7 +33,7 @@ export function AccountDownloadsPage() {
   const { session, profile } = useCustomerAuth();
   const userId = session?.user.id;
   const userEmail = session?.user.email ?? profile?.email;
-  const { isVip, status, testPlan, setTestPlan, claimDownload } = useMembership();
+  const { isVip, status, dailyQuota, claimDownload } = useMembership();
 
   const [loading, setLoading] = useState(true);
   const [ordersWithDownloads, setOrdersWithDownloads] = useState<OrderWithDownloads[]>([]);
@@ -42,7 +43,7 @@ export function AccountDownloadsPage() {
   const [catalogSearch, setCatalogSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [claimingProductId, setClaimingProductId] = useState<string | null>(null);
-  const [claimSuccessMessage, setClaimSuccessMessage] = useState<string | null>(null);
+  const [claimSuccessInfo, setClaimSuccessInfo] = useState<{ message: string; url?: string } | null>(null);
 
   const loadDownloads = async () => {
     if (!userId && !userEmail) return;
@@ -91,14 +92,19 @@ export function AccountDownloadsPage() {
     }
   };
 
-  const handleVipClaim = async (product: { id: string; name: string }) => {
+  const handleVipClaim = async (product: { id: string; name: string; slug?: string }) => {
     setClaimingProductId(product.id);
-    setClaimSuccessMessage(null);
+    setClaimSuccessInfo(null);
     try {
       const result = await claimDownload(product);
       if (result.success && result.url) {
-        setClaimSuccessMessage(`"${product.name}" download started! File saved to your downloads.`);
-        window.open(result.url, '_blank', 'noopener,noreferrer');
+        setClaimSuccessInfo({
+          message: `"${product.name}" এর ফাইল ডাউনলোড প্রস্তুত! আপনার লাইব্রেরিতেও যুক্ত করা হয়েছে।`,
+          url: result.url.startsWith('http') ? result.url : undefined,
+        });
+        if (result.url.startsWith('http')) {
+          window.open(result.url, '_blank', 'noopener,noreferrer');
+        }
         // reload downloads in background
         void loadDownloads();
       } else {
@@ -160,43 +166,6 @@ export function AccountDownloadsPage() {
               Access and download all your digital purchases and VIP membership files.
             </p>
           </div>
-
-          {/* Localhost Test Switcher (for convenience) */}
-          <div className="flex items-center gap-1.5 self-start rounded-xl border border-ink-200 bg-white p-1 text-xs shadow-xs">
-            <span className="px-2 font-medium text-ink-500">Test Mode:</span>
-            <button
-              onClick={() => setTestPlan(null)}
-              className={`rounded-lg px-2 py-1 font-semibold transition-colors ${
-                !testPlan ? 'bg-ink-800 text-white' : 'text-ink-600 hover:bg-ink-100'
-              }`}
-            >
-              Normal
-            </button>
-            <button
-              onClick={() => setTestPlan('monthly')}
-              className={`rounded-lg px-2 py-1 font-semibold transition-colors ${
-                testPlan === 'monthly' ? 'bg-brand-600 text-white' : 'text-ink-600 hover:bg-ink-100'
-              }`}
-            >
-              1 Mo (৳499)
-            </button>
-            <button
-              onClick={() => setTestPlan('yearly')}
-              className={`rounded-lg px-2 py-1 font-semibold transition-colors ${
-                testPlan === 'yearly' ? 'bg-brand-600 text-white' : 'text-ink-600 hover:bg-ink-100'
-              }`}
-            >
-              1 Yr (৳799)
-            </button>
-            <button
-              onClick={() => setTestPlan('lifetime')}
-              className={`rounded-lg px-2 py-1 font-semibold transition-colors ${
-                testPlan === 'lifetime' ? 'bg-amber-500 text-ink-950 font-bold' : 'text-ink-600 hover:bg-ink-100'
-              }`}
-            >
-              👑 Lifetime
-            </button>
-          </div>
         </div>
 
         {/* VIP MEMBERSHIP STATUS CARD */}
@@ -207,7 +176,7 @@ export function AccountDownloadsPage() {
             <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-2">
                 <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-400/20 border border-amber-400/30 px-3 py-1 text-xs font-bold text-amber-300">
-                  <Crown size={14} className="fill-amber-400" />
+                  <Crown size={14} className="text-amber-300" strokeWidth={2.2} />
                   <span>VIP ALL-ACCESS MEMBER</span>
                 </div>
                 <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-white">
@@ -216,7 +185,7 @@ export function AccountDownloadsPage() {
                 <p className="text-xs sm:text-sm text-ink-300">
                   {status.isLifetime ? (
                     <span className="font-semibold text-amber-300">
-                      ✨ আজীবন এক্সেস সক্রিয় — সকল বর্তমান ও ভবিষ্যতের প্রোডাক্ট ফ্রিতে ডাউনলোড করুন!
+                      আজীবন এক্সেস সক্রিয় — সকল বর্তমান ও ভবিষ্যতের প্রোডাক্ট ফ্রিতে ডাউনলোড করুন!
                     </span>
                   ) : (
                     <span>
@@ -224,6 +193,17 @@ export function AccountDownloadsPage() {
                     </span>
                   )}
                 </p>
+                <div className="mt-2 inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-1.5 text-xs">
+                  {dailyQuota.limit !== null ? (
+                    <span className="text-amber-200">
+                      আজকের ডাউনলোড কোটা: <strong>{dailyQuota.used}</strong> / {dailyQuota.limit}টি ফাইল (বাকি <strong>{dailyQuota.remaining}</strong>টি)
+                    </span>
+                  ) : (
+                    <span className="text-emerald-300 font-bold">
+                      দৈনিক ডাউনলোড: আনলিমিটেড (সীমাহীন)
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
@@ -259,14 +239,14 @@ export function AccountDownloadsPage() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-3.5">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-400 text-ink-950 font-bold shadow-sm">
-                  <Crown size={22} className="fill-ink-950" />
+                  <Crown size={22} className="text-ink-950" strokeWidth={2.2} />
                 </div>
                 <div>
                   <h3 className="font-display text-base sm:text-lg font-bold text-ink-900">
                     ৩,০০০+ সব প্রোডাক্ট আনলিমিটেড ডাউনলোড করতে চান?
                   </h3>
                   <p className="mt-0.5 text-xs sm:text-sm text-ink-600">
-                    মাত্র <strong className="text-brand-700">৳৪৯৯ (১ মাস)</strong>, <strong className="text-brand-700">৳৭৯৯ (১ বছর)</strong> অথবা <strong className="text-amber-700 font-extrabold">৳৯৯৯-এ লাইফটাইম</strong> ভিআইপি মেম্বারশিপ নিয়ে সব প্রোডাক্ট ফ্রিতে নিন!
+                    মাত্র <strong className="text-brand-700">৳৪৯৯ (১ মাস WP পাস)</strong>, <strong className="text-brand-700">৳৮৯৯ (১ মাস অল-এক্সেস)</strong> অথবা সেরা অফারে <strong className="text-amber-700 font-extrabold">৳১,১৯৯-এ আজীবন</strong> ভিআইপি মেম্বারশিপ নিয়ে সব প্রোডাক্ট ফ্রিতে নিন!
                   </p>
                 </div>
               </div>
@@ -283,10 +263,23 @@ export function AccountDownloadsPage() {
         )}
 
         {/* SUCCESS NOTIFICATION */}
-        {claimSuccessMessage && (
-          <div className="flex items-center gap-2.5 rounded-2xl border border-success-200 bg-success-50 p-4 text-sm text-success-800">
-            <CheckCircle2 size={18} className="shrink-0 text-success-600" />
-            <span>{claimSuccessMessage}</span>
+        {claimSuccessInfo && (
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-success-200 bg-success-50 p-4 text-sm text-success-800 shadow-soft">
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 size={18} className="shrink-0 text-success-600" />
+              <span>{claimSuccessInfo.message}</span>
+            </div>
+            {claimSuccessInfo.url && (
+              <a
+                href={claimSuccessInfo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-1.5 shrink-0 rounded-xl bg-success-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-success-700 transition-colors"
+              >
+                <Download size={15} />
+                <span>সরাসরি লিঙ্ক ওপেন করুন</span>
+              </a>
+            )}
           </div>
         )}
 
@@ -420,9 +413,10 @@ export function AccountDownloadsPage() {
                 <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
                   <Link
                     to="/membership"
-                    className="rounded-xl bg-amber-400 px-5 py-2.5 font-display text-xs font-bold text-ink-950 shadow-sm transition-colors hover:bg-amber-300"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-amber-400 px-5 py-2.5 font-display text-xs font-bold text-ink-950 shadow-sm transition-colors hover:bg-amber-300"
                   >
-                    👑 VIP মেম্বারশিপ নিন
+                    <Crown size={14} className="text-ink-950" strokeWidth={2.2} />
+                    <span>VIP মেম্বারশিপ নিন</span>
                   </Link>
                   <Link
                     to="/products"

@@ -101,6 +101,15 @@ function weadownApiPlugin() {
             const sourceUrl = urlObj.searchParams.get('url') || 'https://weadown.com/wordpress-theme/';
             const limit = parseInt(urlObj.searchParams.get('limit') || '30', 10);
             const page = parseInt(urlObj.searchParams.get('page') || '1', 10);
+
+            if (sourceUrl.includes('idcardscannerpro.com')) {
+              const { previewProducts: previewIdCardScanner } = require('./scripts/idcardscannerService.cjs');
+              const data = await previewIdCardScanner(sourceUrl, limit, page);
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify(data));
+              return;
+            }
+
             const data = await previewProducts(sourceUrl, limit, page);
             res.setHeader('Content-Type', 'application/json');
             res.end(JSON.stringify(data));
@@ -121,7 +130,23 @@ function weadownApiPlugin() {
             req.on('end', async () => {
               try {
                 const parsed = JSON.parse(body || '{}');
-                const result = await importMultipleProducts(parsed.sourceUrls || [], {
+                const sourceUrls = parsed.sourceUrls || [];
+                const isIdCardScanner = sourceUrls.some((u: string) => u.includes('idcardscannerpro.com'));
+
+                if (isIdCardScanner) {
+                  const { importMultipleProducts: importIdCardScanner } = require('./scripts/idcardscannerService.cjs');
+                  const result = await importIdCardScanner(sourceUrls, {
+                    price: parsed.price,
+                    categoryName: parsed.categoryName,
+                    status: parsed.status || 'published',
+                    overwritePrice: parsed.overwritePrice === true
+                  });
+                  res.setHeader('Content-Type', 'application/json');
+                  res.end(JSON.stringify(result));
+                  return;
+                }
+
+                const result = await importMultipleProducts(sourceUrls, {
                   price: parsed.price ?? 99,
                   categoryName: parsed.categoryName || 'WordPress',
                   status: parsed.status || 'published',

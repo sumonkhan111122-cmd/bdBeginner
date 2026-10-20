@@ -45,7 +45,8 @@ const DEFAULT_PRICE = 99;
 const LIMIT_PRESETS = [10, 20, 30, 50, 100, 200, 500, 1000];
 
 const PRESETS = [
-  { label: '🌐 All / Homepage', url: 'https://weadown.com/' },
+  { label: '🪪 ID Card Scanner Pro Store', url: 'https://www.idcardscannerpro.com/p/e-commerce-store.html' },
+  { label: '🌐 WeaDown Homepage', url: 'https://weadown.com/' },
   { label: '🎨 Themes (Page 1)', url: 'https://weadown.com/wordpress-theme/' },
   { label: '🎨 Themes (Page 2 - Old)', url: 'https://weadown.com/wordpress-theme/pages/2/' },
   { label: '🎨 Themes (Page 3 - Older)', url: 'https://weadown.com/wordpress-theme/pages/3/' },
@@ -427,11 +428,11 @@ export function AdminProductImporterPage() {
             <span>Automatic Product Importer & Update Sync</span>
           </div>
           <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-ink-900 sm:text-3xl">
-            WeaDown Product Importer
+            Product Importer & Store Sync
           </h1>
           <p className="mt-1 max-w-2xl text-sm leading-6 text-ink-500">
-            যেকোনো ক্যাটাগরি, হোমপেজ বা সিঙ্গেল প্রোডাক্টের লিংক পেস্ট করে প্রোডাক্ট ও তার রিয়েল ইমেজ,
-            ডেসক্রিপশন সরাসরি ইম্পোর্ট ও আপডেট সিঙ্ক করুন।
+            যেকোনো ক্যাটাগরি, স্টোর পেজ (যেমন WeaDown বা ID Card Scanner Pro) বা সিঙ্গেল প্রোডাক্টের লিংক পেস্ট করে প্রোডাক্ট, ছবি,
+            প্রাইস, ডিসকাউন্ট ও ডেসক্রিপশন সরাসরি ইম্পোর্ট করুন।
           </p>
         </div>
 
@@ -1066,7 +1067,25 @@ export function AdminProductImporterPage() {
                       <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
                         <div className="min-w-0 pr-2">
                           <h3 className="font-semibold text-ink-900 line-clamp-1">{item.title}</h3>
-                          <p className="mt-0.5 line-clamp-2 text-xs leading-5 text-ink-500">
+                          {typeof item.price === 'number' && item.price > 0 && (
+                            <div className="mt-1 flex flex-wrap items-center gap-2">
+                              <span className="text-sm font-bold text-brand-700">৳{item.price}</span>
+                              {item.compareAtPrice && item.compareAtPrice > item.price && (
+                                <>
+                                  <span className="text-xs text-ink-400 line-through">৳{item.compareAtPrice}</span>
+                                  <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                                    {Math.round(((item.compareAtPrice - item.price) / item.compareAtPrice) * 100)}% OFF
+                                  </span>
+                                </>
+                              )}
+                              {item.sourceCategory && (
+                                <span className="rounded-md bg-ink-100 px-1.5 py-0.5 text-[10px] font-semibold text-ink-600">
+                                  {item.sourceCategory}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          <p className="mt-1 line-clamp-2 text-xs leading-5 text-ink-500">
                             {item.excerpt || 'No description provided.'}
                           </p>
                         </div>

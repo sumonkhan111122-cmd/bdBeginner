@@ -182,9 +182,13 @@ function ProductDetailPage() {
   const { seoSettings } = useSiteSettings();
   const formatPrice = useCurrencyFormatter();
 
-  const { isVip, status: vipStatus, claimDownload } = useMembership();
+  const { isVip, status: vipStatus, dailyQuota, claimDownload } = useMembership();
   const [vipDownloading, setVipDownloading] = useState(false);
-  const [vipNotice, setVipNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [vipNotice, setVipNotice] = useState<{
+    type: 'success' | 'error';
+    message: string;
+    downloadUrl?: string;
+  } | null>(null);
 
   const { data: product, loading, error, retry } = useProduct(slug);
 
@@ -195,13 +199,16 @@ function ProductDetailPage() {
     setVipDownloading(true);
     setVipNotice(null);
     try {
-      const res = await claimDownload({ id: product.id, name: product.name });
+      const res = await claimDownload({ id: product.id, name: product.name, slug: product.slug });
       if (res.success && res.url) {
         setVipNotice({
           type: 'success',
-          message: 'ডাউনলোড লিঙ্ক সফলভাবে তৈরি হয়েছে এবং ওপেন হয়েছে! আপনার অ্যাকাউন্টেও ফাইলটি যুক্ত হয়েছে।',
+          message: 'ডাউনলোড লিঙ্ক সফলভাবে তৈরি হয়েছে! যদি নতুন ট্যাব ওপেন না হয়, তবে নিচের বাটনে ক্লিক করুন।',
+          downloadUrl: res.url,
         });
-        window.open(res.url, '_blank');
+        if (res.url.startsWith('http')) {
+          window.open(res.url, '_blank', 'noopener,noreferrer');
+        }
       } else {
         setVipNotice({
           type: 'error',
@@ -379,7 +386,7 @@ function ProductDetailPage() {
               <div className="mt-6 rounded-2xl border-2 border-amber-400/60 bg-gradient-to-br from-amber-500/15 via-yellow-500/10 to-amber-600/15 p-5 shadow-lg shadow-amber-500/10">
                 <div className="flex items-center gap-3">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 text-ink-950 shadow-sm">
-                    <Crown size={20} className="fill-ink-950" />
+                    <Crown size={20} strokeWidth={2.2} />
                   </span>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -391,6 +398,15 @@ function ProductDetailPage() {
                     <p className="mt-0.5 text-xs text-ink-600">
                       আপনার VIP মেম্বারশিপের অধীনে এই ফাইলটি সম্পূর্ণ ফ্রিতে আনলক করা হয়েছে।
                     </p>
+                    {dailyQuota.limit !== null ? (
+                      <p className="mt-1 text-[11px] font-semibold text-brand-700">
+                        আজকের ডাউনলোড: {dailyQuota.used} / {dailyQuota.limit} ফাইল ব্যবহৃত (বাকি {dailyQuota.remaining}টি)
+                      </p>
+                    ) : (
+                      <p className="mt-1 text-[11px] font-bold text-emerald-700">
+                        দৈনিক ডাউনলোড: আনলিমিটেড (সীমাহীন)
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -422,7 +438,20 @@ function ProductDetailPage() {
                         : 'border border-rose-200 bg-rose-50 text-rose-800'
                     }`}
                   >
-                    {vipNotice.message}
+                    <div>{vipNotice.message}</div>
+                    {vipNotice.downloadUrl && (
+                      <div className="mt-2.5">
+                        <a
+                          href={vipNotice.downloadUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-2 font-medium text-white shadow-sm hover:bg-emerald-700 transition-colors"
+                        >
+                          <Download size={14} className="stroke-[2.5]" />
+                          সরাসরি ফাইল ডাউনলোড / লিঙ্ক ওপেন করুন
+                        </a>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -470,7 +499,7 @@ function ProductDetailPage() {
                 <div className="mt-4 rounded-xl border border-amber-300/60 bg-gradient-to-br from-amber-500/10 via-amber-400/5 to-yellow-500/10 p-4">
                   <div className="flex items-start gap-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 text-ink-950 shadow-sm">
-                      <Crown size={18} className="fill-ink-950" />
+                      <Crown size={18} strokeWidth={2.2} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
@@ -482,7 +511,7 @@ function ProductDetailPage() {
                         </span>
                       </div>
                       <p className="mt-1 text-xs leading-relaxed text-ink-700">
-                        প্রতিটি আলাদা না কিনে মাত্র <strong>৳৪৯৯</strong> থেকে VIP মেম্বারশিপ নিয়ে সাইটের সব প্রোডাক্ট ফ্রিতে ডাউনলোড করুন! লাইফটাইম অ্যাক্সেস মাত্র <strong>৳৯৯৯</strong>।
+                        প্রতিটি আলাদা না কিনে মাত্র <strong>৳৪৯৯</strong> থেকে VIP মেম্বারশিপ নিয়ে সাইটের প্রোডাক্ট ফ্রিতে ডাউনলোড করুন! সারাজীবনের জন্য লাইফটাইম অ্যাক্সেস মাত্র <strong>৳১,১৯৯</strong>।
                       </p>
                       <Link
                         to="/membership"

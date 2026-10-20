@@ -17,6 +17,9 @@ import {
   Grid3x3,
   FolderArchive,
   Tag,
+  Laptop,
+  GraduationCap,
+  FileCode,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { AnnouncementBar } from './AnnouncementBar';
@@ -31,6 +34,9 @@ import { safeHttpUrl } from '@/lib/urls';
 const exploreLinks = [
   { label: 'WordPress Themes', to: '/wordpress', description: 'Curated premium WP themes', icon: Layers },
   { label: 'WordPress Plugins', to: '/plugins', description: 'GPL plugins & dev tools', icon: Sparkles },
+  { label: 'Software & Tools', to: '/products?category=software', description: 'Productivity & utilities', icon: Laptop },
+  { label: 'Digital Courses', to: '/products?category=courses', description: 'Practical skills & training', icon: GraduationCap },
+  { label: 'PHP Scripts & Code', to: '/products?category=scripts', description: 'Web apps & source codes', icon: FileCode },
   { label: 'Digital Resources', to: '/resources', description: 'Templates, scripts & assets', icon: FolderArchive },
   { label: 'Special Deals', to: '/deals', description: 'Discounts & limited-time offers', icon: Tag },
   { label: 'All Categories', to: '/categories', description: 'Browse complete catalog', icon: Grid3x3 },

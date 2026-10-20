@@ -1,6 +1,6 @@
 import { getSupabase } from '@/lib/supabase';
 import { MEMBERSHIP_PLANS, type MembershipPlanId } from '@/data/membershipPlans';
-import { createCheckoutOrderPriced } from '@/services/orders';
+import { createCheckoutOrderPriced, getGuestOrderReceipt } from '@/services/orders';
 import { listOrderDownloadsGuest, openDownloadLinkGuest } from '@/services/downloads';
 
 export interface MembershipStatus {
@@ -17,48 +17,28 @@ export interface MembershipStatus {
 const TEST_VIP_STORAGE_KEY = 'bdb_test_vip_plan';
 
 /**
- * Get locally overridden VIP plan for testing on localhost
+ * Clean up any legacy test override key from localStorage
  */
-export function getLocalTestVip(): MembershipPlanId | null {
-  if (typeof window === 'undefined') return null;
-  const stored = localStorage.getItem(TEST_VIP_STORAGE_KEY);
-  if (stored === 'monthly' || stored === 'yearly' || stored === 'lifetime') {
-    return stored;
+if (typeof window !== 'undefined') {
+  try {
+    localStorage.removeItem(TEST_VIP_STORAGE_KEY);
+  } catch {
+    // ignore
   }
+}
+
+export function getLocalTestVip(): MembershipPlanId | null {
   return null;
 }
 
-/**
- * Set locally overridden VIP plan for testing on localhost
- */
-export function setLocalTestVip(plan: MembershipPlanId | null): void {
-  if (typeof window === 'undefined') return;
-  if (!plan) {
-    localStorage.removeItem(TEST_VIP_STORAGE_KEY);
-  } else {
-    localStorage.setItem(TEST_VIP_STORAGE_KEY, plan);
-  }
+export function setLocalTestVip(_plan: MembershipPlanId | null): void {
+  // Test mode disabled for security
 }
 
 /**
- * Checks whether a user has an active VIP membership from their paid orders.
+ * Checks whether a user has an active VIP membership from their paid orders in database.
  */
 export async function checkUserMembership(userId?: string | null, email?: string | null): Promise<MembershipStatus> {
-  // 1. Check local developer/test override first (perfect for local testing)
-  const localTest = getLocalTestVip();
-  if (localTest) {
-    const plan = MEMBERSHIP_PLANS.find((p) => p.id === localTest);
-    return {
-      isVip: true,
-      planId: localTest,
-      planName: plan?.nameBn || plan?.name || 'VIP Member (Test)',
-      expiresAt: localTest === 'lifetime' ? null : new Date(Date.now() + (localTest === 'monthly' ? 30 : 365) * 86400000).toISOString(),
-      isLifetime: localTest === 'lifetime',
-      daysRemaining: localTest === 'lifetime' ? undefined : (localTest === 'monthly' ? 30 : 365),
-      source: 'test_mode',
-    };
-  }
-
   if (!userId && !email) {
     return {
       isVip: false,
@@ -103,7 +83,10 @@ export async function checkUserMembership(userId?: string | null, email?: string
     for (const order of orders) {
       const items = (order.order_items ?? []) as { id: string; product_id: string; product_slug?: string }[];
       const hasLifetime = items.some(
-        (i) => i.product_slug === 'membership-lifetime-pass' || i.product_id === 'a0000001-0000-0000-0000-000000000003'
+        (i) =>
+          i.product_slug === 'membership-lifetime-pass' ||
+          i.product_id === 'a0000001-0000-4000-8000-000000000003' ||
+          i.product_id === 'a0000001-0000-0000-0000-000000000003'
       );
       if (hasLifetime) {
         return {
@@ -118,21 +101,24 @@ export async function checkUserMembership(userId?: string | null, email?: string
       }
     }
 
-    // Check for Yearly VIP
+    // Check for Yearly / All-Access 1-Month VIP
     for (const order of orders) {
       const items = (order.order_items ?? []) as { id: string; product_id: string; product_slug?: string }[];
       const hasYearly = items.some(
-        (i) => i.product_slug === 'membership-yearly-pass' || i.product_id === 'a0000001-0000-0000-0000-000000000002'
+        (i) =>
+          i.product_slug === 'membership-yearly-pass' ||
+          i.product_id === 'a0000001-0000-4000-8000-000000000002' ||
+          i.product_id === 'a0000001-0000-0000-0000-000000000002'
       );
       if (hasYearly) {
         const orderDate = new Date(order.created_at).getTime();
-        const expiryDate = orderDate + 365 * 24 * 60 * 60 * 1000;
+        const expiryDate = orderDate + 30 * 24 * 60 * 60 * 1000;
         if (expiryDate > now) {
           const daysRemaining = Math.max(1, Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24)));
           return {
             isVip: true,
             planId: 'yearly',
-            planName: '1-Year VIP Pass',
+            planName: '1-Month All-Access Pass',
             expiresAt: new Date(expiryDate).toISOString(),
             isLifetime: false,
             daysRemaining,
@@ -143,11 +129,14 @@ export async function checkUserMembership(userId?: string | null, email?: string
       }
     }
 
-    // Check for Monthly VIP
+    // Check for Monthly WordPress VIP
     for (const order of orders) {
       const items = (order.order_items ?? []) as { id: string; product_id: string; product_slug?: string }[];
       const hasMonthly = items.some(
-        (i) => i.product_slug === 'membership-monthly-pass' || i.product_id === 'a0000001-0000-0000-0000-000000000001'
+        (i) =>
+          i.product_slug === 'membership-monthly-pass' ||
+          i.product_id === 'a0000001-0000-4000-8000-000000000001' ||
+          i.product_id === 'a0000001-0000-0000-0000-000000000001'
       );
       if (hasMonthly) {
         const orderDate = new Date(order.created_at).getTime();
@@ -157,7 +146,7 @@ export async function checkUserMembership(userId?: string | null, email?: string
           return {
             isVip: true,
             planId: 'monthly',
-            planName: '1-Month VIP Pass',
+            planName: '1-Month WordPress Pass',
             expiresAt: new Date(expiryDate).toISOString(),
             isLifetime: false,
             daysRemaining,
@@ -190,27 +179,211 @@ export async function checkUserMembership(userId?: string | null, email?: string
 }
 
 /**
+ * Formats current date string in Asia/Dhaka time (UTC+6)
+ */
+export function getDhakaDateKey(): string {
+  const now = new Date();
+  const dhakaOffsetMs = 6 * 60 * 60 * 1000;
+  const dhakaTime = new Date(now.getTime() + dhakaOffsetMs);
+  const yyyy = dhakaTime.getUTCFullYear();
+  const mm = String(dhakaTime.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(dhakaTime.getUTCDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+/**
+ * Gets ISO UTC timestamp for start of current Dhaka calendar day (00:00:00 UTC+6)
+ */
+export function getDhakaStartOfDayIso(): string {
+  const now = new Date();
+  const dhakaOffsetMs = 6 * 60 * 60 * 1000;
+  const dhakaTime = new Date(now.getTime() + dhakaOffsetMs);
+  const midnightUtcMs =
+    Date.UTC(dhakaTime.getUTCFullYear(), dhakaTime.getUTCMonth(), dhakaTime.getUTCDate()) -
+    dhakaOffsetMs;
+  return new Date(midnightUtcMs).toISOString();
+}
+
+/**
+ * Gets total VIP claim orders placed today by this customer across DB and local storage
+ */
+export async function getTodayVipDownloadCount(
+  userId?: string | null,
+  email?: string | null
+): Promise<number> {
+  const dateKey = getDhakaDateKey();
+  const storageId = (userId || email || 'guest').toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const localKey = `bdb_vip_daily_${dateKey}_${storageId}`;
+  let localCount = 0;
+  if (typeof window !== 'undefined') {
+    try {
+      localCount = parseInt(localStorage.getItem(localKey) || '0', 10) || 0;
+    } catch {
+      // ignore
+    }
+  }
+
+  let dbCount = 0;
+  try {
+    const sb = getSupabase();
+    const todayIso = getDhakaStartOfDayIso();
+    let query = sb
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', todayIso)
+      .eq('payment_status', 'paid')
+      .eq('coupon_code', 'VIP_PASS_FREE');
+
+    if (userId && email) {
+      query = query.or(`user_id.eq.${userId},customer_email.eq.${email}`);
+    } else if (userId) {
+      query = query.eq('user_id', userId);
+    } else if (email) {
+      query = query.eq('customer_email', email);
+    }
+
+    const { count, error } = await query;
+    if (!error && typeof count === 'number') {
+      dbCount = count;
+    }
+  } catch {
+    // non-blocking
+  }
+
+  return Math.max(localCount, dbCount);
+}
+
+/**
+ * Records local counter increment after a successful VIP download claim
+ */
+export function recordLocalVipDownload(userId?: string | null, email?: string | null): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const dateKey = getDhakaDateKey();
+    const storageId = (userId || email || 'guest').toLowerCase().replace(/[^a-z0-9]/g, '_');
+    const localKey = `bdb_vip_daily_${dateKey}_${storageId}`;
+    const current = parseInt(localStorage.getItem(localKey) || '0', 10) || 0;
+    localStorage.setItem(localKey, String(current + 1));
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Returns daily quota breakdown for UI display (used, limit, remaining)
+ */
+export async function getDailyDownloadQuota(
+  userId?: string | null,
+  email?: string | null,
+  planId?: MembershipPlanId | null
+): Promise<{ limit: number | null; used: number; remaining: number | null }> {
+  if (!planId) {
+    return { limit: null, used: 0, remaining: null };
+  }
+  const plan = MEMBERSHIP_PLANS.find((p) => p.id === planId);
+  const limit = plan?.dailyDownloadLimit ?? null;
+  if (limit === null) {
+    return { limit: null, used: 0, remaining: null };
+  }
+  const used = await getTodayVipDownloadCount(userId, email);
+  const remaining = Math.max(0, limit - used);
+  return { limit, used, remaining };
+}
+
+/**
  * Claims a free product download for an active VIP member.
+ * Enforces daily download limits (10 for ৳499, 20 for ৳899, unlimited for lifetime).
  * Creates an authorized 0 BDT paid order linked to the customer,
  * fetches the download link, and returns the direct URL.
  */
 export async function claimVipProductDownload(
-  product: { id: string; name: string },
+  product: { id: string; name: string; slug?: string },
   customer: { name: string; email: string; phone?: string; userId?: string }
 ): Promise<{ success: boolean; url?: string; orderNumber?: string; error?: string }> {
   try {
+    // Strict verification: Customer must have an active VIP membership from a paid order
+    const membership = await checkUserMembership(customer.userId, customer.email);
+    if (!membership.isVip) {
+      return {
+        success: false,
+        error: 'একটি সক্রিয় VIP মেম্বারশিপ একাউন্ট প্রয়োজন। মেম্বারশিপ প্যাকেজ ক্রয় করে লগইন অবস্থায় ডাউনলোড করুন।',
+      };
+    }
+
+    // Daily Download Limit Verification (৳499 = 10 files/day, ৳899 = 20 files/day, ৳1,199 = Unlimited)
+    const plan = MEMBERSHIP_PLANS.find((p) => p.id === membership.planId);
+    const dailyLimit = plan?.dailyDownloadLimit ?? null;
+
+    if (dailyLimit !== null) {
+      const todayCount = await getTodayVipDownloadCount(customer.userId, customer.email);
+      if (todayCount >= dailyLimit) {
+        const planTitle =
+          membership.planId === 'monthly'
+            ? '১ মাস ওয়ার্ডপ্রেস পাস (৳৪৯৯)'
+            : '১ মাস অল-এক্সেস পাস (৳৮৯৯)';
+        return {
+          success: false,
+          error: `আপনার ${planTitle} প্যাকেজের আজকের দৈনিক ডাউনলোড লিমিট (${dailyLimit}টি ফাইল) পূর্ণ হয়ে গেছে। রাত ১২টার পর পুনরায় ডাউনলোড করতে পারবেন। কোনো দৈনিক লিমিট ছাড়া সীমাহীন ডাউনলোডের জন্য আজীবন ভিআইপি পাসে (৳১,১৯৯) আপগ্রেড করুন!`,
+        };
+      }
+    }
+
+    let productId = product.id;
+
+    // Defense-in-depth: Verify product exists in database, or lookup by slug
+    try {
+      const sb = getSupabase();
+      const { data: dbProd } = await sb
+        .from('products')
+        .select('id, name, slug, category_id, categories(slug)')
+        .eq('id', productId)
+        .maybeSingle();
+
+      if (!dbProd && product.slug) {
+        const { data: bySlug } = await sb
+          .from('products')
+          .select('id, name, slug, category_id, categories(slug)')
+          .eq('slug', product.slug)
+          .maybeSingle();
+        if (bySlug?.id) {
+          productId = bySlug.id;
+        }
+      }
+
+      // 499 Plan Restriction: Only WordPress themes and plugins allowed
+      if (membership.planId === 'monthly') {
+        const checkTarget = dbProd || null;
+        const catSlug = (checkTarget as any)?.categories?.slug;
+        const nameLower = (checkTarget?.name || product.name || '').toLowerCase();
+        const isWpCategory = catSlug === 'wordpress' || catSlug === 'plugins';
+        const isWpText = nameLower.includes('wordpress') || nameLower.includes('plugin') || nameLower.includes('theme');
+
+        if (catSlug && !isWpCategory && !isWpText) {
+          return {
+            success: false,
+            error: 'আপনার "১ মাস ওয়ার্ডপ্রেস পাস (৳৪৯৯)" প্যাকেজটি শুধুমাত্র ওয়ার্ডপ্রেস থিম ও প্লাগইনের জন্য প্রযোজ্য। কোর্স, সফটওয়্যার, এআই টুলস ও স্ক্রিপ্ট আনলিমিটেড পেতে আজীবন ভিআইপি পাস (৳১,১৯৯) অথবা ১ মাস অল-এক্সেস পাস বেছে নিন!',
+          };
+        }
+      }
+    } catch {
+      // non-blocking
+    }
+
     const orderResult = await createCheckoutOrderPriced({
       customerName: customer.name.trim() || 'VIP Member',
       customerEmail: customer.email.trim(),
       customerPhone: customer.phone?.trim() || '01700000000',
       customerNote: `VIP Membership Claim: ${product.name}`,
-      items: [{ product_id: product.id, quantity: 1 }],
+      items: [{ product_id: productId, quantity: 1 }],
       couponCode: 'VIP_PASS_FREE',
     });
 
     if (!orderResult?.order_number || !orderResult?.access_token) {
       throw new Error('Could not generate VIP entitlement.');
     }
+
+    // Record local counter increment
+    recordLocalVipDownload(customer.userId, customer.email);
 
     // If user is authenticated, associate user_id with the new order in background
     if (customer.userId) {
@@ -222,30 +395,27 @@ export async function claimVipProductDownload(
       }
     }
 
+    // Get order receipt to retrieve order item ID safely without RLS restrictions
+    const receipt = await getGuestOrderReceipt(orderResult.order_number, orderResult.access_token);
+    const matchedItem = receipt.items?.find((i) => i.product_id === productId || i.product_id === product.id) || receipt.items?.[0];
+    const orderItemId = matchedItem?.id;
+
     // Fetch download link via external-downloads guest protocol
     const links = await listOrderDownloadsGuest(orderResult.order_number, orderResult.access_token);
     if (!links || links.length === 0) {
       return {
         success: true,
         orderNumber: orderResult.order_number,
-        error: 'No active download file found for this product yet. Please contact support.',
+        url: '/account/downloads',
       };
     }
 
-    // Grab the first link
-    const firstLink = links[0];
-    const { data: orderDetails } = await getSupabase()
-      .from('order_items')
-      .select('id')
-      .eq('order_id', orderResult.order_id)
-      .eq('product_id', product.id)
-      .maybeSingle();
-
-    const orderItemId = orderDetails?.id;
     if (!orderItemId) {
-      throw new Error('Order item not found.');
+      throw new Error('Order item could not be verified.');
     }
 
+    // Grab the first active download link
+    const firstLink = links[0];
     const downloadUrl = await openDownloadLinkGuest(
       orderResult.order_number,
       orderResult.access_token,

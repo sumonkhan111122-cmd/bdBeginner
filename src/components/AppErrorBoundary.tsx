@@ -17,6 +17,27 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
     });
   }
 
+  private handleReload = () => {
+    try {
+      sessionStorage.removeItem('bdBeginner-cart');
+      sessionStorage.removeItem('bdBeginner-coupon');
+    } catch {
+      // ignore
+    }
+    window.location.reload();
+  };
+
+  private handleGoHome = (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      sessionStorage.removeItem('bdBeginner-cart');
+      sessionStorage.removeItem('bdBeginner-coupon');
+    } catch {
+      // ignore
+    }
+    window.location.href = '/';
+  };
+
   render() {
     if (!this.state.hasError) return this.props.children;
 
@@ -31,17 +52,18 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
           <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
             <button
               type="button"
-              onClick={() => window.location.reload()}
+              onClick={this.handleReload}
               className="inline-flex h-11 items-center justify-center rounded-xl bg-brand-600 px-5 text-sm font-semibold text-white hover:bg-brand-700"
             >
               Reload page
             </button>
-            <a
-              href="/"
+            <button
+              type="button"
+              onClick={this.handleGoHome}
               className="inline-flex h-11 items-center justify-center rounded-xl border border-ink-200 bg-white px-5 text-sm font-semibold text-ink-800 hover:bg-ink-50"
             >
               Go to homepage
-            </a>
+            </button>
           </div>
         </section>
       </main>

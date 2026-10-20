@@ -117,31 +117,11 @@ export default function App() {
         <Route path="/categories" element={<CategoriesPage />} />
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/services/:slug" element={<ServiceDetailPage />} />
-        <Route path="/wordpress" element={<ProductsPage initialCategory="WordPress" />} />
-        <Route path="/plugins" element={<ProductsPage initialCategory="WordPress" />} />
+        <Route path="/wordpress" element={<ProductsPage initialCategory="WordPress Themes" />} />
+        <Route path="/plugins" element={<ProductsPage initialCategory="WordPress Plugins" />} />
         <Route path="/playflix" element={<PlayflixRedirect />} />
-        <Route
-          path="/resources"
-          element={
-            <PlaceholderPage
-              title="Digital Resources"
-              description="Templates, graphics, UI kits, and downloadable digital assets for designers and developers."
-              backLink="/"
-              backLabel="Back to Home"
-            />
-          }
-        />
-        <Route
-          path="/deals"
-          element={
-            <PlaceholderPage
-              title="Deals & Offers"
-              description="Current promotions and discounted digital products. Check back regularly for new deals."
-              backLink="/"
-              backLabel="Back to Home"
-            />
-          }
-        />
+        <Route path="/resources" element={<ProductsPage initialCategory="Digital Resources" />} />
+        <Route path="/deals" element={<ProductsPage dealsOnly={true} />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/order/success/:orderNumber" element={<OrderSuccessPage />} />

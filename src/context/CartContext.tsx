@@ -40,20 +40,41 @@ const CartContext = createContext<CartContextValue | null>(null);
 const CART_KEY = 'bdBeginner-cart';
 const COUPON_KEY = 'bdBeginner-coupon';
 
+function isValidCartItem(item: unknown): item is CartItem {
+  if (!item || typeof item !== 'object') return false;
+  const candidate = item as Partial<CartItem>;
+  return (
+    typeof candidate.productId === 'string' &&
+    candidate.productId.trim().length > 0 &&
+    typeof candidate.name === 'string' &&
+    candidate.name.trim().length > 0 &&
+    typeof candidate.price === 'number' &&
+    !Number.isNaN(candidate.price) &&
+    typeof candidate.quantity === 'number' &&
+    candidate.quantity > 0
+  );
+}
+
 function createCartItem(product: Product, quantity: number): CartItem {
   return {
     id: product.id,
     productId: product.id,
-    slug: product.slug,
-    name: product.name,
-    price: product.price,
-    thumbnail: product.thumbnail,
-    icon: product.icon,
-    accent: product.accent,
-    deliveryType: product.deliveryType,
-    quantity,
+    slug: product.slug || '',
+    name: product.name || 'Digital Product',
+    price: typeof product.price === 'number' ? product.price : 0,
+    thumbnail: product.thumbnail || '',
+    icon: product.icon || 'Package',
+    accent: product.accent || 'brand',
+    deliveryType: product.deliveryType || 'instant-download',
+    quantity: Math.max(1, quantity),
   };
 }
+
+const LEGACY_PRODUCT_ID_MIGRATIONS: Record<string, string> = {
+  'a0000001-0000-0000-0000-000000000001': 'a0000001-0000-4000-8000-000000000001',
+  'a0000001-0000-0000-0000-000000000002': 'a0000001-0000-4000-8000-000000000002',
+  'a0000001-0000-0000-0000-000000000003': 'a0000001-0000-4000-8000-000000000003',
+};
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(() => {
@@ -61,8 +82,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (!stored) return [];
     try {
       const parsed: unknown = JSON.parse(stored);
-      return Array.isArray(parsed) ? (parsed as CartItem[]) : [];
+      if (!Array.isArray(parsed)) return [];
+      let hasMigration = false;
+      const valid = parsed.filter(isValidCartItem).map((item) => {
+        const replacementId = LEGACY_PRODUCT_ID_MIGRATIONS[item.productId];
+        if (replacementId) {
+          hasMigration = true;
+          return { ...item, id: replacementId, productId: replacementId };
+        }
+        return item;
+      });
+      if (hasMigration || valid.length !== parsed.length) {
+        sessionStorage.setItem(CART_KEY, JSON.stringify(valid));
+      }
+      return valid;
     } catch {
+      sessionStorage.removeItem(CART_KEY);
       return [];
     }
   });
@@ -190,16 +225,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // ── Cart operations ──
   const addItem = useCallback((product: Product, quantity = 1, shouldOpenCart = true) => {
+    if (!product || !product.id || typeof product.id !== 'string') {
+      console.error('Invalid product passed to addItem:', product);
+      return;
+    }
+    const safeQty = Math.max(1, Math.floor(quantity) || 1);
     setItems((prev) => {
       const existing = prev.find((item) => item.productId === product.id);
       if (existing) {
         return prev.map((item) =>
           item.productId === product.id
-            ? { ...item, quantity: item.quantity + quantity }
+            ? { ...item, quantity: item.quantity + safeQty }
             : item,
         );
       }
-      return [...prev, createCartItem(product, quantity)];
+      return [...prev, createCartItem(product, safeQty)];
     });
     if (shouldOpenCart) {
       setIsOpen(true);

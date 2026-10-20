@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Crown, Check, ArrowRight, Zap, Flame, ShieldCheck, Sparkles, Download, RefreshCw } from 'lucide-react';
-import { MEMBERSHIP_PLANS, type MembershipPlan } from '@/data/membershipPlans';
+import { Crown, Check, ArrowRight, Zap, ShieldCheck, Sparkles, Download, RefreshCw, X, Package, Star } from 'lucide-react';
+import { MEMBERSHIP_PLANS, planToProduct, type MembershipPlan } from '@/data/membershipPlans';
 import { useCart } from '@/context/CartContext';
 
 export function MembershipSection() {
@@ -10,7 +10,7 @@ export function MembershipSection() {
 
   const handleSelectPlan = (plan: MembershipPlan) => {
     clearCart();
-    addItem(plan.productId, 1);
+    addItem(planToProduct(plan), 1, false);
     navigate('/checkout');
   };
 
@@ -21,7 +21,7 @@ export function MembershipSection() {
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3.5 py-1 text-xs font-bold text-amber-900 shadow-xs">
-            <Crown size={14} className="text-amber-500 fill-amber-400" />
+            <Crown size={14} className="text-amber-600" strokeWidth={2} />
             <span>VIP ALL-ACCESS MEMBERSHIP</span>
           </div>
 
@@ -34,35 +34,35 @@ export function MembershipSection() {
           </p>
         </div>
 
-        {/* 3 Balanced Pricing Cards matching site's white card aesthetic */}
-        <div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-6 items-stretch max-w-5xl mx-auto">
+        {/* 3 Balanced Pricing Cards with Center-Stage Lifetime VIP Hero */}
+        <div className="mt-14 grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-6 items-stretch max-w-5xl mx-auto">
           {MEMBERSHIP_PLANS.map((plan) => {
             const isLifetime = plan.id === 'lifetime';
-            const isYearly = plan.id === 'yearly';
+            const isDecoy = plan.id === 'yearly';
 
             return (
               <div
                 key={plan.id}
                 className={`relative flex flex-col justify-between rounded-2xl p-6 sm:p-7 transition-all duration-300 ${
                   isLifetime
-                    ? 'border-2 border-amber-400 bg-gradient-to-b from-amber-50/40 via-white to-white shadow-floating ring-4 ring-amber-400/10 lg:-translate-y-2'
-                    : isYearly
-                    ? 'border border-brand-200 bg-gradient-to-b from-brand-50/20 to-white shadow-card hover:border-brand-300'
-                    : 'border border-ink-100 bg-white shadow-card hover:border-ink-200'
+                    ? 'border-2 border-amber-400 bg-gradient-to-b from-amber-50/50 via-white to-amber-50/20 shadow-2xl ring-4 ring-amber-400/20 lg:-translate-y-4 lg:scale-105 z-10'
+                    : isDecoy
+                    ? 'border border-brand-200 bg-white shadow-card hover:border-brand-300 hover:shadow-md'
+                    : 'border border-ink-200 bg-white shadow-card hover:border-ink-300 hover:shadow-md'
                 }`}
               >
                 {/* Top Badge */}
                 {plan.badge && (
                   <div
-                    className={`absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full px-3 py-0.5 text-[11px] font-bold tracking-wide uppercase shadow-sm flex items-center gap-1 ${
+                    className={`absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full px-3.5 py-1 text-[11px] font-extrabold tracking-wide uppercase shadow-md flex items-center gap-1.5 ${
                       isLifetime
-                        ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-ink-950 ring-1 ring-amber-300'
-                        : isYearly
-                        ? 'bg-brand-600 text-white'
+                        ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-ink-950 ring-2 ring-amber-300'
+                        : isDecoy
+                        ? 'bg-brand-700 text-white'
                         : 'bg-ink-800 text-white'
                     }`}
                   >
-                    {isLifetime && <Flame size={12} className="fill-ink-950" />}
+                    {isLifetime ? <Sparkles size={12} className="text-ink-950" /> : <Star size={12} />}
                     <span>{plan.badgeBn || plan.badge}</span>
                   </div>
                 )}
@@ -79,12 +79,12 @@ export function MembershipSection() {
                       className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
                         isLifetime
                           ? 'bg-amber-100 text-amber-700'
-                          : isYearly
-                          ? 'bg-brand-50 text-brand-600'
-                          : 'bg-ink-100 text-ink-700'
+                          : isDecoy
+                          ? 'bg-purple-50 text-purple-600'
+                          : 'bg-brand-50 text-brand-600'
                       }`}
                     >
-                      {isLifetime ? <Crown size={20} className="fill-amber-500" /> : <Zap size={20} />}
+                      {isLifetime ? <Crown size={20} className="text-amber-600" strokeWidth={2} /> : isDecoy ? <Sparkles size={20} /> : <Package size={20} />}
                     </div>
                   </div>
 
@@ -108,24 +108,32 @@ export function MembershipSection() {
                     </div>
                   )}
 
+                  {/* Decoy callout note for Lifetime */}
+                  {plan.decoyNoteBn && (
+                    <div className="mt-2.5 rounded-lg bg-amber-400/15 border border-amber-400/30 px-2.5 py-1 text-[11px] font-bold text-amber-900 flex items-center justify-center gap-1">
+                      <Sparkles size={12} className="text-amber-700 shrink-0" />
+                      <span>{plan.decoyNoteBn}</span>
+                    </div>
+                  )}
+
                   <div className="my-5 h-px bg-ink-100" />
 
                   {/* Feature Checklist */}
                   <ul className="space-y-2.5 text-xs text-ink-700">
-                    {plan.features.slice(0, 4).map((f, i) => (
+                    {plan.features.slice(0, 5).map((f, i) => (
                       <li key={i} className="flex items-start gap-2.5">
                         <span
                           className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${
-                            isLifetime
+                            f.unavailable
+                              ? 'bg-rose-50 text-rose-500'
+                              : isLifetime
                               ? 'bg-amber-100 text-amber-800'
-                              : isYearly
-                              ? 'bg-brand-100 text-brand-700'
-                              : 'bg-ink-100 text-ink-700'
+                              : 'bg-brand-50 text-brand-700'
                           }`}
                         >
-                          <Check size={11} strokeWidth={3} />
+                          {f.unavailable ? <X size={10} strokeWidth={3} /> : <Check size={11} strokeWidth={3} />}
                         </span>
-                        <span className={f.highlight ? 'font-bold text-ink-900' : 'text-ink-600'}>
+                        <span className={f.unavailable ? 'text-ink-400 line-through' : f.highlight ? 'font-bold text-ink-900' : 'text-ink-600'}>
                           {f.textBn}
                         </span>
                       </li>
@@ -139,15 +147,18 @@ export function MembershipSection() {
                     onClick={() => handleSelectPlan(plan)}
                     className={`w-full py-3 px-4 rounded-xl font-display font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 ${
                       isLifetime
-                        ? 'bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-ink-950 hover:brightness-105 active:scale-[0.99] shadow-md shadow-amber-500/20'
-                        : isYearly
-                        ? 'bg-brand-600 text-white hover:bg-brand-700 active:scale-[0.99] shadow-sm'
+                        ? 'bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-ink-950 hover:brightness-105 active:scale-[0.99] shadow-md shadow-amber-500/20 font-extrabold text-sm'
+                        : isDecoy
+                        ? 'bg-brand-700 text-white hover:bg-brand-800 active:scale-[0.99] shadow-sm'
                         : 'bg-ink-900 text-white hover:bg-ink-800 active:scale-[0.99]'
                     }`}
                   >
                     <span>{plan.ctaTextBn}</span>
                     <ArrowRight size={15} />
                   </button>
+                  <p className={`mt-2 text-center text-[10px] ${isLifetime ? 'text-amber-800 font-semibold' : 'text-ink-400'}`}>
+                    {isLifetime ? 'এককালীন পেমেন্ট • আজীবন ফ্রি এক্সেস' : 'তাত্ক্ষণিক সক্রিয়করণ • বিকাশ / নগদ'}
+                  </p>
                 </div>
               </div>
             );

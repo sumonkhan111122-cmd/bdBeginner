@@ -36,6 +36,8 @@ export type ProductImportPreviewItem = {
   downloadPageUrl?: string | null;
   downloadError?: string | null;
   downloadPackageName?: string | null;
+  price?: number;
+  compareAtPrice?: number;
 };
 
 export type ProductImportPreview = {

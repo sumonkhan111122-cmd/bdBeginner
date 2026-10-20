@@ -143,13 +143,13 @@ export function AccountOverviewPage() {
                   </p>
                   <div className="mt-3 flex flex-wrap gap-4 text-xs font-semibold text-ink-700">
                     <span className="flex items-center gap-1.5">
-                      <CheckCircle2 size={14} className="text-emerald-600" /> ১ মাস: ৳৪৯৯
+                      <CheckCircle2 size={14} className="text-emerald-600" /> ১ মাস WP: ৳৪৯৯
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <CheckCircle2 size={14} className="text-emerald-600" /> ১ বছর: ৳৭৯৯
+                      <CheckCircle2 size={14} className="text-emerald-600" /> ১ মাস অল-এক্সেস: ৳৮৯৯
                     </span>
                     <span className="flex items-center gap-1.5 font-bold text-amber-800">
-                      <Sparkles size={14} className="text-amber-600" /> লাইফটাইম: ৳৯৯৯ (সেরা অফার)
+                      <Sparkles size={14} className="text-amber-600" /> লাইফটাইম: ৳১,১৯৯ (সেরা অফার)
                     </span>
                   </div>
                 </div>

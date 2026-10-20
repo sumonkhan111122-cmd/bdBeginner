@@ -19,9 +19,13 @@ export function CategoryCard({ category }: CategoryCardProps) {
   const Icon = (Icons[category.icon as keyof typeof Icons] ?? Icons.Folder) as Icons.LucideIcon;
   const colors = accentMap[category.color] ?? accentMap.brand;
 
+  const targetUrl = category.slug === 'web-services'
+    ? '/services'
+    : `/products?category=${encodeURIComponent(category.slug)}`;
+
   return (
     <Link
-      to={`/categories#${category.slug}`}
+      to={targetUrl}
       className="group relative flex flex-col items-start overflow-hidden rounded-xl border border-ink-100 bg-white p-5 transition-all duration-200 ease-smooth hover:border-ink-200 hover:shadow-card sm:p-6"
     >
       {/* Accent bar at bottom */}
@@ -35,14 +39,14 @@ export function CategoryCard({ category }: CategoryCardProps) {
       >
         <Icon size={22} aria-hidden="true" />
       </div>
-      <h3 className="mt-4 font-display text-base font-bold text-ink-900">
+      <h3 className="mt-4 font-display text-base font-bold text-ink-900 group-hover:text-brand-700 transition-colors">
         {category.name}
       </h3>
       <p className="mt-1 text-sm leading-relaxed text-ink-500">
         {category.tagline}
       </p>
       <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-500 transition-colors group-hover:text-brand-600">
-        Browse
+        Browse {category.name}
         <ArrowRight size={14} className="transition-transform duration-200 group-hover:translate-x-0.5" />
       </span>
     </Link>

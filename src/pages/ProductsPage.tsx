@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { ProductCard } from '@/components/cards/ProductCard';
 import { Button } from '@/components/ui/Button';
@@ -14,6 +15,16 @@ import {
   X,
   ChevronDown,
   Check,
+  Tag,
+  Sparkles,
+  LayoutGrid,
+  Palette,
+  Puzzle,
+  Laptop,
+  GraduationCap,
+  Folder,
+  Code2,
+  Bot,
 } from 'lucide-react';
 import type { DeliveryType } from '@/types';
 
@@ -40,43 +51,140 @@ const SORT_LABELS: Record<SortOption, string> = {
   'price-desc': 'Price: High to Low',
 };
 
-type ProductsPageProps = {
-  initialCategory?: string;
+const CATEGORY_SLUG_MAP: Record<string, string> = {
+  wordpress: 'WordPress Themes',
+  'wordpress-themes': 'WordPress Themes',
+  theme: 'WordPress Themes',
+  themes: 'WordPress Themes',
+  plugins: 'WordPress Plugins',
+  'wordpress-plugins': 'WordPress Plugins',
+  plugin: 'WordPress Plugins',
+  software: 'Software',
+  'ai-tools': 'AI Tools',
+  ai: 'AI Tools',
+  'web-services': 'Web Services',
+  courses: 'Courses',
+  course: 'Courses',
+  'digital-resources': 'Digital Resources',
+  resources: 'Digital Resources',
+  scripts: 'PHP Scripts & Code',
+  script: 'PHP Scripts & Code',
+  'php-scripts': 'PHP Scripts & Code',
+  php: 'PHP Scripts & Code',
 };
 
-export function ProductsPage({ initialCategory }: ProductsPageProps = {}) {
+const QUICK_CATEGORY_PILLS = [
+  { label: 'সব প্রোডাক্ট', slug: 'all', categoryName: null, icon: LayoutGrid },
+  { label: 'WordPress Themes', slug: 'wordpress', categoryName: 'WordPress Themes', icon: Palette },
+  { label: 'WordPress Plugins', slug: 'plugins', categoryName: 'WordPress Plugins', icon: Puzzle },
+  { label: 'Software & Tools', slug: 'software', categoryName: 'Software', icon: Laptop },
+  { label: 'Digital Courses', slug: 'courses', categoryName: 'Courses', icon: GraduationCap },
+  { label: 'Digital Resources', slug: 'digital-resources', categoryName: 'Digital Resources', icon: Folder },
+  { label: 'PHP Scripts', slug: 'scripts', categoryName: 'PHP Scripts & Code', icon: Code2 },
+  { label: 'AI Tools', slug: 'ai-tools', categoryName: 'AI Tools', icon: Bot },
+  { label: 'স্পেশাল ডিল', slug: 'deals', categoryName: '__deals__', icon: Tag },
+];
+
+function resolveCategoryName(raw: string, availableCategories: string[]): string {
+  const normalized = raw.toLowerCase().trim();
+  if (CATEGORY_SLUG_MAP[normalized]) {
+    return CATEGORY_SLUG_MAP[normalized];
+  }
+  const match = availableCategories.find(
+    (c) => c.toLowerCase() === normalized || c.toLowerCase().includes(normalized)
+  );
+  return match || raw;
+}
+
+type ProductsPageProps = {
+  initialCategory?: string;
+  dealsOnly?: boolean;
+};
+
+export function ProductsPage({ initialCategory, dealsOnly = false }: ProductsPageProps = {}) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const formatPrice = useCurrencyFormatter();
   const { data: products, loading, error, retry } = usePublishedProducts();
+
   const priceRangeLabels = [
     `Under ${formatPrice(500)}`,
     `${formatPrice(500)} – ${formatPrice(1000)}`,
     `${formatPrice(1000)} – ${formatPrice(2000)}`,
     `${formatPrice(2000)}+`,
   ];
+
   const categoryNames = useMemo(
     () => [...new Set(products.map((p) => p.category))].sort(),
     [products],
   );
+
   const PRODUCTS_PER_PAGE = 30;
   const [currentPage, setCurrentPage] = useState(1);
-  const [search, setSearch] = useState('');
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(
-    initialCategory ? [initialCategory] : [],
-  );
+
+  const urlCategoryParam = searchParams.get('category');
+  const urlDealsParam = searchParams.get('deals') === 'true' || dealsOnly;
+  const urlSearchParam = searchParams.get('search') || searchParams.get('q') || '';
+
+  const [search, setSearch] = useState(urlSearchParam);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(() => {
+    const raw = urlCategoryParam || initialCategory;
+    return raw ? [resolveCategoryName(raw, [])] : [];
+  });
+  const [isDealsOnly, setIsDealsOnly] = useState<boolean>(urlDealsParam);
   const [selectedTypes, setSelectedTypes] = useState<DeliveryType[]>([]);
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<number[]>([]);
   const [sort, setSort] = useState<SortOption>('featured');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
+  // Sync state whenever URL or props change
+  useEffect(() => {
+    const raw = urlCategoryParam || initialCategory;
+    if (raw) {
+      setSelectedCategories([resolveCategoryName(raw, categoryNames)]);
+    } else if (!urlCategoryParam && !initialCategory) {
+      setSelectedCategories([]);
+    }
+    setIsDealsOnly(urlDealsParam);
+  }, [urlCategoryParam, initialCategory, urlDealsParam, categoryNames]);
+
+  useEffect(() => {
+    if (urlSearchParam) {
+      setSearch(urlSearchParam);
+    }
+  }, [urlSearchParam]);
+
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, selectedCategories, selectedTypes, selectedPriceRanges, sort]);
+  }, [search, selectedCategories, isDealsOnly, selectedTypes, selectedPriceRanges, sort]);
 
   const toggleCategory = useCallback((cat: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat],
-    );
-  }, []);
+    setSelectedCategories((prev) => {
+      const next = prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat];
+      const params = new URLSearchParams(searchParams);
+      if (next.length === 1) {
+        const foundSlug = Object.entries(CATEGORY_SLUG_MAP).find(([, name]) => name === next[0])?.[0] || next[0];
+        params.set('category', foundSlug);
+      } else {
+        params.delete('category');
+      }
+      setSearchParams(params, { replace: true });
+      return next;
+    });
+  }, [searchParams, setSearchParams]);
+
+  const toggleDeals = useCallback(() => {
+    setIsDealsOnly((prev) => {
+      const nextVal = !prev;
+      const params = new URLSearchParams(searchParams);
+      if (nextVal) {
+        params.set('deals', 'true');
+      } else {
+        params.delete('deals');
+      }
+      setSearchParams(params, { replace: true });
+      return nextVal;
+    });
+  }, [searchParams, setSearchParams]);
 
   const toggleType = useCallback((type: DeliveryType) => {
     setSelectedTypes((prev) =>
@@ -92,13 +200,46 @@ export function ProductsPage({ initialCategory }: ProductsPageProps = {}) {
 
   const clearAllFilters = useCallback(() => {
     setSelectedCategories([]);
+    setIsDealsOnly(false);
     setSelectedTypes([]);
     setSelectedPriceRanges([]);
     setSearch('');
-  }, []);
+    const params = new URLSearchParams(searchParams);
+    params.delete('category');
+    params.delete('deals');
+    params.delete('search');
+    params.delete('q');
+    setSearchParams(params, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  const handlePillClick = (pill: typeof QUICK_CATEGORY_PILLS[number]) => {
+    setCurrentPage(1);
+    const params = new URLSearchParams(searchParams);
+
+    if (pill.slug === 'all') {
+      setSelectedCategories([]);
+      setIsDealsOnly(false);
+      params.delete('category');
+      params.delete('deals');
+    } else if (pill.slug === 'deals') {
+      setSelectedCategories([]);
+      setIsDealsOnly(true);
+      params.delete('category');
+      params.set('deals', 'true');
+    } else {
+      setIsDealsOnly(false);
+      params.delete('deals');
+      if (pill.categoryName) {
+        setSelectedCategories([pill.categoryName]);
+        params.set('category', pill.slug);
+      }
+    }
+    setSearchParams(params, { replace: true });
+  };
 
   const hasActiveFilters =
     selectedCategories.length > 0 ||
+    isDealsOnly ||
     selectedTypes.length > 0 ||
     selectedPriceRanges.length > 0 ||
     search.length > 0;
@@ -112,6 +253,15 @@ export function ProductsPage({ initialCategory }: ProductsPageProps = {}) {
         !p.category.toLowerCase().includes(search.toLowerCase())
       )
         return false;
+
+      if (isDealsOnly) {
+        const hasDiscount =
+          (p.compareAtPrice && p.compareAtPrice > p.price) ||
+          p.badge === 'sale' ||
+          p.badge === 'featured' ||
+          p.featured;
+        if (!hasDiscount) return false;
+      }
 
       if (selectedCategories.length > 0 && !selectedCategories.includes(p.category))
         return false;
@@ -145,7 +295,7 @@ export function ProductsPage({ initialCategory }: ProductsPageProps = {}) {
     }
 
     return result;
-  }, [products, search, selectedCategories, selectedTypes, selectedPriceRanges, sort]);
+  }, [products, search, isDealsOnly, selectedCategories, selectedTypes, selectedPriceRanges, sort]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PRODUCTS_PER_PAGE));
   const paginatedProducts = useMemo(() => {
@@ -155,11 +305,57 @@ export function ProductsPage({ initialCategory }: ProductsPageProps = {}) {
 
   const activeFilterCount =
     selectedCategories.length +
+    (isDealsOnly ? 1 : 0) +
     selectedTypes.length +
     selectedPriceRanges.length;
 
+  const headerInfo = useMemo(() => {
+    if (isDealsOnly) {
+      return {
+        eyebrow: 'Special Deals & Offers',
+        title: 'স্পেশাল ডিল ও ডিসকাউন্ট প্রোডাক্ট সমূহ',
+        description: 'হিউজ ডিসকাউন্ট ও স্পেশাল অফারে সেরা ওয়ার্ডপ্রেস থিম, প্লাগিন, সফটওয়্যার ও ডিজিটাল রিসোর্স সংগ্রহ করুন।',
+      };
+    }
+    if (selectedCategories.length === 1) {
+      const cat = selectedCategories[0];
+      return {
+        eyebrow: 'Category',
+        title: cat,
+        description: `Explore our collection of authentic ${cat}. Instant download, clean files, and regular updates.`,
+      };
+    }
+    return {
+      eyebrow: 'Digital Marketplace',
+      title: 'Explore All Digital Products',
+      description: 'Browse WordPress themes, plugins, software, AI tools, courses, and digital resources — each with instant download and verified access.',
+    };
+  }, [isDealsOnly, selectedCategories]);
+
   const filterContent = (
     <div className="flex flex-col gap-6">
+      {/* Special Deals Quick Filter */}
+      <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3.5">
+        <button
+          onClick={toggleDeals}
+          className="flex w-full items-center justify-between text-left text-sm font-bold text-amber-950"
+        >
+          <span className="flex items-center gap-2">
+            <Tag size={16} className="text-amber-600" />
+            <span>শুধু স্পেশাল ডিল দেখুন</span>
+          </span>
+          <span
+            className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors ${
+              isDealsOnly
+                ? 'border-amber-600 bg-amber-600 text-white'
+                : 'border-amber-300 bg-white'
+            }`}
+          >
+            {isDealsOnly && <Check size={11} strokeWidth={3} />}
+          </span>
+        </button>
+      </div>
+
       {/* Categories */}
       <div>
         <h3 className="font-display text-sm font-bold uppercase tracking-wider text-ink-900">
@@ -290,24 +486,55 @@ export function ProductsPage({ initialCategory }: ProductsPageProps = {}) {
 
   return (
     <Layout>
-      {/* Header */}
-      <div className="border-b border-ink-100 bg-ink-50/40">
-        <div className="container-page py-12 sm:py-16">
+      {/* Dynamic Header */}
+      <div className="border-b border-ink-100 bg-gradient-to-b from-ink-50/60 to-white">
+        <div className="container-page py-10 sm:py-14">
           <SectionHeading
-            eyebrow="Marketplace"
-            title="Explore Digital Products"
-            description="Browse WordPress products, software, AI tools, courses, and digital resources — each with clear pricing and delivery information."
+            eyebrow={headerInfo.eyebrow}
+            title={headerInfo.title}
+            description={headerInfo.description}
           />
-          {/* Search */}
-          <div className="mt-8 max-w-2xl">
-            <div className="flex items-center gap-3 rounded-2xl border border-ink-200 bg-white px-5 py-4 shadow-soft transition-colors focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100">
-              <Search size={20} className="shrink-0 text-ink-400" />
+
+          {/* Quick Category Navigation Pills */}
+          <div className="mt-8">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+              {QUICK_CATEGORY_PILLS.map((pill) => {
+                const isActive =
+                  pill.slug === 'all'
+                    ? selectedCategories.length === 0 && !isDealsOnly
+                    : pill.slug === 'deals'
+                      ? isDealsOnly
+                      : selectedCategories.includes(pill.categoryName || '');
+
+                const Icon = pill.icon;
+                return (
+                  <button
+                    key={pill.slug}
+                    onClick={() => handlePillClick(pill)}
+                    className={`flex items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold transition-all duration-200 ${
+                      isActive
+                        ? 'bg-brand-600 text-white shadow-soft ring-2 ring-brand-600/20 scale-[1.02]'
+                        : 'border border-ink-200/80 bg-white text-ink-700 hover:border-ink-300 hover:bg-ink-50'
+                    }`}
+                  >
+                    <Icon size={15} className={isActive ? 'text-white' : 'text-brand-600'} />
+                    <span>{pill.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Search bar */}
+          <div className="mt-5 max-w-2xl">
+            <div className="flex items-center gap-3 rounded-2xl border border-ink-200 bg-white px-5 py-3.5 shadow-soft transition-colors focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100">
+              <Search size={19} className="shrink-0 text-ink-400" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search products by name, description, or category..."
-                className="w-full bg-transparent text-base text-ink-800 placeholder:text-ink-400 focus:outline-none"
+                placeholder="প্রোডাক্টের নাম, বিবরণ বা ক্যাটাগরি সার্চ করুন..."
+                className="w-full bg-transparent text-sm sm:text-base text-ink-800 placeholder:text-ink-400 focus:outline-none"
                 aria-label="Search products"
               />
               {search && (
@@ -316,7 +543,7 @@ export function ProductsPage({ initialCategory }: ProductsPageProps = {}) {
                   className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-ink-400 transition-colors hover:bg-ink-50 hover:text-ink-700"
                   aria-label="Clear search"
                 >
-                  <X size={18} />
+                  <X size={17} />
                 </button>
               )}
             </div>
@@ -409,6 +636,16 @@ export function ProductsPage({ initialCategory }: ProductsPageProps = {}) {
             {/* Active filter chips */}
             {activeFilterCount > 0 && (
               <div className="flex flex-wrap items-center gap-2 pt-3">
+                {isDealsOnly && (
+                  <button
+                    onClick={toggleDeals}
+                    className="flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800 transition-colors hover:bg-amber-200"
+                  >
+                    <Tag size={12} className="text-amber-700" />
+                    <span>Special Deals</span>
+                    <X size={12} />
+                  </button>
+                )}
                 {selectedCategories.map((cat) => (
                   <button
                     key={cat}
