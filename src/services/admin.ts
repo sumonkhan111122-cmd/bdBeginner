@@ -933,7 +933,11 @@ export async function syncDownloadLinks(
   // delete removed links
   for (const ex of existing) {
     if (!newIds.has(ex.id)) {
-      await deleteProductDownloadLink(ex.id);
+      try {
+        await deleteProductDownloadLink(ex.id);
+      } catch (delErr) {
+        console.warn('Could not delete old download link:', ex.id, delErr);
+      }
     }
   }
 
@@ -977,5 +981,47 @@ export async function deleteProducts(productIds: string[]): Promise<void> {
     console.error('Failed to delete products:', error);
     throw new Error(error.message || 'Failed to delete products.');
   }
+}
+
+export function extractErrorMessage(
+  err: unknown,
+  fallback = 'Operation failed. Please check your connection and try again.'
+): string {
+  if (!err) return fallback;
+  if (typeof err === 'string' && err.trim()) return err;
+  if (err instanceof Error && err.message) {
+    if (err.message.includes('42501') || err.message.includes('permission denied')) {
+      return 'Admin permission denied. Please log out and sign in again as administrator.';
+    }
+    return err.message;
+  }
+  if (typeof err === 'object') {
+    const obj = err as Record<string, unknown>;
+    const code = String(obj.code || '');
+    const msg = typeof obj.message === 'string' ? obj.message : '';
+    const details = typeof obj.details === 'string' ? obj.details : '';
+    const hint = typeof obj.hint === 'string' ? obj.hint : '';
+    const errDesc = typeof obj.error_description === 'string' ? obj.error_description : '';
+    const errorStr = typeof obj.error === 'string' ? obj.error : '';
+
+    if (code === '42501' || msg.includes('permission denied') || details.includes('permission denied')) {
+      return 'Admin permission denied. Please log out and sign in again as administrator.';
+    }
+    if (msg.trim()) {
+      if (details.trim()) return `${msg}: ${details}`;
+      if (hint.trim()) return `${msg} (${hint})`;
+      return msg;
+    }
+    if (errDesc.trim()) return errDesc;
+    if (errorStr.trim()) return errorStr;
+    if (details.trim()) return details;
+    if (hint.trim()) return hint;
+
+    try {
+      const str = JSON.stringify(err);
+      if (str && str !== '{}') return str;
+    } catch {}
+  }
+  return fallback;
 }
 

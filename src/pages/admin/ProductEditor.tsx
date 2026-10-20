@@ -29,6 +29,7 @@ import {
   fetchProductDownloadLinks,
   syncDownloadLinks,
   ensureUniqueSlug,
+  extractErrorMessage,
   type ProductInput,
 } from '@/services/admin';
 import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
@@ -210,6 +211,19 @@ export function ProductEditor({ productId }: ProductEditorProps) {
   const [dragActive, setDragActive] = useState(false);
   const originalImageUrls = useRef<Set<string>>(new Set());
   const previewUrls = useRef<Set<string>>(new Set());
+  const initialChildData = useRef<{
+    features: string;
+    includes: string;
+    faqs: string;
+    images: string;
+    links: string;
+  }>({
+    features: '[]',
+    includes: '[]',
+    faqs: '[]',
+    images: '[]',
+    links: '[]',
+  });
 
   useEffect(() => {
     const urls = previewUrls.current;
@@ -282,6 +296,32 @@ export function ProductEditor({ productId }: ProductEditorProps) {
         })),
       });
       originalImageUrls.current = new Set(loadedImages.map((image) => image.image_url));
+      initialChildData.current = {
+        features: JSON.stringify(product.features.map((f) => f.feature)),
+        includes: JSON.stringify(product.includes.map((i) => i.item)),
+        faqs: JSON.stringify(product.faqs.map((f) => ({ question: f.question, answer: f.answer }))),
+        images: JSON.stringify(
+          loadedImages
+            .filter((img) => img.image_url.trim() !== '')
+            .map((img, i) => ({
+              image_url: img.image_url,
+              alt_text: img.alt_text || null,
+              sort_order: img.sort_order ?? i,
+            })),
+        ),
+        links: JSON.stringify(
+          loadedLinks
+            .filter((l) => l.title.trim() !== '' && l.download_url.trim() !== '')
+            .map((l) => ({
+              id: l.id,
+              title: l.title,
+              download_url: l.download_url,
+              version: l.version || null,
+              sort_order: l.sort_order,
+              is_active: l.is_active,
+            })),
+        ),
+      };
       setPrimaryImageKey(
         loadedImages.find((img) => img.image_url === product.thumbnail_url)?.key ?? null,
       );
@@ -466,6 +506,8 @@ export function ProductEditor({ productId }: ProductEditorProps) {
     if (!state.delivery_type) e.delivery_type = 'Delivery type is required.';
     if (state.delivery_type === 'digital_download') {
       state.download_links.forEach((link, idx) => {
+        // If row is completely blank, ignore it so draft entries don't block saving
+        if (!link.title.trim() && !link.download_url.trim()) return;
         if (!link.title.trim()) {
           e[`download_link_${idx}_title`] = 'Title is required.';
         }
@@ -474,8 +516,8 @@ export function ProductEditor({ productId }: ProductEditorProps) {
         } else {
           try {
             const url = new URL(link.download_url);
-            if (url.protocol !== 'https:') {
-              e[`download_link_${idx}_url`] = 'URL must use HTTPS.';
+            if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+              e[`download_link_${idx}_url`] = 'URL must use HTTP or HTTPS.';
             }
           } catch {
             e[`download_link_${idx}_url`] = 'Invalid URL format.';
@@ -524,7 +566,10 @@ export function ProductEditor({ productId }: ProductEditorProps) {
   };
 
   const handleSave = async () => {
-    if (!validate()) return;
+    if (!validate()) {
+      setSaveError('Please review the form. Some required fields are missing or invalid.');
+      return;
+    }
     setSaving(true);
     setSaveError(null);
     setImageError(null);
@@ -545,6 +590,7 @@ export function ProductEditor({ productId }: ProductEditorProps) {
       }
       persistedProductId = resultId;
 
+      const hasNewFiles = state.images.some((img) => !!img.file);
       const resolvedImages: ImageItem[] = [];
       for (let index = 0; index < state.images.length; index += 1) {
         const image = state.images[index];
@@ -571,15 +617,26 @@ export function ProductEditor({ productId }: ProductEditorProps) {
         await updateProduct(resultId, { thumbnail_url: finalThumbnail });
       }
 
-      await Promise.all([
-        syncFeatures(resultId, state.features.filter((f) => f.trim() !== '')),
-        syncIncludes(resultId, state.includes.filter((i) => i.trim() !== '')),
-        syncFaqs(
-          resultId,
-          state.faqs.filter((f) => f.question.trim() && f.answer.trim()),
-        ),
-        syncImages(
-          resultId,
+      // Check what actually changed before doing expensive DELETE + INSERT queries
+      const featuresChanged =
+        !isEdit ||
+        JSON.stringify(state.features.filter((f) => f.trim() !== '')) !==
+          initialChildData.current.features;
+
+      const includesChanged =
+        !isEdit ||
+        JSON.stringify(state.includes.filter((i) => i.trim() !== '')) !==
+          initialChildData.current.includes;
+
+      const faqsChanged =
+        !isEdit ||
+        JSON.stringify(state.faqs.filter((f) => f.question.trim() && f.answer.trim())) !==
+          initialChildData.current.faqs;
+
+      const imagesChanged =
+        !isEdit ||
+        hasNewFiles ||
+        JSON.stringify(
           resolvedImages
             .filter((img) => img.image_url.trim() !== '')
             .map((img, i) => ({
@@ -587,12 +644,88 @@ export function ProductEditor({ productId }: ProductEditorProps) {
               alt_text: img.alt_text || null,
               sort_order: img.sort_order ?? i,
             })),
-        ),
-        syncDownloadLinks(
-          resultId,
-          state.download_links.filter(l => l.title.trim() !== '' && l.download_url.trim() !== '')
-        ),
-      ]);
+        ) !== initialChildData.current.images;
+
+      const linksChanged =
+        !isEdit ||
+        JSON.stringify(
+          state.download_links
+            .filter((l) => l.title.trim() !== '' && l.download_url.trim() !== '')
+            .map((l) => ({
+              id: l.id,
+              title: l.title,
+              download_url: l.download_url,
+              version: l.version || null,
+              sort_order: l.sort_order,
+              is_active: l.is_active,
+            })),
+        ) !== initialChildData.current.links;
+
+      const subErrors: string[] = [];
+
+      if (featuresChanged) {
+        try {
+          await syncFeatures(resultId, state.features.filter((f) => f.trim() !== ''));
+        } catch (subErr) {
+          console.warn('Features sync warning:', subErr);
+          subErrors.push('Features');
+        }
+      }
+
+      if (includesChanged) {
+        try {
+          await syncIncludes(resultId, state.includes.filter((i) => i.trim() !== ''));
+        } catch (subErr) {
+          console.warn('Includes sync warning:', subErr);
+          subErrors.push('Includes');
+        }
+      }
+
+      if (faqsChanged) {
+        try {
+          await syncFaqs(
+            resultId,
+            state.faqs.filter((f) => f.question.trim() && f.answer.trim()),
+          );
+        } catch (subErr) {
+          console.warn('FAQs sync warning:', subErr);
+          subErrors.push('FAQs');
+        }
+      }
+
+      if (imagesChanged) {
+        try {
+          await syncImages(
+            resultId,
+            resolvedImages
+              .filter((img) => img.image_url.trim() !== '')
+              .map((img, i) => ({
+                image_url: img.image_url,
+                alt_text: img.alt_text || null,
+                sort_order: img.sort_order ?? i,
+              })),
+          );
+        } catch (subErr) {
+          console.warn('Images sync warning:', subErr);
+          subErrors.push('Gallery Images');
+        }
+      }
+
+      if (linksChanged) {
+        try {
+          await syncDownloadLinks(
+            resultId,
+            state.download_links.filter((l) => l.title.trim() !== '' && l.download_url.trim() !== ''),
+          );
+        } catch (subErr) {
+          console.warn('Download links sync warning:', subErr);
+          subErrors.push('Download Links');
+        }
+      }
+
+      if (subErrors.length > 0) {
+        setImageError(`Product details saved, but ${subErrors.join(', ')} could not be updated.`);
+      }
 
       const finalUrls = new Set(resolvedImages.map((image) => image.image_url));
       const removedUrls = [...originalImageUrls.current].filter((url) => !finalUrls.has(url));
@@ -610,6 +743,35 @@ export function ProductEditor({ productId }: ProductEditorProps) {
         }
       });
       originalImageUrls.current = new Set(finalUrls);
+
+      // Refresh snapshot of child data
+      initialChildData.current = {
+        features: JSON.stringify(state.features.filter((f) => f.trim() !== '')),
+        includes: JSON.stringify(state.includes.filter((i) => i.trim() !== '')),
+        faqs: JSON.stringify(state.faqs.filter((f) => f.question.trim() && f.answer.trim())),
+        images: JSON.stringify(
+          resolvedImages
+            .filter((img) => img.image_url.trim() !== '')
+            .map((img, i) => ({
+              image_url: img.image_url,
+              alt_text: img.alt_text || null,
+              sort_order: img.sort_order ?? i,
+            })),
+        ),
+        links: JSON.stringify(
+          state.download_links
+            .filter((l) => l.title.trim() !== '' && l.download_url.trim() !== '')
+            .map((l) => ({
+              id: l.id,
+              title: l.title,
+              download_url: l.download_url,
+              version: l.version || null,
+              sort_order: l.sort_order,
+              is_active: l.is_active,
+            })),
+        ),
+      };
+
       setState((current) => ({
         ...current,
         thumbnail_url: finalThumbnail ?? '',
@@ -629,15 +791,7 @@ export function ProductEditor({ productId }: ProductEditorProps) {
           ),
         );
       }
-      const detail =
-        err instanceof Error
-          ? err.message
-          : typeof err === 'object' && err !== null && 'message' in err
-            ? String((err as { message: unknown }).message)
-            : '';
-      setSaveError(
-        detail || 'Failed to save product. Please check your input and try again.',
-      );
+      setSaveError(extractErrorMessage(err));
     } finally {
       setSaving(false);
       setUploadStatus(null);

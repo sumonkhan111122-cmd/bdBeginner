@@ -21,6 +21,7 @@ import {
   duplicateProduct,
   updateProduct,
   deleteProducts,
+  extractErrorMessage,
   type AdminProduct,
 } from '@/services/admin';
 import type { CategoryRow } from '@/types/db';
@@ -237,13 +238,7 @@ export function AdminProductsPage() {
       );
     } catch (err: unknown) {
       console.error('Failed to toggle featured status', err);
-      const msg =
-        err instanceof Error
-          ? err.message
-          : typeof err === 'object' && err !== null && 'message' in err
-            ? String((err as { message: unknown }).message)
-            : 'Failed to update featured status.';
-      setActionError(msg);
+      setActionError(extractErrorMessage(err, 'Failed to update featured status.'));
     } finally {
       setTogglingFeaturedId(null);
     }
