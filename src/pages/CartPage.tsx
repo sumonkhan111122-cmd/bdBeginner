@@ -25,6 +25,7 @@ export function CartPage() {
     pricingError,
   } = useCart();
   const navigate = useNavigate();
+  const [showCouponInput, setShowCouponInput] = useState(false);
   const [couponInput, setCouponInput] = useState('');
   const [couponApplying, setCouponApplying] = useState(false);
   const [couponLocalError, setCouponLocalError] = useState<string | null>(null);
@@ -119,8 +120,17 @@ export function CartPage() {
                       <X size={14} /> Remove
                     </button>
                   </div>
+                ) : !showCouponInput ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowCouponInput(true)}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 transition-colors py-1"
+                  >
+                    <Tag size={14} />
+                    <span>কুপন কোড আছে? (Apply Coupon)</span>
+                  </button>
                 ) : (
-                  <div>
+                  <div className="space-y-2">
                     <div className="flex gap-2">
                       <input
                         type="text"
@@ -131,6 +141,7 @@ export function CartPage() {
                         onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
                         disabled={couponApplying}
                         maxLength={40}
+                        autoFocus
                       />
                       <button
                         onClick={handleApplyCoupon}
@@ -139,6 +150,14 @@ export function CartPage() {
                       >
                         {couponApplying ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <Percent size={14} />}
                         Apply
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setShowCouponInput(false); setCouponLocalError(null); }}
+                        className="flex h-10 w-9 items-center justify-center rounded-lg border border-ink-200 text-ink-400 hover:text-ink-700 hover:bg-ink-100"
+                        title="Cancel"
+                      >
+                        <X size={14} />
                       </button>
                     </div>
                     {couponLocalError && (

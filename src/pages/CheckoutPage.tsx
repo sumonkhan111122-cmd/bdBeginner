@@ -58,14 +58,14 @@ export function CheckoutPage() {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [termsAccepted, setTermsAccepted] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', phone: '', note: '' });
   const [paymentMethod, setPaymentMethod] = useState<'bkash' | 'manual' | null>(null);
   const [paymentSettings, setPaymentSettings] = useState<PaymentMethodSetting[]>([]);
   const [paymentSettingsLoading, setPaymentSettingsLoading] = useState(true);
   const [paymentSettingsError, setPaymentSettingsError] = useState<string | null>(null);
 
-  // Coupon input state (for in-checkout coupon application)
+  // Coupon input state (hidden by default until user clicks to apply)
+  const [showCouponInput, setShowCouponInput] = useState(false);
   const [couponInput, setCouponInput] = useState('');
   const [couponApplying, setCouponApplying] = useState(false);
   const [couponLocalError, setCouponLocalError] = useState<string | null>(null);
@@ -157,7 +157,6 @@ export function CheckoutPage() {
     items.length > 0 &&
     form.name.trim().length >= 2 &&
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(authoritativeEmail) &&
-    termsAccepted &&
     (isZeroTotal || !!paymentMethod) &&
     !paymentSettingsLoading &&
     !paymentSettingsError &&
@@ -404,11 +403,6 @@ export function CheckoutPage() {
               </section>
             )}
 
-            <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-ink-100 bg-white p-5 shadow-soft">
-              <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 rounded border-ink-300 text-brand-600 focus:ring-brand-500" />
-              <span className="text-sm leading-relaxed text-ink-600">I agree to the <Link to="/terms" target="_blank" className="font-semibold text-brand-600 hover:underline">Terms &amp; Conditions</Link>, <Link to="/refund-policy" target="_blank" className="font-semibold text-brand-600 hover:underline">Refund Policy</Link> and <Link to="/delivery-policy" target="_blank" className="font-semibold text-brand-600 hover:underline">Delivery Policy</Link>.</span>
-            </label>
-
             {submitError && <div className="flex items-start gap-2 rounded-xl border border-error-200 bg-error-50 p-4 text-sm text-error-700"><AlertCircle className="mt-0.5 shrink-0" size={17} />{submitError}</div>}
           </div>
 
@@ -440,8 +434,17 @@ export function CheckoutPage() {
                       <X size={14} />
                     </button>
                   </div>
+                ) : !showCouponInput ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowCouponInput(true)}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 transition-colors py-1"
+                  >
+                    <Tag size={13} />
+                    <span>কুপন কোড আছে? (Apply Coupon)</span>
+                  </button>
                 ) : (
-                  <div>
+                  <div className="space-y-1.5">
                     <div className="flex gap-2">
                       <input
                         type="text"
@@ -452,6 +455,7 @@ export function CheckoutPage() {
                         onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleApplyCoupon(); } }}
                         disabled={couponApplying}
                         maxLength={40}
+                        autoFocus
                       />
                       <button
                         type="button"
@@ -461,6 +465,14 @@ export function CheckoutPage() {
                       >
                         {couponApplying ? <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <Percent size={12} />}
                         Apply
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setShowCouponInput(false); setCouponLocalError(null); }}
+                        className="flex h-9 w-8 items-center justify-center rounded-lg border border-ink-200 text-ink-400 hover:text-ink-700 hover:bg-ink-100"
+                        title="Cancel"
+                      >
+                        <X size={13} />
                       </button>
                     </div>
                     {couponLocalError && <p className="mt-1.5 text-xs font-medium text-error-600">{couponLocalError}</p>}
@@ -496,6 +508,16 @@ export function CheckoutPage() {
                 {submitting ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> Placing Order…</> : isZeroTotal ? <><CheckCircle2 size={16} /> Complete Order</> : <><Lock size={16} /> Place Order</>}
               </Button>
               <div className="mt-4 flex items-center justify-center gap-1.5 text-xs text-ink-400"><ShieldCheck size={14} /> Secure server-calculated checkout</div>
+              <p className="mt-3 text-center text-[11px] text-ink-400 leading-normal">
+                By placing this order, you agree to our{' '}
+                <Link to="/terms" target="_blank" className="font-medium text-ink-600 hover:underline">
+                  Terms &amp; Conditions
+                </Link>{' '}
+                and{' '}
+                <Link to="/refund-policy" target="_blank" className="font-medium text-ink-600 hover:underline">
+                  Refund Policy
+                </Link>.
+              </p>
             </div>
           </aside>
         </div>
