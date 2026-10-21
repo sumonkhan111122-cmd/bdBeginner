@@ -29,6 +29,18 @@ export type TrackOrder = {
   items: TrackOrderItem[];
 };
 
+export type TrackCheckoutItem = {
+  id?: string | number;
+  productId?: string | number;
+  name?: string;
+  price?: number;
+  quantity?: number;
+  product?: TrackProduct;
+};
+
+/**
+ * 1. PageView - Triggered on route / page change
+ */
 export function trackPageView(url?: string): void {
   try {
     if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
@@ -44,6 +56,9 @@ export function trackPageView(url?: string): void {
   }
 }
 
+/**
+ * 2. ViewContent - Viewing a key product or landing page
+ */
 export function trackViewContent(product: TrackProduct): void {
   try {
     const value = Number(product.salePrice ?? product.price) || 0;
@@ -81,6 +96,9 @@ export function trackViewContent(product: TrackProduct): void {
   }
 }
 
+/**
+ * 3. AddToCart - Adding an item to shopping cart or basket
+ */
 export function trackAddToCart(product: TrackProduct, quantity = 1): void {
   try {
     const unitPrice = Number(product.salePrice ?? product.price) || 0;
@@ -119,15 +137,39 @@ export function trackAddToCart(product: TrackProduct, quantity = 1): void {
   }
 }
 
-export type TrackCheckoutItem = {
-  id?: string | number;
-  productId?: string | number;
-  name?: string;
-  price?: number;
-  quantity?: number;
-  product?: TrackProduct;
-};
+/**
+ * 4. AddToWishlist - Adding items to a wishlist
+ */
+export function trackAddToWishlist(product: { id: string | number; name?: string; price?: number }): void {
+  try {
+    const productIdStr = String(product.id);
+    const value = Number(product.price) || 0;
 
+    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+      window.fbq('track', 'AddToWishlist', {
+        content_name: product.name || `Product ${productIdStr}`,
+        content_ids: [productIdStr],
+        content_type: 'product',
+        value,
+        currency: 'BDT',
+      });
+    }
+
+    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+      window.gtag('event', 'add_to_wishlist', {
+        currency: 'BDT',
+        value,
+        items: [{ item_id: productIdStr, item_name: product.name, price: value }],
+      });
+    }
+  } catch (err) {
+    console.debug('Tracking error (AddToWishlist):', err);
+  }
+}
+
+/**
+ * 5. InitiateCheckout - The start of a checkout process
+ */
 export function trackInitiateCheckout(
   items: Array<TrackCheckoutItem>,
   totalValue: number,
@@ -173,6 +215,33 @@ export function trackInitiateCheckout(
   }
 }
 
+/**
+ * 6. AddPaymentInfo - Adding customer payment information during checkout
+ */
+export function trackAddPaymentInfo(totalValue = 0, paymentMethod?: string): void {
+  try {
+    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+      window.fbq('track', 'AddPaymentInfo', {
+        value: totalValue,
+        currency: 'BDT',
+        content_category: paymentMethod || 'bKash / Nagad / Rocket',
+      });
+    }
+    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+      window.gtag('event', 'add_payment_info', {
+        currency: 'BDT',
+        value: totalValue,
+        payment_type: paymentMethod || 'bKash / Nagad / Rocket',
+      });
+    }
+  } catch (err) {
+    console.debug('Tracking error (AddPaymentInfo):', err);
+  }
+}
+
+/**
+ * 7. Purchase - Completion of a purchase
+ */
 export function trackPurchase(order: TrackOrder): void {
   try {
     const storageKey = `bdb_tracked_purchase_${order.id}`;
@@ -213,6 +282,97 @@ export function trackPurchase(order: TrackOrder): void {
   }
 }
 
+/**
+ * 8. Lead - Submission of inquiry, contact, or pre-order interest
+ */
+export function trackLead(leadName = 'Course Inquiry', value = 0): void {
+  try {
+    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+      window.fbq('track', 'Lead', {
+        content_name: leadName,
+        value: Number(value) || 0,
+        currency: 'BDT',
+      });
+    }
+    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+      window.gtag('event', 'generate_lead', {
+        currency: 'BDT',
+        value: Number(value) || 0,
+      });
+    }
+  } catch (err) {
+    console.debug('Tracking error (Lead):', err);
+  }
+}
+
+/**
+ * 9. CompleteRegistration - User sign-up or registration
+ */
+export function trackCompleteRegistration(method = 'Email'): void {
+  try {
+    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+      window.fbq('track', 'CompleteRegistration', {
+        status: true,
+        content_name: method,
+      });
+    }
+    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+      window.gtag('event', 'sign_up', {
+        method,
+      });
+    }
+  } catch (err) {
+    console.debug('Tracking error (CompleteRegistration):', err);
+  }
+}
+
+/**
+ * 10. Contact - User contacting via WhatsApp, Phone, or Contact form
+ */
+export function trackContact(channel = 'WhatsApp'): void {
+  try {
+    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+      window.fbq('track', 'Contact', {
+        content_name: channel,
+      });
+    }
+    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+      window.gtag('event', 'contact', {
+        method: channel,
+      });
+    }
+  } catch (err) {
+    console.debug('Tracking error (Contact):', err);
+  }
+}
+
+/**
+ * 11. Subscribe - Paid VIP membership or recurring subscription
+ */
+export function trackSubscribe(planName: string, value: number): void {
+  try {
+    const val = Number(value) || 0;
+    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+      window.fbq('track', 'Subscribe', {
+        value: val,
+        currency: 'BDT',
+        predicted_ltv: val * 1.5,
+      });
+    }
+    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+      window.gtag('event', 'subscribe', {
+        currency: 'BDT',
+        value: val,
+      });
+    }
+  } catch (err) {
+    console.debug('Tracking error (Subscribe):', err);
+  }
+}
+
+/**
+ * 12. Search - User search query
+ */
 export function trackSearch(query: string): void {
   try {
     const trimmed = query.trim();
@@ -231,5 +391,96 @@ export function trackSearch(query: string): void {
     }
   } catch (err) {
     console.debug('Tracking error (Search):', err);
+  }
+}
+
+/**
+ * 13. StartTrial - Starting a free demo or trial session
+ */
+export function trackStartTrial(courseName = 'AI Motion Masterclass Demo', value = 0): void {
+  try {
+    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+      window.fbq('track', 'StartTrial', {
+        value: Number(value) || 0,
+        currency: 'BDT',
+        predicted_ltv: 290,
+      });
+    }
+  } catch (err) {
+    console.debug('Tracking error (StartTrial):', err);
+  }
+}
+
+/**
+ * 14. CustomizeProduct - Customizing a service or product options
+ */
+export function trackCustomizeProduct(customizationName: string): void {
+  try {
+    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+      window.fbq('track', 'CustomizeProduct', {
+        content_name: customizationName,
+      });
+    }
+  } catch (err) {
+    console.debug('Tracking error (CustomizeProduct):', err);
+  }
+}
+
+/**
+ * 15. Schedule - Booking consultation or meeting
+ */
+export function trackSchedule(appointmentType = 'Consultation'): void {
+  try {
+    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+      window.fbq('track', 'Schedule', {
+        content_name: appointmentType,
+      });
+    }
+  } catch (err) {
+    console.debug('Tracking error (Schedule):', err);
+  }
+}
+
+/**
+ * 16. SubmitApplication - Applying for course certificate or partnership
+ */
+export function trackSubmitApplication(applicationType = 'Certificate Application'): void {
+  try {
+    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+      window.fbq('track', 'SubmitApplication', {
+        content_name: applicationType,
+      });
+    }
+  } catch (err) {
+    console.debug('Tracking error (SubmitApplication):', err);
+  }
+}
+
+/**
+ * 17. Donate
+ */
+export function trackDonate(amount = 0): void {
+  try {
+    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+      window.fbq('track', 'Donate', {
+        value: Number(amount) || 0,
+        currency: 'BDT',
+      });
+    }
+  } catch (err) {
+    console.debug('Tracking error (Donate):', err);
+  }
+}
+
+/**
+ * 18. FindLocation
+ */
+export function trackFindLocation(): void {
+  try {
+    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+      window.fbq('track', 'FindLocation');
+    }
+  } catch (err) {
+    console.debug('Tracking error (FindLocation):', err);
   }
 }

@@ -14,7 +14,7 @@ import {
   validateCheckoutCart,
   triggerOrderNotification,
 } from '@/services/orders';
-import { trackInitiateCheckout } from '@/lib/tracking';
+import { trackInitiateCheckout, trackAddPaymentInfo } from '@/lib/tracking';
 import { initiateBkashPayment } from '@/services/payment';
 import {
   fetchPublicPaymentSettings,
@@ -198,6 +198,8 @@ export function CheckoutPage() {
         return;
       }
 
+      trackAddPaymentInfo(pricing?.total || 0, paymentMethod || 'bKash');
+
       const result = await createCheckoutOrderPriced({
         customerName: form.name.trim(),
         customerEmail: authoritativeEmail,
@@ -312,7 +314,7 @@ export function CheckoutPage() {
                 <p className="mt-2 text-sm text-success-700">This order is fully covered by your discount. No payment method is needed.</p>
               </section>
             ) : (
-              <section className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft sm:p-6 font-['Hind_Siliguri',sans-serif]">
+              <section className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft sm:p-6 font-sans">
                 <div className="flex items-center justify-between">
                   <h2 className="font-display text-lg font-bold text-ink-900">Payment Method (পেমেন্ট পদ্ধতি)</h2>
                   <span className="text-xs text-ink-400 font-medium">নিরাপদ ও সহজ পেমেন্ট</span>

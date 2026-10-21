@@ -4,6 +4,7 @@ import { Mail, ArrowLeft, Loader2, Chrome } from 'lucide-react';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { TurnstileCaptcha, type TurnstileRef } from '@/components/auth/TurnstileCaptcha';
 import { OtpInput } from '@/components/auth/OtpInput';
+import { trackCompleteRegistration } from '@/lib/tracking';
 
 export function LoginPage() {
   const { requestOtp, verifyOtp, signInWithGoogle, session, loading } = useCustomerAuth();
@@ -90,6 +91,7 @@ export function LoginPage() {
     setSubmitting(false);
 
     if (result.ok) {
+      trackCompleteRegistration('Email OTP');
       // The CustomerAuthContext (and underlying AdminAuthContext) will update the session, 
       // triggering the useEffect above to redirect.
     } else {

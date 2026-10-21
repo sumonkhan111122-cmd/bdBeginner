@@ -416,7 +416,7 @@ export function ProtectedVideoPlayer({
         return false;
       }}
       onMouseMove={handleMouseMove}
-      className="group relative w-full aspect-video rounded-3xl overflow-hidden bg-black border border-white/10 shadow-[0_0_60px_-15px_rgba(59,130,246,0.35)] select-none font-['Hind_Siliguri',sans-serif]"
+      className="group relative w-full aspect-video rounded-3xl overflow-hidden bg-black border border-white/10 shadow-[0_0_60px_-15px_rgba(59,130,246,0.35)] select-none font-sans"
     >
       {/* LOCKED VIDEO SHIELD (For non-enrolled students on premium classes) */}
       {isLocked ? (
@@ -435,7 +435,7 @@ export function ProtectedVideoPlayer({
           </h3>
 
           <p className="text-sm text-ink-300 max-w-md leading-relaxed mb-6">
-            এই সম্পূর্ণ প্র্যাকটিক্যাল ক্লাস এবং প্রজেক্ট ফাইলগুলো দেখতে মাত্র ১৯৯ টাকায় আজীবন এক্সেস নিন।
+            এই সম্পূর্ণ প্র্যাকটিক্যাল ক্লাস এবং প্রজেক্ট ফাইলগুলো দেখতে মাত্র ২৯০ টাকায় আজীবন এক্সেস নিন।
           </p>
 
           <button
@@ -443,7 +443,7 @@ export function ProtectedVideoPlayer({
             onClick={onUnlockClick}
             className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-brand-600 via-brand-500 to-accent-600 px-7 py-3.5 text-sm sm:text-base font-extrabold text-white shadow-xl hover:opacity-95 transition-all transform hover:scale-105 active:scale-95"
           >
-            <span>মাত্র ১৯৯ টাকায় সম্পূর্ণ কোর্স আনলক করুন</span>
+            <span>মাত্র ২৯০ টাকায় সম্পূর্ণ কোর্স আনলক করুন</span>
             <ArrowRight size={17} />
           </button>
         </div>

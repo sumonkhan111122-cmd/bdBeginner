@@ -17,6 +17,7 @@ import { AI_MOTION_COURSE, courseToProduct } from '@/data/aiMotionCourse';
 import { enrollInCourse } from '@/services/courseEnrollment';
 import { useCart } from '@/context/CartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
+import { trackInitiateCheckout, trackAddPaymentInfo, trackLead } from '@/lib/tracking';
 
 interface CoursePurchaseModalProps {
   isOpen: boolean;
@@ -45,6 +46,12 @@ export function CoursePurchaseModal({
 
   // Handle standard site checkout redirect
   const handleGoToFullCheckout = () => {
+    trackInitiateCheckout(
+      [{ productId: AI_MOTION_COURSE.id, name: AI_MOTION_COURSE.title, price: 290, quantity: 1 }],
+      290
+    );
+    trackAddPaymentInfo(290, paymentMethod);
+    trackLead('AI Motion Course Checkout', 290);
     clearCart();
     addItem(courseToProduct(), 1, false);
     onClose();
@@ -58,7 +65,7 @@ export function CoursePurchaseModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto font-['Hind_Siliguri',sans-serif]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto font-sans">
       <div className="relative w-full max-w-lg rounded-3xl bg-[#0b1329] border border-white/10 p-6 sm:p-8 shadow-2xl text-white my-8">
         {/* Close Button */}
         <button
@@ -109,10 +116,10 @@ export function CoursePurchaseModal({
               </h2>
 
               <div className="mt-3 flex items-center justify-center gap-3">
-                <span className="text-3xl font-extrabold text-white">৳১৯৯</span>
-                <span className="text-base text-ink-500 line-through">৳১,৯৯৯</span>
-                <span className="rounded-xl bg-amber-400 text-ink-950 px-2.5 py-0.5 text-xs font-black">
-                  ৯০% ছাড়
+                <span className="text-3xl font-extrabold text-white tracking-tight font-sans">৳290</span>
+                <span className="text-base text-ink-500 line-through font-sans">৳5,000</span>
+                <span className="rounded-xl bg-amber-400 text-ink-950 px-2.5 py-0.5 text-xs font-black font-sans">
+                  94% ছাড়
                 </span>
               </div>
             </div>
@@ -220,7 +227,7 @@ export function CoursePurchaseModal({
                 disabled={submitting}
                 className="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 via-brand-500 to-accent-600 px-6 py-3 text-sm font-extrabold text-white shadow-xl hover:opacity-95 transition-all disabled:opacity-50"
               >
-                <span>{submitting ? 'প্রসেসিং হচ্ছে...' : 'এখনই ১৯৯ টাকায় ভর্তি হন'}</span>
+                <span>{submitting ? 'প্রসেসিং হচ্ছে...' : 'এখনই ২৯০ টাকায় ভর্তি হন'}</span>
                 <ArrowRight size={16} />
               </button>
 

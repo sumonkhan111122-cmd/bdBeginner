@@ -138,7 +138,7 @@ export function CourseLearningPortal({
   if (!isEnrolled) {
     return (
       <div
-        className={`min-h-screen flex items-center justify-center p-4 font-['Hind_Siliguri',sans-serif] ${
+        className={`min-h-screen flex items-center justify-center p-4 font-sans ${
           isDarkMode ? 'bg-[#070b14] text-white' : 'bg-slate-50 text-slate-900'
         }`}
       >
@@ -159,7 +159,7 @@ export function CourseLearningPortal({
                 isDarkMode ? 'text-slate-300' : 'text-slate-600'
               }`}
             >
-              এই লার্নিং পোর্টালের ক্লাসগুলো দেখার জন্য আপনাকে প্রথমে কোর্সটি কিনতে হবে। মাত্র ১৯৯
+              এই লার্নিং পোর্টালের ক্লাসগুলো দেখার জন্য আপনাকে প্রথমে কোর্সটি কিনতে হবে। মাত্র ২৯০
               টাকায় আজীবন এক্সেস পান।
             </p>
           </div>
@@ -173,7 +173,7 @@ export function CourseLearningPortal({
               }}
               className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 hover:bg-brand-500 px-6 py-3.5 text-base font-bold text-white shadow-lg transition-all cursor-pointer"
             >
-              <span>এখনই কোর্সটি কিনুন (৳১৯৯)</span>
+              <span>এখনই কোর্সটি কিনুন (৳290)</span>
               <ArrowRight size={18} />
             </button>
             {onBackToLanding && (
@@ -322,7 +322,7 @@ export function CourseLearningPortal({
 
   return (
     <div
-      className={`min-h-screen ${theme.bg} ${theme.textPrimary} font-['Hind_Siliguri',sans-serif] transition-colors duration-200 selection:bg-brand-500 selection:text-white`}
+      className={`min-h-screen ${theme.bg} ${theme.textPrimary} font-sans transition-colors duration-200 selection:bg-brand-500 selection:text-white`}
     >
       {/* 1. TOP MINIMALIST HEADER BAR */}
       <header className={`sticky top-0 z-40 border-b backdrop-blur-xl ${theme.headerBg}`}>

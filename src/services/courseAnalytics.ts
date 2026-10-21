@@ -139,7 +139,7 @@ export function computeCourseMetrics(orders: OrderRow[]): CoursePerformanceMetri
 
     if (isPaid) {
       paidOrders++;
-      totalRevenue += Number(o.total) || 199;
+      totalRevenue += Number(o.total) || 290;
     } else if (isPending) {
       pendingOrders++;
     } else if (isFailed) {

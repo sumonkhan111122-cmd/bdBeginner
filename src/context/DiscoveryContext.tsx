@@ -26,6 +26,7 @@ import {
   clearRecentlyViewedDb,
   mergeGuestRecentlyViewedDb,
 } from '@/services/discoveryDb';
+import { trackAddToWishlist } from '@/lib/tracking';
 
 type DiscoveryState = {
   wishlistIds: string[];
@@ -108,6 +109,10 @@ export function DiscoveryProvider({ children }: { children: ReactNode }) {
   const toggleWishlist = useCallback(async (productId: string) => {
     const isCurrentlySaved = wishlistIds.includes(productId);
     
+    if (!isCurrentlySaved) {
+      trackAddToWishlist({ id: productId });
+    }
+
     // Optimistic UI update
     setWishlistIds((prev) => 
       isCurrentlySaved 

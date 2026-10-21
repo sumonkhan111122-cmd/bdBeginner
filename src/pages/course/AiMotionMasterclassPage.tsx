@@ -43,6 +43,7 @@ import { recordCourseView } from '@/services/courseAnalytics';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { useCart } from '@/context/CartContext';
 import { useMembership } from '@/context/MembershipContext';
+import { trackViewContent, trackStartTrial, trackInitiateCheckout } from '@/lib/tracking';
 
 export function AiMotionMasterclassPage() {
   const navigate = useNavigate();
@@ -58,6 +59,7 @@ export function AiMotionMasterclassPage() {
   // Track course page view
   useEffect(() => {
     recordCourseView();
+    trackViewContent(courseToProduct(AI_MOTION_COURSE));
   }, []);
 
   // Check enrollment
@@ -145,12 +147,24 @@ export function AiMotionMasterclassPage() {
       );
       return;
     }
+    trackInitiateCheckout(
+      [
+        {
+          productId: AI_MOTION_COURSE.id,
+          name: AI_MOTION_COURSE.title,
+          price: 290,
+          quantity: 1,
+        },
+      ],
+      290
+    );
     clearCart();
     addItem(courseToProduct(), 1, false);
     navigate('/checkout');
   };
 
   const handleWatchDemo = () => {
+    trackStartTrial('AI Motion Masterclass Demo', 0);
     if (enrolled) {
       setViewMode('learning');
     } else {
@@ -172,7 +186,7 @@ export function AiMotionMasterclassPage() {
 
   return (
     <Layout>
-      <div className="font-['Hind_Siliguri',sans-serif] bg-[#070b14] text-ink-100">
+      <div className="font-sans bg-[#070b14] text-ink-100">
         
         {/* ENROLLED TOP BANNER (Visible if user already purchased & paid) */}
         {enrolled && (
@@ -277,10 +291,10 @@ export function AiMotionMasterclassPage() {
               <div className="pt-6 max-w-xl mx-auto">
                 <div className="rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-7 sm:p-9 backdrop-blur-2xl shadow-2xl space-y-6">
                   <div className="flex items-baseline justify-center gap-3.5">
-                    <span className="text-4xl sm:text-5xl font-extrabold text-white">৳১৯৯</span>
-                    <span className="text-lg sm:text-xl text-ink-400 line-through">৳১,৯৯৯</span>
-                    <span className="rounded-xl bg-amber-400 text-ink-950 px-3 py-1 text-xs font-black uppercase tracking-wider">
-                      ৯০% বিশেষ অফার
+                    <span className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight font-sans">৳290</span>
+                    <span className="text-lg sm:text-xl text-ink-400 line-through font-sans">৳5,000</span>
+                    <span className="rounded-xl bg-amber-400 text-ink-950 px-3 py-1 text-xs font-black uppercase tracking-wider font-sans">
+                      94% বিশেষ অফার
                     </span>
                   </div>
 
@@ -304,7 +318,7 @@ export function AiMotionMasterclassPage() {
                         onClick={handleEnrollNow}
                         className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-brand-600 via-brand-500 to-accent-600 px-8 py-4 text-base font-extrabold text-white shadow-xl hover:opacity-95 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
                       >
-                        <span>কোর্সটি কিনুন (৳১৯৯)</span>
+                        <span>কোর্সটি কিনুন (৳290)</span>
                         <ArrowRight size={18} />
                       </button>
                     )}
@@ -467,7 +481,7 @@ export function AiMotionMasterclassPage() {
                                   title="কোর্সটি কিনলে আনলক হবে"
                                 >
                                   <Lock size={13} className="text-amber-400" />
-                                  <span>লকড (৳১৯৯)</span>
+                                  <span>লকড (৳290)</span>
                                 </button>
                               )}
                             </div>
@@ -486,7 +500,7 @@ export function AiMotionMasterclassPage() {
                 onClick={handleEnrollNow}
                 className="inline-flex items-center gap-2 rounded-2xl bg-brand-600 px-8 py-4 text-base font-extrabold text-white shadow-xl hover:bg-brand-500 transition-all cursor-pointer"
               >
-                <span>মাত্র ১৯৯ টাকায় সম্পূর্ণ সিলেবাস আনলক করুন</span>
+                <span>মাত্র ২৯০ টাকায় সম্পূর্ণ সিলেবাস আনলক করুন</span>
                 <ArrowRight size={18} />
               </button>
             </div>
@@ -505,7 +519,7 @@ export function AiMotionMasterclassPage() {
                 কোর্সের সাথে সম্পূর্ণ ফ্রিতে পাচ্ছেন এক্সক্লুসিভ অ্যাসেটস
               </h2>
               <p className="text-sm sm:text-base text-ink-300">
-                আজই ১৯৯ টাকায় এনরোল করলে নিচের সমস্ত প্রিমিয়াম প্যাকগুলো পাবেন কোনো অতিরিক্ত ফি ছাড়াই।
+                আজই ২৯০ টাকায় এনরোল করলে নিচের সমস্ত প্রিমিয়াম প্যাকগুলো পাবেন কোনো অতিরিক্ত ফি ছাড়াই।
               </p>
             </div>
 
@@ -651,7 +665,7 @@ export function AiMotionMasterclassPage() {
               এআই দিয়ে ভিডিও এডিটিংয়ের ভবিষ্যৎ আয়ত্ত করুন
             </h2>
             <p className="text-sm sm:text-base text-ink-300 max-w-xl mx-auto leading-relaxed">
-              মাত্র ১৯৯ টাকায় আজীবন এক্সেস নিন। ১০টি প্র্যাক্টিক্যাল ক্লাস (১ ঘণ্টা ৩০ মিনিট) ও সম্পূর্ণ ফ্রি সোর্স ফাইল দিয়ে আপনার ক্যারিয়ার এগিয়ে নিন।
+              মাত্র ২৯০ টাকায় আজীবন এক্সেস নিন। ১০টি প্র্যাক্টিক্যাল ক্লাস (১ ঘণ্টা ৩০ মিনিট) ও সম্পূর্ণ ফ্রি সোর্স ফাইল দিয়ে আপনার ক্যারিয়ার এগিয়ে নিন।
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
@@ -671,7 +685,7 @@ export function AiMotionMasterclassPage() {
                   </>
                 ) : (
                   <>
-                    <span>এখনই ১৯৯ টাকায় ভর্তি হন</span>
+                    <span>এখনই ২৯০ টাকায় ভর্তি হন</span>
                     <ArrowRight size={18} />
                   </>
                 )}
@@ -684,8 +698,8 @@ export function AiMotionMasterclassPage() {
         <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#070b14]/95 border-t border-white/10 p-3.5 backdrop-blur-xl flex items-center justify-between gap-3">
           <div>
             <div className="flex items-baseline gap-2">
-              <span className="text-xl font-black text-white">৳১৯৯</span>
-              <span className="text-xs text-ink-500 line-through">৳১,৯৯৯</span>
+              <span className="text-xl font-black text-white font-sans">৳290</span>
+              <span className="text-xs text-ink-500 line-through font-sans">৳5,000</span>
             </div>
             <span className="text-[11px] text-amber-400 font-bold block">১০টি ক্লাস • আজীবন এক্সেস</span>
           </div>
@@ -704,7 +718,7 @@ export function AiMotionMasterclassPage() {
               </>
             ) : (
               <>
-                <span>এনরোল করুন (৳১৯৯)</span>
+                <span>এনরোল করুন (৳290)</span>
                 <ArrowRight size={15} />
               </>
             )}
@@ -772,7 +786,7 @@ export function AiMotionMasterclassPage() {
                   }}
                   className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 via-brand-500 to-accent-600 px-6 py-3.5 text-sm font-bold text-white shadow-xl hover:opacity-95 transition-all cursor-pointer"
                 >
-                  <span>সম্পূর্ণ কোর্স আনলক করুন (৳১৯৯)</span>
+                  <span>সম্পূর্ণ কোর্স আনলক করুন (৳290)</span>
                   <ArrowRight size={16} />
                 </button>
               </div>

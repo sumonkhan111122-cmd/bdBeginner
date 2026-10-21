@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Mail, MapPin, MessageCircle, Send } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useSiteSettings } from '@/context/SiteSettingsContext';
+import { trackContact } from '@/lib/tracking';
 
 export function ContactPage() {
   const { siteSettings } = useSiteSettings();
@@ -13,6 +14,7 @@ export function ContactPage() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    trackContact('Email Form');
     const formData = new FormData(event.currentTarget);
     const name = String(formData.get('name') || '').trim();
     const email = String(formData.get('email') || '').trim();

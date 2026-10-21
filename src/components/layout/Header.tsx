@@ -33,7 +33,7 @@ import { useDiscovery } from '@/context/DiscoveryContext';
 import { safeHttpUrl } from '@/lib/urls';
 
 const exploreLinks = [
-  { label: 'AI মোশন মাস্টারক্লাস (৳১৯৯)', to: '/course/ai-motion', description: 'Advanced Agentic Video Editing', icon: Film },
+  { label: 'AI মোশন মাস্টারক্লাস (৳290)', to: '/course/ai-motion', description: 'Advanced Agentic Video Editing', icon: Film },
   { label: 'WordPress Themes', to: '/wordpress', description: 'Curated premium WP themes', icon: Layers },
   { label: 'WordPress Plugins', to: '/plugins', description: 'GPL plugins & dev tools', icon: Sparkles },
   { label: 'Software & Tools', to: '/products?category=software', description: 'Productivity & utilities', icon: Laptop },
@@ -171,8 +171,8 @@ export function Header() {
             >
               <Film size={13} className="text-purple-600 shrink-0" />
               <span>AI মোশন ক্লাস</span>
-              <span className="rounded-md bg-purple-600 px-1 py-0.2 text-[9px] font-extrabold uppercase tracking-wider text-white">
-                ৳১৯৯
+              <span className="rounded-md bg-purple-600 px-1 py-0.2 text-[9px] font-extrabold uppercase tracking-wider text-white font-sans">
+                ৳290
               </span>
             </NavLink>
 
@@ -447,8 +447,8 @@ export function Header() {
                     <Film size={18} className="text-purple-600" />
                     <span>AI মোশন ক্লাস</span>
                   </span>
-                  <span className="rounded-full bg-purple-600 px-2 py-0.5 text-[10px] font-extrabold text-white">
-                    ৳১৯৯
+                  <span className="rounded-full bg-purple-600 px-2 py-0.5 text-[10px] font-extrabold text-white font-sans">
+                    ৳290
                   </span>
                 </NavLink>
 

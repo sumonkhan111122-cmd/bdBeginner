@@ -24,6 +24,7 @@ import { MEMBERSHIP_PLANS, MEMBERSHIP_PERKS, planToProduct, type MembershipPlan 
 import { useCart } from '@/context/CartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { useMembership } from '@/context/MembershipContext';
+import { trackSubscribe, trackViewContent } from '@/lib/tracking';
 
 export function MembershipPage() {
   const navigate = useNavigate();
@@ -32,7 +33,17 @@ export function MembershipPage() {
   const { isVip, status } = useMembership();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
+  React.useEffect(() => {
+    trackViewContent({
+      id: 'vip-membership',
+      name: 'VIP All-Access Membership',
+      price: 1199,
+      category: 'Membership',
+    });
+  }, []);
+
   const handleSelectPlan = (plan: MembershipPlan) => {
+    trackSubscribe(plan.name, plan.price);
     // Clear existing cart and add only the membership package
     clearCart();
     addItem(planToProduct(plan), 1, false);

@@ -11,6 +11,7 @@ import { usePublishedProducts } from '@/hooks/useCatalog';
 import { useCurrencyFormatter } from '@/hooks/useCurrency';
 import { useSiteSettings } from '@/context/SiteSettingsContext';
 import { applySeo } from '@/lib/seo';
+import { trackSearch } from '@/lib/tracking';
 import {
   Search,
   SlidersHorizontal,
@@ -138,6 +139,12 @@ export function ProductsPage({ initialCategory, dealsOnly = false }: ProductsPag
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<number[]>([]);
   const [sort, setSort] = useState<SortOption>('featured');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  useEffect(() => {
+    if (urlSearchParam && urlSearchParam.trim().length >= 2) {
+      trackSearch(urlSearchParam.trim());
+    }
+  }, [urlSearchParam]);
 
   // Dynamic SEO based on active filters
   useEffect(() => {

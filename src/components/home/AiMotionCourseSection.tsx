@@ -27,7 +27,7 @@ export function AiMotionCourseSection() {
   };
 
   return (
-    <section className="section-padding bg-gradient-to-b from-[#070b14] via-[#0b1329] to-[#070b14] text-white relative overflow-hidden border-t border-white/10 font-['Hind_Siliguri',sans-serif]">
+    <section className="section-padding bg-gradient-to-b from-[#070b14] via-[#0b1329] to-[#070b14] text-white relative overflow-hidden border-t border-white/10 font-sans">
       {/* Background glow effects */}
       <div className="absolute top-1/2 left-0 -translate-y-1/2 w-96 h-96 bg-brand-600/15 blur-[120px] pointer-events-none rounded-full" />
       <div className="absolute top-1/2 right-0 -translate-y-1/2 w-96 h-96 bg-accent-600/15 blur-[120px] pointer-events-none rounded-full" />
@@ -76,8 +76,11 @@ export function AiMotionCourseSection() {
             {/* Price & Action Buttons */}
             <div className="pt-3 flex flex-wrap items-center gap-4">
               <div className="flex items-baseline gap-2.5 mr-2">
-                <span className="text-3xl sm:text-4xl font-extrabold text-white">৳১৯৯</span>
-                <span className="text-base sm:text-lg text-ink-400 line-through">৳১,৯৯৯</span>
+                <span className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight font-sans">৳290</span>
+                <span className="text-base sm:text-lg text-ink-400 line-through font-sans">৳5,000</span>
+                <span className="rounded-xl bg-amber-400 text-ink-950 px-2.5 py-0.5 text-xs font-black uppercase tracking-wider font-sans">
+                  94% ছাড়
+                </span>
               </div>
 
               <button
@@ -85,7 +88,7 @@ export function AiMotionCourseSection() {
                 onClick={handleQuickBuy}
                 className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-brand-600 via-brand-500 to-accent-600 px-7 py-3.5 text-sm sm:text-base font-extrabold text-white shadow-xl hover:opacity-95 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
               >
-                <span>কোর্সটি কিনুন (৳১৯৯)</span>
+                <span>কোর্সটি কিনুন (৳290)</span>
                 <ArrowRight size={17} />
               </button>
 

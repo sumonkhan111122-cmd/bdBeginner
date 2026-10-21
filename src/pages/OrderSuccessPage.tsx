@@ -158,7 +158,7 @@ function ReceiptView({ receipt, signedIn, guestToken }: { receipt: OrderWithDeta
     <Layout>
       <div className="container-page py-10 sm:py-14">
         <div className="mx-auto max-w-4xl">
-          <div className="text-center font-['Hind_Siliguri',sans-serif]">
+          <div className="text-center font-sans">
             {order.payment_status === 'paid' ? (
               <>
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-success-50 text-success-600 ring-8 ring-success-500/10">
@@ -192,7 +192,7 @@ function ReceiptView({ receipt, signedIn, guestToken }: { receipt: OrderWithDeta
           {hasAiMotionCourse && (
             order.payment_status === 'paid' ? (
               /* ACTIVE PAID ENROLLMENT */
-              <div className="mt-6 rounded-2xl border border-purple-500/30 bg-gradient-to-r from-purple-950/90 via-ink-900 to-brand-950/90 p-5 sm:p-6 text-white shadow-xl font-['Hind_Siliguri',sans-serif]">
+              <div className="mt-6 rounded-2xl border border-purple-500/30 bg-gradient-to-r from-purple-950/90 via-ink-900 to-brand-950/90 p-5 sm:p-6 text-white shadow-xl font-sans">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="flex items-center gap-3.5">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-purple-600 text-white shadow-md">
@@ -221,7 +221,7 @@ function ReceiptView({ receipt, signedIn, guestToken }: { receipt: OrderWithDeta
               </div>
             ) : order.payment_status === 'pending' ? (
               /* PENDING MANUAL VERIFICATION - STRICTLY NO START COURSE BUTTON! */
-              <div className="mt-6 rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-950/90 via-ink-950 to-[#171003] p-5 sm:p-6 text-white shadow-xl font-['Hind_Siliguri',sans-serif]">
+              <div className="mt-6 rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-950/90 via-ink-950 to-[#171003] p-5 sm:p-6 text-white shadow-xl font-sans">
                 <div className="flex flex-col sm:flex-row items-start justify-between gap-5">
                   <div className="flex items-start gap-3.5">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-md">
@@ -272,7 +272,7 @@ function ReceiptView({ receipt, signedIn, guestToken }: { receipt: OrderWithDeta
               </div>
             ) : (
               /* UNPAID MANUAL ORDER - STRICTLY NO START COURSE BUTTON! */
-              <div className="mt-6 rounded-2xl border border-brand-500/40 bg-gradient-to-r from-brand-950/90 via-ink-950 to-[#070b14] p-5 sm:p-6 text-white shadow-xl font-['Hind_Siliguri',sans-serif]">
+              <div className="mt-6 rounded-2xl border border-brand-500/40 bg-gradient-to-r from-brand-950/90 via-ink-950 to-[#070b14] p-5 sm:p-6 text-white shadow-xl font-sans">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="flex items-start gap-3.5">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-500/20 text-brand-400 border border-brand-500/30">
