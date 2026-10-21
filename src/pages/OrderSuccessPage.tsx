@@ -14,6 +14,7 @@ import { fetchPublicPaymentSettings, getEnabledManualMethods } from '@/services/
 import { listOrderDownloadsAuth, listOrderDownloadsGuest, openDownloadLinkAuth, openDownloadLinkGuest, type DownloadLinkMetadata } from '@/services/downloads';
 import { ManualPaymentModal } from '@/components/checkout/ManualPaymentModal';
 import { useCart } from '@/context/CartContext';
+import { trackPurchase } from '@/lib/tracking';
 import type { OrderWithDetails } from '@/types/orders';
 import type { PaymentMethodSetting } from '@/types/settings';
 
@@ -25,8 +26,19 @@ function ReceiptView({ receipt, signedIn, guestToken }: { receipt: OrderWithDeta
   useEffect(() => {
     if (order.payment_status === 'paid') {
       clearCart();
+      trackPurchase({
+        id: order.id,
+        order_number: order.order_number,
+        total_amount: order.total_amount,
+        currency_code: order.currency_code,
+        items: items.map((item) => ({
+          product_id: item.product_id,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+        })),
+      });
     }
-  }, [order.payment_status, clearCart]);
+  }, [order.payment_status, order.id, order.order_number, order.total_amount, order.currency_code, items, clearCart]);
 
   const [downloads, setDownloads] = useState<DownloadLinkMetadata[]>([]);
   const [downloadsLoading, setDownloadsLoading] = useState(true);

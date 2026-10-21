@@ -1,16 +1,26 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { AlertCircle, CheckCircle2, Loader2, Save, Search } from 'lucide-react';
+import { AlertCircle, Check, CheckCircle2, Copy, ExternalLink, Loader2, Save, Search, Share2 } from 'lucide-react';
 import { useSiteSettings } from '@/context/SiteSettingsContext';
-import { normalizeGoogleVerification } from '@/lib/seo';
+import { normalizeFacebookVerification, normalizeGoogleVerification } from '@/lib/seo';
 import { safeHttpUrl } from '@/lib/urls';
 import { updateSeoSettings, type SeoSettingsInput } from '@/services/settings';
 import type { SeoSettings } from '@/types/settings';
 
-type FormState = Omit<SeoSettingsInput, 'default_og_image_url' | 'google_search_console_verification' | 'google_analytics_id' | 'google_tag_manager_id'> & {
+type FormState = Omit<
+  SeoSettingsInput,
+  | 'default_og_image_url'
+  | 'google_search_console_verification'
+  | 'google_analytics_id'
+  | 'google_tag_manager_id'
+  | 'facebook_pixel_id'
+  | 'facebook_domain_verification'
+> & {
   default_og_image_url: string;
   google_search_console_verification: string;
   google_analytics_id: string;
   google_tag_manager_id: string;
+  facebook_pixel_id: string;
+  facebook_domain_verification: string;
 };
 
 function toForm(settings: SeoSettings): FormState {
@@ -22,6 +32,8 @@ function toForm(settings: SeoSettings): FormState {
     google_search_console_verification: settings.google_search_console_verification ?? '',
     google_analytics_id: settings.google_analytics_id ?? '',
     google_tag_manager_id: settings.google_tag_manager_id ?? '',
+    facebook_pixel_id: settings.facebook_pixel_id ?? '',
+    facebook_domain_verification: settings.facebook_domain_verification ?? '',
     robots_index: settings.robots_index,
     robots_follow: settings.robots_follow,
   };
@@ -59,6 +71,34 @@ export function AdminSeoPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [copiedFeed, setCopiedFeed] = useState(false);
+  const [copiedSitemap, setCopiedSitemap] = useState(false);
+
+  const catalogFeedUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/api/catalog/facebook-feed.php`
+      : 'https://bdbeginner.com/api/catalog/facebook-feed.php';
+
+  const sitemapUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/sitemap.xml`
+      : 'https://bdbeginner.com/sitemap.xml';
+
+  const handleCopyFeed = () => {
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(catalogFeedUrl);
+      setCopiedFeed(true);
+      setTimeout(() => setCopiedFeed(false), 2500);
+    }
+  };
+
+  const handleCopySitemap = () => {
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(sitemapUrl);
+      setCopiedSitemap(true);
+      setTimeout(() => setCopiedSitemap(false), 2500);
+    }
+  };
 
   useEffect(() => {
     if (!loading && !dirty) setForm(toForm(seoSettings));
@@ -101,6 +141,18 @@ export function AdminSeoPage() {
       return;
     }
 
+    if (
+      form.facebook_domain_verification.trim() &&
+      !normalizeFacebookVerification(form.facebook_domain_verification)
+    ) {
+      setError('Enter a raw Facebook verification token or a valid facebook-domain-verification meta tag.');
+      return;
+    }
+    if (form.facebook_pixel_id.trim() && !/^\d{6,25}$/.test(form.facebook_pixel_id.trim())) {
+      setError('Facebook Pixel ID must be numeric (typically 15-16 digits, e.g. 1234567890123456).');
+      return;
+    }
+
     const nullable = (value: string) => value.trim() || null;
     setSaving(true);
     try {
@@ -112,6 +164,10 @@ export function AdminSeoPage() {
         google_search_console_verification: nullable(form.google_search_console_verification),
         google_analytics_id: nullable(form.google_analytics_id.toUpperCase()),
         google_tag_manager_id: nullable(form.google_tag_manager_id.toUpperCase()),
+        facebook_pixel_id: nullable(form.facebook_pixel_id.trim()),
+        facebook_domain_verification: nullable(
+          normalizeFacebookVerification(form.facebook_domain_verification) || form.facebook_domain_verification.trim(),
+        ),
         robots_index: form.robots_index,
         robots_follow: form.robots_follow,
       });
@@ -146,16 +202,142 @@ export function AdminSeoPage() {
       )}
 
       <div className="mt-6 grid gap-5 lg:grid-cols-2">
-        <Section title="Search Appearance" description="Defaults used by the homepage and pages without their own metadata.">
-          <div className="flex flex-col gap-4">
-            <Field label="Default Site Title"><input value={form.default_title} onChange={(e) => update('default_title', e.target.value)} className={inputClass} /></Field>
-            <Field label="Title Template" hint="Use %s as the page-title placeholder."><input value={form.title_template} onChange={(e) => update('title_template', e.target.value)} className={inputClass} placeholder="%s | bdBeginner" /></Field>
-            <Field label="Default Meta Description"><textarea value={form.default_meta_description} onChange={(e) => update('default_meta_description', e.target.value)} className={textareaClass} rows={4} /></Field>
-            <Field label="Default OG Image URL"><input type="url" value={form.default_og_image_url} onChange={(e) => update('default_og_image_url', e.target.value)} className={inputClass} placeholder="https://..." /></Field>
-          </div>
-        </Section>
+        <div className="flex flex-col gap-5">
+          <Section title="Search Appearance" description="Defaults used by the homepage and pages without their own metadata.">
+            <div className="flex flex-col gap-4">
+              <Field label="Default Site Title"><input value={form.default_title} onChange={(e) => update('default_title', e.target.value)} className={inputClass} /></Field>
+              <Field label="Title Template" hint="Use %s as the page-title placeholder."><input value={form.title_template} onChange={(e) => update('title_template', e.target.value)} className={inputClass} placeholder="%s | bdBeginner" /></Field>
+              <Field label="Default Meta Description"><textarea value={form.default_meta_description} onChange={(e) => update('default_meta_description', e.target.value)} className={textareaClass} rows={4} /></Field>
+              <Field label="Default OG Image URL"><input type="url" value={form.default_og_image_url} onChange={(e) => update('default_og_image_url', e.target.value)} className={inputClass} placeholder="https://..." /></Field>
+            </div>
+          </Section>
+
+          <Section title="Meta (Facebook) Pixel & Verification" description="Track conversions from Facebook Ads and verify domain ownership in Meta Business Suite.">
+            <div className="flex flex-col gap-4">
+              <Field
+                label="Meta (Facebook) Pixel / Dataset ID"
+                hint="Numeric ID from Meta Events Manager (e.g. 1234567890123456). Automatically tracks PageView, ViewContent, AddToCart, InitiateCheckout, and Purchase events."
+              >
+                <input
+                  value={form.facebook_pixel_id}
+                  onChange={(e) => update('facebook_pixel_id', e.target.value)}
+                  className={inputClass}
+                  placeholder="e.g. 1234567890123456"
+                />
+              </Field>
+
+              <Field
+                label="Facebook Domain Verification"
+                hint="Token or meta tag copied from Meta Business Settings > Domains (e.g. <meta name='facebook-domain-verification' content='...' /> or raw token)."
+              >
+                <textarea
+                  value={form.facebook_domain_verification}
+                  onChange={(e) => update('facebook_domain_verification', e.target.value)}
+                  className={textareaClass}
+                  rows={2}
+                  placeholder="token or <meta name='facebook-domain-verification' content=…>"
+                />
+              </Field>
+            </div>
+          </Section>
+
+          <Section
+            title="Facebook Product Catalog Feed (For Ads & Carousels)"
+            description="Use this feed URL in Meta Commerce Manager so all products automatically show up with pictures, prices (BDT), and titles in Facebook Ads."
+          >
+            <div className="flex flex-col gap-3">
+              <p className="text-xs leading-relaxed text-ink-600">
+                ফেসবুকে স্পন্সরড অ্যাড বা ডায়নামিক ক্যারোসেল অ্যাড চালানোর জন্য Meta Commerce Manager-এ (Catalog &gt; Data Sources &gt; Data Feed) নিচের লিংকটি দিন:
+              </p>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={catalogFeedUrl}
+                  className="h-10 flex-1 rounded-xl border border-ink-200 bg-ink-50 px-3 text-xs font-mono text-ink-700 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleCopyFeed}
+                  className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl bg-brand-50 px-3.5 text-xs font-semibold text-brand-700 transition-colors hover:bg-brand-100"
+                >
+                  {copiedFeed ? <Check size={14} className="text-success-600" /> : <Copy size={14} />}
+                  {copiedFeed ? 'Copied!' : 'Copy Feed'}
+                </button>
+                <a
+                  href={catalogFeedUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-10 shrink-0 items-center gap-1 rounded-xl border border-ink-200 bg-white px-3 text-xs font-semibold text-ink-600 transition-colors hover:bg-ink-50"
+                  title="View Live XML Feed"
+                >
+                  <ExternalLink size={14} />
+                </a>
+              </div>
+              <div className="mt-1 rounded-xl bg-ink-50/70 p-3 text-xs text-ink-500">
+                <span className="font-semibold text-ink-700">Supported formats:</span> Standard RSS 2.0 / Google &amp; Facebook Merchant XML. Automatic real-time sync with bdBeginner catalog.
+              </div>
+            </div>
+          </Section>
+        </div>
 
         <div className="flex flex-col gap-5">
+          <Section
+            title="Google Search Console & Sitemap"
+            description="Submit your sitemap directly to Google Search Console to index all 680+ products and pages."
+          >
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-semibold text-ink-700">XML Sitemap URL (Real-time &amp; Static with Images)</span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={sitemapUrl}
+                    className="h-10 flex-1 rounded-xl border border-ink-200 bg-ink-50 px-3 text-xs font-mono text-ink-700 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCopySitemap}
+                    className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl bg-brand-50 px-3.5 text-xs font-semibold text-brand-700 transition-colors hover:bg-brand-100"
+                  >
+                    {copiedSitemap ? <Check size={14} className="text-success-600" /> : <Copy size={14} />}
+                    {copiedSitemap ? 'Copied!' : 'Copy'}
+                  </button>
+                  <a
+                    href={sitemapUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex h-10 shrink-0 items-center gap-1 rounded-xl border border-ink-200 bg-white px-3 text-xs font-semibold text-ink-600 transition-colors hover:bg-ink-50"
+                    title="Open Sitemap"
+                  >
+                    <ExternalLink size={14} />
+                  </a>
+                </div>
+              </div>
+              <div className="rounded-xl bg-emerald-50/70 p-3 text-xs text-emerald-800">
+                <div className="font-semibold flex items-center gap-1.5">
+                  <CheckCircle2 size={14} className="text-emerald-600" />
+                  All 680+ Products, Categories &amp; Core Pages Included
+                </div>
+                <p className="mt-1 text-emerald-700 leading-relaxed">
+                  Contains Google Image extensions (<code className="font-mono text-[11px]">&lt;image:image&gt;</code>) so product thumbnails are indexed in Google Image Search.
+                </p>
+              </div>
+              <div className="flex items-center justify-between text-xs text-ink-500 pt-1 border-t border-ink-100">
+                <span>Submit in Search Console:</span>
+                <a
+                  href="https://search.google.com/search-console/sitemaps"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-brand-600 font-medium hover:underline"
+                >
+                  Open Sitemaps Tool <ExternalLink size={12} />
+                </a>
+              </div>
+            </div>
+          </Section>
+
           <Section title="Google Verification" description="Accepts either the raw token or the complete copied meta tag.">
             <Field label="Google Search Console Verification">
               <textarea value={form.google_search_console_verification} onChange={(e) => update('google_search_console_verification', e.target.value)} className={textareaClass} rows={3} placeholder="token or <meta name=…>" />

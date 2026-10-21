@@ -5,6 +5,18 @@
   # Route /api/weadown/* requests to native cPanel PHP API
   RewriteRule ^api/weadown/(.*)$ api/weadown/index.php?endpoint=$1 [QSA,L]
 
+  # Route Facebook Catalog Feed aliases
+  RewriteRule ^facebook-catalog\.xml$ api/catalog/facebook-feed.php [L,QSA]
+  RewriteRule ^facebook-catalog\.csv$ api/catalog/facebook-feed.php?format=csv [L,QSA]
+  RewriteRule ^api/catalog/facebook-catalog\.xml$ api/catalog/facebook-feed.php [L,QSA]
+
+  # Route sitemap.xml to dynamic real-time PHP generator
+  RewriteRule ^sitemap\.xml$ api/sitemap.php [L,QSA]
+
+  # Social Crawlers / Facebook Scraper: dynamic Open Graph metadata for product pages
+  RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|Facebot|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Slackbot) [NC]
+  RewriteRule ^products/([a-zA-Z0-9_-]+)/?$ api/og.php?slug=$1 [L,QSA]
+
   # Allow direct access to existing files and directories
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d

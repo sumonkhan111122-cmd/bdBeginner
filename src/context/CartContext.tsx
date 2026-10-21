@@ -11,6 +11,7 @@ import {
 import type { Product, CartItem } from '@/types';
 import type { CheckoutPricingResult } from '@/types/discounts';
 import { calculateCheckoutPricing, friendlyPricingError } from '@/services/pricing';
+import { trackAddToCart } from '@/lib/tracking';
 
 type CartContextValue = {
   items: CartItem[];
@@ -241,6 +242,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, createCartItem(product, safeQty)];
     });
+    trackAddToCart(product, safeQty);
     if (shouldOpenCart) {
       setIsOpen(true);
     }

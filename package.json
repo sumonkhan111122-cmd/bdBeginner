@@ -12,6 +12,7 @@
     "import:weadown": "node scripts/auto-import-weadown.cjs",
     "extract:recover": "node scripts/extract-downloads.cjs --recover",
     "extract:single": "node scripts/extract-downloads.cjs",
+    "sitemap:generate": "node scripts/generate-sitemap.cjs",
     "worker": "node worker/server.js"
   },
   "dependencies": {

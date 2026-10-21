@@ -9,6 +9,8 @@ import { CatalogError, CatalogEmpty } from '@/components/ui/CatalogState';
 import { Pagination } from '@/components/ui/Pagination';
 import { usePublishedProducts } from '@/hooks/useCatalog';
 import { useCurrencyFormatter } from '@/hooks/useCurrency';
+import { useSiteSettings } from '@/context/SiteSettingsContext';
+import { applySeo } from '@/lib/seo';
 import {
   Search,
   SlidersHorizontal,
@@ -104,6 +106,7 @@ type ProductsPageProps = {
 export function ProductsPage({ initialCategory, dealsOnly = false }: ProductsPageProps = {}) {
   const [searchParams, setSearchParams] = useSearchParams();
   const formatPrice = useCurrencyFormatter();
+  const { siteSettings, seoSettings } = useSiteSettings();
   const { data: products, loading, error, retry } = usePublishedProducts();
 
   const priceRangeLabels = [
@@ -135,6 +138,38 @@ export function ProductsPage({ initialCategory, dealsOnly = false }: ProductsPag
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<number[]>([]);
   const [sort, setSort] = useState<SortOption>('featured');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  // Dynamic SEO based on active filters
+  useEffect(() => {
+    let title = 'Digital Products & Tools | bdBeginner';
+    let desc = seoSettings.default_meta_description;
+    let canonical = '/products';
+
+    if (selectedCategories.length === 1) {
+      const cat = selectedCategories[0];
+      title = `${cat} — Themes, Plugins & Tools | bdBeginner`;
+      desc = `Browse verified ${cat} with authentic downloads, lifetime updates, and verified licenses at bdBeginner.`;
+      const foundSlug = Object.entries(CATEGORY_SLUG_MAP).find(([, name]) => name === cat)?.[0] || cat.toLowerCase().replace(/\s+/g, '-');
+      canonical = `/products?category=${encodeURIComponent(foundSlug)}`;
+    } else if (isDealsOnly) {
+      title = 'Special Deals & Discounted Products | bdBeginner';
+      desc = 'Discover limited-time discounts and special deals on WordPress themes, plugins, and software licenses.';
+      canonical = '/products?deals=true';
+    } else if (search.trim()) {
+      title = `Search results for "${search.trim()}" | bdBeginner`;
+      desc = `Find digital products, scripts, courses, and WordPress themes matching "${search.trim()}" on bdBeginner.`;
+    }
+
+    applySeo(
+      {
+        title,
+        description: desc,
+        canonicalPath: canonical,
+        image: seoSettings.default_og_image_url,
+      },
+      seoSettings,
+    );
+  }, [selectedCategories, isDealsOnly, search, seoSettings]);
 
   // Sync state whenever URL or props change
   useEffect(() => {

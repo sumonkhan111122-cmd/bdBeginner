@@ -8,6 +8,12 @@ type SeoInput = {
   image?: string | null;
   index?: boolean;
   follow?: boolean;
+  type?: 'website' | 'product';
+  price?: number | null;
+  currency?: string | null;
+  availability?: 'in stock' | 'out of stock';
+  retailerItemId?: string | null;
+  brand?: string | null;
 };
 
 function setMeta(attribute: 'name' | 'property', key: string, content?: string | null) {
@@ -51,11 +57,13 @@ export function applySeo(input: SeoInput, settings: SeoSettings): void {
   const robots = `${(input.index ?? settings.robots_index) ? 'index' : 'noindex'},${
     (input.follow ?? settings.robots_follow) ? 'follow' : 'nofollow'
   }`;
+  const ogType = input.type || 'website';
 
   document.title = title;
   setMeta('name', 'description', description);
   setMeta('name', 'robots', robots);
-  setMeta('property', 'og:type', 'website');
+  setMeta('property', 'og:type', ogType);
+  setMeta('property', 'og:site_name', 'bdBeginner');
   setMeta('property', 'og:title', title);
   setMeta('property', 'og:description', description);
   setMeta('property', 'og:image', image);
@@ -65,6 +73,24 @@ export function applySeo(input: SeoInput, settings: SeoSettings): void {
   setMeta('name', 'twitter:description', description);
   setMeta('name', 'twitter:image', image);
   setCanonical(input.canonicalPath ?? '/');
+
+  if (ogType === 'product') {
+    if (input.price != null) {
+      setMeta('property', 'product:price:amount', String(input.price));
+      setMeta('property', 'product:price:currency', input.currency || 'BDT');
+    }
+    setMeta('property', 'product:availability', input.availability || 'in stock');
+    setMeta('property', 'product:condition', 'new');
+    if (input.brand) setMeta('property', 'product:brand', input.brand);
+    if (input.retailerItemId) setMeta('property', 'product:retailer_item_id', input.retailerItemId);
+  } else {
+    setMeta('property', 'product:price:amount', null);
+    setMeta('property', 'product:price:currency', null);
+    setMeta('property', 'product:availability', null);
+    setMeta('property', 'product:condition', null);
+    setMeta('property', 'product:brand', null);
+    setMeta('property', 'product:retailer_item_id', null);
+  }
 }
 
 function readMetaAttribute(markup: string, attribute: string): string | null {
@@ -90,6 +116,22 @@ export function normalizeGoogleVerification(value: string | null | undefined): s
 export function applyGoogleVerification(value: string | null | undefined): void {
   const token = normalizeGoogleVerification(value);
   setMeta('name', 'google-site-verification', token);
+}
+
+export function normalizeFacebookVerification(value: string | null | undefined): string | null {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  if (/^<meta\b/i.test(trimmed)) {
+    const name = readMetaAttribute(trimmed, 'name');
+    if (name?.toLowerCase() !== 'facebook-domain-verification') return null;
+    return readMetaAttribute(trimmed, 'content') || null;
+  }
+  return trimmed.replace(/^['"]|['"]$/g, '') || null;
+}
+
+export function applyFacebookVerification(value: string | null | undefined): void {
+  const token = normalizeFacebookVerification(value);
+  setMeta('name', 'facebook-domain-verification', token);
 }
 
 function removeById(id: string) {
@@ -138,6 +180,41 @@ export function configureGtm(value: string | null | undefined): void {
   script.dataset.containerId = id;
   script.textContent = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${id}');`;
   document.head.appendChild(script);
+}
+
+export function configureFacebookPixel(value: string | null | undefined): void {
+  const rawId = value?.trim() || (import.meta.env.VITE_FACEBOOK_PIXEL_ID as string | undefined)?.trim() || '';
+  const scriptId = 'bdb-fb-pixel-script';
+  const noscriptId = 'bdb-fb-pixel-noscript';
+
+  if (!rawId || !/^\d{6,25}$/.test(rawId)) {
+    removeById(scriptId);
+    removeById(noscriptId);
+    return;
+  }
+
+  const existing = document.getElementById(scriptId) as HTMLScriptElement | null;
+  if (existing?.dataset.pixelId === rawId) return;
+
+  removeById(scriptId);
+  removeById(noscriptId);
+
+  const script = document.createElement('script');
+  script.id = scriptId;
+  script.dataset.pixelId = rawId;
+  script.textContent = `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${rawId}');fbq('track','PageView');`;
+  document.head.appendChild(script);
+
+  const noscript = document.createElement('noscript');
+  noscript.id = noscriptId;
+  const pixelImg = document.createElement('img');
+  pixelImg.height = 1;
+  pixelImg.width = 1;
+  pixelImg.style.display = 'none';
+  pixelImg.alt = '';
+  pixelImg.src = `https://www.facebook.com/tr?id=${encodeURIComponent(rawId)}&ev=PageView&noscript=1`;
+  noscript.appendChild(pixelImg);
+  document.body.appendChild(noscript);
 }
 
 export function applyFavicon(value: string | null | undefined): void {

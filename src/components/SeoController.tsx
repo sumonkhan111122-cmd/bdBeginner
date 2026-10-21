@@ -2,17 +2,24 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useSiteSettings } from '@/context/SiteSettingsContext';
 import {
+  applyFacebookVerification,
   applyFavicon,
   applyGoogleVerification,
   applySeo,
   applyStructuredData,
+  configureFacebookPixel,
   configureGa4,
   configureGtm,
 } from '@/lib/seo';
+import { trackPageView } from '@/lib/tracking';
 
 export function SeoController() {
   const { pathname } = useLocation();
   const { siteSettings, seoSettings } = useSiteSettings();
+
+  useEffect(() => {
+    trackPageView(pathname);
+  }, [pathname]);
 
   useEffect(() => {
     const privateRoute = /^\/(admin|account|checkout|cart|wishlist|login|auth|payment|order)(\/|$)/.test(pathname);
@@ -53,8 +60,10 @@ export function SeoController() {
 
   useEffect(() => {
     applyGoogleVerification(seoSettings.google_search_console_verification);
+    applyFacebookVerification(seoSettings.facebook_domain_verification);
     configureGa4(seoSettings.google_analytics_id);
     configureGtm(seoSettings.google_tag_manager_id);
+    configureFacebookPixel(seoSettings.facebook_pixel_id);
   }, [seoSettings]);
 
   useEffect(() => {

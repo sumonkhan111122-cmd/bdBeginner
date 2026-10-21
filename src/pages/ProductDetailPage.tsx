@@ -39,7 +39,8 @@ import { ProductDetailSkeleton } from '@/components/ui/SkeletonCard';
 import { CatalogError } from '@/components/ui/CatalogState';
 import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
 import { useSiteSettings } from '@/context/SiteSettingsContext';
-import { applySeo, formatSeoTitle } from '@/lib/seo';
+import { applySeo, applyStructuredData, formatSeoTitle } from '@/lib/seo';
+import { trackViewContent } from '@/lib/tracking';
 import { useCurrencyFormatter } from '@/hooks/useCurrency';
 import type { DeliveryType, Product } from '@/types';
 
@@ -239,17 +240,55 @@ function ProductDetailPage() {
 
   useEffect(() => {
     if (!product) return;
+    trackViewContent(product);
+  }, [product]);
+
+  useEffect(() => {
+    if (!product) return;
     const title = product.seoTitle || formatSeoTitle(product.name, seoSettings);
+    const image = product.thumbnail || product.images[0]?.url || seoSettings.default_og_image_url;
+    const priceValue = product.salePrice ?? product.price;
+
     applySeo(
       {
         title,
         description:
           product.seoDescription || product.shortDescription || seoSettings.default_meta_description,
         canonicalPath: `/products/${product.slug}`,
-        image: product.thumbnail || product.images[0]?.url || seoSettings.default_og_image_url,
+        image,
+        type: 'product',
+        price: priceValue,
+        currency: 'BDT',
+        availability: 'in stock',
+        retailerItemId: product.id,
+        brand: 'bdBeginner',
       },
       seoSettings,
     );
+
+    applyStructuredData('product-detail', {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: product.name,
+      description: product.shortDescription || product.description || '',
+      image: image ? [image] : undefined,
+      sku: product.id,
+      brand: {
+        '@type': 'Brand',
+        name: 'bdBeginner',
+      },
+      offers: {
+        '@type': 'Offer',
+        price: priceValue,
+        priceCurrency: 'BDT',
+        availability: 'https://schema.org/InStock',
+        url: window.location.href,
+      },
+    });
+
+    return () => {
+      applyStructuredData('product-detail', null);
+    };
   }, [product, seoSettings]);
 
   if (loading) {

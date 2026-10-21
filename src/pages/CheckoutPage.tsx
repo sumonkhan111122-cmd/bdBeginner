@@ -14,6 +14,7 @@ import {
   validateCheckoutCart,
   triggerOrderNotification,
 } from '@/services/orders';
+import { trackInitiateCheckout } from '@/lib/tracking';
 import { initiateBkashPayment } from '@/services/payment';
 import {
   fetchPublicPaymentSettings,
@@ -70,6 +71,13 @@ export function CheckoutPage() {
   const [couponLocalError, setCouponLocalError] = useState<string | null>(null);
 
   const isZeroTotal = pricing && pricing.total === 0;
+
+  useEffect(() => {
+    if (items.length > 0) {
+      const totalVal = pricing ? pricing.total : items.reduce((sum, item) => sum + (item.product.salePrice ?? item.product.price) * item.quantity, 0);
+      trackInitiateCheckout(items, totalVal);
+    }
+  }, [items.length]); // fires once per checkout entry
 
   useEffect(() => {
     if (authLoading || !session) return;

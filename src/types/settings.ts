@@ -33,6 +33,8 @@ export type SeoSettings = {
   google_search_console_verification: string | null;
   google_analytics_id: string | null;
   google_tag_manager_id: string | null;
+  facebook_pixel_id: string | null;
+  facebook_domain_verification: string | null;
   robots_index: boolean;
   robots_follow: boolean;
   updated_at: string | null;
@@ -107,6 +109,8 @@ export const DEFAULT_SEO_SETTINGS: SeoSettings = {
   google_search_console_verification: null,
   google_analytics_id: null,
   google_tag_manager_id: null,
+  facebook_pixel_id: null,
+  facebook_domain_verification: null,
   robots_index: true,
   robots_follow: true,
   updated_at: null,
