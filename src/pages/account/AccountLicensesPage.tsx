@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { AccountLayout } from '@/components/account/AccountLayout';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { getCustomerOrders } from '@/services/orders';
+import { isOrderPaidOrConfirmed } from '@/lib/orders';
 import { listFulfillmentsAuth, revealFulfillmentAuth } from '@/services/fulfillment';
 import type { OrderRow, FulfillmentRow, RevealResult } from '@/types/orders';
 import { Button } from '@/components/ui/Button';
@@ -17,6 +18,7 @@ type OrderLicenseGroup = {
 export function AccountLicensesPage() {
   const { session } = useCustomerAuth();
   const userId = session?.user.id;
+  const userEmail = session?.user.email;
   const [loading, setLoading] = useState(true);
   const [groups, setGroups] = useState<OrderLicenseGroup[]>([]);
   const [revealedKeys, setRevealedKeys] = useState<Record<string, string[]>>({});
@@ -24,15 +26,15 @@ export function AccountLicensesPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!userId) return;
-    const currentUserId = userId;
+    if (!userId && !userEmail) return;
+    const currentUserId = userId || '';
 
     let active = true;
 
     async function load() {
       try {
-        const orders = await getCustomerOrders(currentUserId);
-        const paidOrders = orders.filter((o) => o.payment_status === 'paid');
+        const orders = await getCustomerOrders(currentUserId, userEmail || undefined);
+        const paidOrders = orders.filter(isOrderPaidOrConfirmed);
 
         const results = await Promise.all(
           paidOrders.map(async (order) => {

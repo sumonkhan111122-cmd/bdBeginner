@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Settings,
   Check,
+  Smartphone,
 } from 'lucide-react';
 import {
   getLessonPlaybackTime,
@@ -70,6 +71,8 @@ export function ProtectedVideoPlayer({
   const [showQualityMenu, setShowQualityMenu] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false);
+  const [isMobileLandscape, setIsMobileLandscape] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [resumeNotice, setResumeNotice] = useState<string | null>(null);
   const [playerReady, setPlayerReady] = useState(false);
@@ -81,6 +84,49 @@ export function ProtectedVideoPlayer({
   useEffect(() => {
     currentTimeRef.current = currentTime;
   }, [currentTime]);
+
+  // Listen for native fullscreen changes across browsers
+  useEffect(() => {
+    const handleFsChange = () => {
+      const isFs = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      );
+      setIsFullscreen(isFs);
+      if (!isFs) {
+        setIsPseudoFullscreen(false);
+      }
+    };
+    document.addEventListener('fullscreenchange', handleFsChange);
+    document.addEventListener('webkitfullscreenchange', handleFsChange);
+    document.addEventListener('mozfullscreenchange', handleFsChange);
+    document.addEventListener('MSFullscreenChange', handleFsChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFsChange);
+      document.removeEventListener('webkitfullscreenchange', handleFsChange);
+      document.removeEventListener('mozfullscreenchange', handleFsChange);
+      document.removeEventListener('MSFullscreenChange', handleFsChange);
+    };
+  }, []);
+
+  // Detect mobile device orientation (when phone is turned horizontally)
+  useEffect(() => {
+    const checkOrientation = () => {
+      if (typeof window === 'undefined') return;
+      const isMobile = window.innerWidth <= 960 || window.innerHeight <= 540;
+      const isLand = window.innerWidth > window.innerHeight;
+      setIsMobileLandscape(isMobile && isLand);
+    };
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+    return () => {
+      window.removeEventListener('resize', checkOrientation);
+      window.removeEventListener('orientationchange', checkOrientation);
+    };
+  }, []);
 
   // Saved resume position for current lesson (seconds)
   const savedResumeSeconds = useMemo(() => {
@@ -363,15 +409,116 @@ export function ProtectedVideoPlayer({
     }
   };
 
-  // Fullscreen container
-  const toggleFullscreen = () => {
-    if (!containerRef.current) return;
-    if (!document.fullscreenElement) {
-      containerRef.current.requestFullscreen().catch(() => {});
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen().catch(() => {});
+  // Cross-browser request native fullscreen
+  const requestNativeFs = async (el: HTMLElement) => {
+    if (el.requestFullscreen) {
+      await el.requestFullscreen();
+      return true;
+    }
+    if ((el as any).webkitRequestFullscreen) {
+      (el as any).webkitRequestFullscreen();
+      return true;
+    }
+    if ((el as any).mozRequestFullScreen) {
+      (el as any).mozRequestFullScreen();
+      return true;
+    }
+    if ((el as any).msRequestFullscreen) {
+      (el as any).msRequestFullscreen();
+      return true;
+    }
+    return false;
+  };
+
+  // Cross-browser exit native fullscreen
+  const exitNativeFs = async () => {
+    if (
+      document.fullscreenElement ||
+      (document as any).webkitFullscreenElement ||
+      (document as any).mozFullScreenElement
+    ) {
+      if (document.exitFullscreen) {
+        await document.exitFullscreen().catch(() => {});
+      } else if ((document as any).webkitExitFullscreen) {
+        (document as any).webkitExitFullscreen();
+      } else if ((document as any).mozCancelFullScreen) {
+        (document as any).mozCancelFullScreen();
+      }
+    }
+  };
+
+  // Toggle fullscreen (with fallback to pseudo-fullscreen on iOS/restricted browsers)
+  const toggleFullscreen = async () => {
+    if (isLocked) {
+      if (onUnlockClick) onUnlockClick();
+      return;
+    }
+
+    if (isFullscreen || isPseudoFullscreen) {
+      await exitNativeFs();
       setIsFullscreen(false);
+      setIsPseudoFullscreen(false);
+      try {
+        if (screen.orientation && (screen.orientation as any).unlock) {
+          (screen.orientation as any).unlock();
+        }
+      } catch {}
+    } else {
+      let nativeSuccess = false;
+      if (containerRef.current) {
+        try {
+          nativeSuccess = await requestNativeFs(containerRef.current);
+          if (nativeSuccess) setIsFullscreen(true);
+        } catch {
+          nativeSuccess = false;
+        }
+      }
+      if (!nativeSuccess) {
+        // Fallback for iOS / mobile browsers that restrict div fullscreen
+        setIsPseudoFullscreen(true);
+      }
+    }
+  };
+
+  // Dedicated Mobile Landscape / Rotation Toggle
+  const toggleRotateLandscape = async () => {
+    if (isLocked) {
+      if (onUnlockClick) onUnlockClick();
+      return;
+    }
+
+    if (isFullscreen || isPseudoFullscreen || isMobileLandscape) {
+      await exitNativeFs();
+      setIsFullscreen(false);
+      setIsPseudoFullscreen(false);
+      try {
+        if (screen.orientation && (screen.orientation as any).unlock) {
+          (screen.orientation as any).unlock();
+        }
+      } catch {}
+    } else {
+      // First attempt native fullscreen
+      let nativeSuccess = false;
+      if (containerRef.current) {
+        try {
+          nativeSuccess = await requestNativeFs(containerRef.current);
+          if (nativeSuccess) setIsFullscreen(true);
+        } catch {
+          nativeSuccess = false;
+        }
+      }
+      if (!nativeSuccess) {
+        setIsPseudoFullscreen(true);
+      }
+
+      // Try orientation lock if supported (Android Chrome / Edge / etc.)
+      try {
+        if (screen.orientation && (screen.orientation as any).lock) {
+          await (screen.orientation as any).lock('landscape');
+        }
+      } catch {
+        // User may turn device manually if orientation lock API is restricted
+      }
     }
   };
 
@@ -408,6 +555,8 @@ export function ProtectedVideoPlayer({
     typeof window !== 'undefined' ? window.location.origin : ''
   )}`;
 
+  const isAnyFullscreen = isFullscreen || isPseudoFullscreen;
+
   return (
     <div
       ref={containerRef}
@@ -416,44 +565,46 @@ export function ProtectedVideoPlayer({
         return false;
       }}
       onMouseMove={handleMouseMove}
-      className="group relative w-full aspect-video rounded-3xl overflow-hidden bg-black border border-white/10 shadow-[0_0_60px_-15px_rgba(59,130,246,0.35)] select-none font-sans"
+      onTouchStart={handleMouseMove}
+      className={`group relative w-full bg-black select-none font-sans transition-all duration-300 ${
+        isAnyFullscreen || isMobileLandscape
+          ? 'fixed inset-0 z-[999999] w-screen h-screen rounded-none border-0 shadow-none'
+          : 'aspect-video rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_50px_-15px_rgba(59,130,246,0.35)]'
+      }`}
     >
       {/* LOCKED VIDEO SHIELD (For non-enrolled students on premium classes) */}
       {isLocked ? (
-        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 text-center bg-gradient-to-b from-ink-950/95 via-black/95 to-brand-950/95 backdrop-blur-xl">
-          <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-3xl bg-brand-500/10 text-brand-400 border border-brand-500/30 mb-5 shadow-2xl">
-            <Lock size={32} />
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-4 sm:p-6 text-center bg-gradient-to-b from-ink-950/95 via-black/95 to-brand-950/95 backdrop-blur-xl">
+          <div className="flex h-14 w-14 sm:h-20 sm:w-20 items-center justify-center rounded-2xl sm:rounded-3xl bg-brand-500/10 text-brand-400 border border-brand-500/30 mb-3 sm:mb-5 shadow-2xl">
+            <Lock size={26} className="sm:hidden" />
+            <Lock size={34} className="hidden sm:block" />
           </div>
 
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-500/20 border border-brand-500/40 px-3.5 py-1 text-xs font-bold text-brand-300 mb-3">
-            <Sparkles size={13} className="text-amber-400" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-500/20 border border-brand-500/40 px-3 py-0.5 sm:px-3.5 sm:py-1 text-[11px] sm:text-xs font-bold text-brand-300 mb-2 sm:mb-3">
+            <Sparkles size={12} className="text-amber-400" />
             <span>প্রিমিয়াম ক্লাস • লকড</span>
           </span>
 
-          <h3 className="text-xl sm:text-2xl font-bold text-white max-w-lg mb-2">
+          <h3 className="text-lg sm:text-2xl font-bold text-white max-w-lg mb-1.5 sm:mb-2 line-clamp-2">
             {title}
           </h3>
 
-          <p className="text-sm text-ink-300 max-w-md leading-relaxed mb-6">
+          <p className="text-xs sm:text-sm text-ink-300 max-w-md leading-relaxed mb-4 sm:mb-6">
             এই সম্পূর্ণ প্র্যাকটিক্যাল ক্লাস এবং প্রজেক্ট ফাইলগুলো দেখতে মাত্র ২৯০ টাকায় আজীবন এক্সেস নিন।
           </p>
 
           <button
             type="button"
             onClick={onUnlockClick}
-            className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-brand-600 via-brand-500 to-accent-600 px-7 py-3.5 text-sm sm:text-base font-extrabold text-white shadow-xl hover:opacity-95 transition-all transform hover:scale-105 active:scale-95"
+            className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-brand-600 via-brand-500 to-accent-600 px-6 py-3 sm:px-7 sm:py-3.5 text-xs sm:text-base font-extrabold text-white shadow-xl hover:opacity-95 transition-all transform hover:scale-105 active:scale-95 cursor-pointer"
           >
             <span>মাত্র ২৯০ টাকায় সম্পূর্ণ কোর্স আনলক করুন</span>
-            <ArrowRight size={17} />
+            <ArrowRight size={16} />
           </button>
         </div>
       ) : (
         <>
-          {/* 
-            ANTI-TITLE CROP WRAPPER:
-            We scale and translateY the iframe so that YouTube's top 70px header (title, avatar, share)
-            and bottom 70px (YouTube logo) are physically pushed outside the overflow-hidden parent!
-          */}
+          {/* UNCROPPED 16:9 VIDEO IFRAME */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <iframe
               key={`${courseId}_${lessonId}_${youtubeId}`}
@@ -461,36 +612,55 @@ export function ProtectedVideoPlayer({
               src={embedUrl}
               onLoad={handleIframeLoad}
               title={title}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              className="absolute w-[100%] h-[135%] -top-[17.5%] left-0 pointer-events-auto"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              className="absolute inset-0 w-full h-full pointer-events-auto"
               tabIndex={-1}
             />
           </div>
 
-          {/* TOP BRANDED BAR (Masks top border and displays bdBeginner Studio branding) */}
+          {/* TOP BRANDED BAR (Masks top border and displays bdBeginner Studio branding & quick toggle) */}
           <div
-            className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-black/95 via-black/60 to-transparent z-20 flex items-center justify-between px-6 pointer-events-auto cursor-pointer"
-            onClick={togglePlay}
+            className="absolute top-0 left-0 right-0 h-12 sm:h-16 bg-gradient-to-b from-black/95 via-black/60 to-transparent z-20 flex items-center justify-between px-3 sm:px-6 pointer-events-auto"
           >
-            <div className="flex items-center gap-3">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-600 text-white font-extrabold text-sm shadow-md">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 cursor-pointer" onClick={togglePlay}>
+              <span className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg sm:rounded-xl bg-brand-600 text-white font-extrabold text-xs sm:text-sm shadow-md shrink-0">
                 bd
               </span>
               <div className="min-w-0">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-brand-400 block">
-                  bdBeginner AI Studio • HD 4K
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-brand-400 block truncate">
+                  bdBeginner AI Studio • HD
                 </span>
-                <span className="text-sm font-bold text-white tracking-wide truncate max-w-xs sm:max-w-md block">
+                <span className="text-xs sm:text-sm font-bold text-white tracking-wide truncate max-w-[170px] sm:max-w-md block">
                   {title}
                 </span>
               </div>
             </div>
 
-            <div className="hidden sm:flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 border border-white/15 px-3 py-1 text-xs font-semibold text-brand-300 backdrop-blur-md">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="hidden md:inline-flex items-center gap-1.5 rounded-full bg-white/10 border border-white/15 px-3 py-1 text-xs font-semibold text-brand-300 backdrop-blur-md">
                 <ShieldCheck size={14} className="text-emerald-400" />
                 <span>মাস্টারক্লাস প্লেয়ার</span>
               </span>
+
+              {/* Quick Screen Rotate / Fullscreen Button on Top Right */}
+              <button
+                type="button"
+                onClick={toggleRotateLandscape}
+                className="inline-flex items-center gap-1 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 px-2.5 py-1 text-[11px] sm:text-xs font-bold text-white backdrop-blur-md transition-colors cursor-pointer"
+                title={isAnyFullscreen ? 'ছোট করুন' : 'রোটেট / ফুলস্ক্রিন'}
+              >
+                {isAnyFullscreen || isMobileLandscape ? (
+                  <>
+                    <Minimize2 size={13} className="text-amber-400" />
+                    <span>ছোট করুন</span>
+                  </>
+                ) : (
+                  <>
+                    <Smartphone size={12} className="rotate-90 text-amber-400" />
+                    <span className="hidden xs:inline">স্ক্রিন বড় করুন</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
 
@@ -500,35 +670,36 @@ export function ProtectedVideoPlayer({
             className="absolute inset-0 z-10 flex items-center justify-center cursor-pointer bg-transparent"
           >
             {!isPlaying && (
-              <div className="flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-full bg-brand-600/90 text-white shadow-[0_0_40px_rgba(37,99,235,0.6)] ring-4 ring-white/20 backdrop-blur-md transition-all transform hover:scale-110 active:scale-95 group-hover:bg-brand-500">
-                <Play size={34} className="translate-x-1 fill-white" />
+              <div className="flex h-16 w-16 sm:h-22 sm:w-22 items-center justify-center rounded-full bg-brand-600/90 text-white shadow-[0_0_40px_rgba(37,99,235,0.6)] ring-4 ring-white/20 backdrop-blur-md transition-all transform hover:scale-110 active:scale-95 group-hover:bg-brand-500">
+                <Play size={28} className="translate-x-0.5 fill-white sm:hidden" />
+                <Play size={34} className="translate-x-1 fill-white hidden sm:block" />
               </div>
             )}
           </div>
 
           {/* RESUME / QUALITY NOTIFICATION TOAST */}
           {resumeNotice && (
-            <div className="absolute top-20 left-6 z-30 flex items-center gap-2.5 rounded-2xl bg-ink-900/95 border border-brand-500/50 px-4 py-2.5 text-xs font-semibold text-white shadow-2xl backdrop-blur-md animate-fade-in">
-              <Clock size={16} className="text-brand-400 shrink-0" />
+            <div className="absolute top-14 sm:top-20 left-3 sm:left-6 z-30 flex items-center gap-2 rounded-2xl bg-ink-900/95 border border-brand-500/50 px-3.5 py-2 text-[11px] sm:text-xs font-semibold text-white shadow-2xl backdrop-blur-md animate-fade-in">
+              <Clock size={15} className="text-brand-400 shrink-0" />
               <span>{resumeNotice}</span>
             </div>
           )}
 
           {/* CUSTOM BRANDED BOTTOM CONTROLS BAR */}
           <div
-            className={`absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-black via-black/85 to-transparent pt-10 pb-4 px-4 sm:px-6 transition-opacity duration-300 ${
+            className={`absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-black via-black/85 to-transparent pt-8 pb-3 px-2.5 sm:px-6 transition-opacity duration-300 ${
               showControls || !isPlaying ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
             }`}
           >
             {/* Scrubber / Progress Slider */}
-            <div className="relative mb-3.5 flex items-center group/scrubber cursor-pointer">
+            <div className="relative mb-2 sm:mb-3 flex items-center group/scrubber cursor-pointer">
               <input
                 type="range"
                 min={0}
                 max={duration || 100}
                 value={currentTime}
                 onChange={handleScrubberChange}
-                className="w-full h-1.5 bg-white/25 rounded-lg appearance-none cursor-pointer accent-brand-500 transition-all hover:h-2.5"
+                className="w-full h-2 sm:h-1.5 bg-white/25 rounded-lg appearance-none cursor-pointer accent-brand-500 transition-all hover:h-2.5 py-1"
                 style={{
                   background: `linear-gradient(to right, #2f6bf6 0%, #2f6bf6 ${(currentTime / (duration || 1)) * 100}%, rgba(255,255,255,0.2) ${(currentTime / (duration || 1)) * 100}%, rgba(255,255,255,0.2) 100%)`,
                 }}
@@ -538,57 +709,58 @@ export function ProtectedVideoPlayer({
             {/* Buttons Row */}
             <div className="flex items-center justify-between text-white text-xs sm:text-sm">
               {/* Left Controls */}
-              <div className="flex items-center gap-1.5 sm:gap-2.5">
+              <div className="flex items-center gap-1 sm:gap-2">
                 {/* Play / Pause */}
                 <button
                   type="button"
                   onClick={togglePlay}
-                  className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-white"
+                  className="p-1.5 sm:p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-white cursor-pointer"
                   title={isPlaying ? 'Pause' : 'Play'}
                 >
-                  {isPlaying ? <Pause size={18} /> : <Play size={18} className="fill-white" />}
+                  {isPlaying ? <Pause size={17} /> : <Play size={17} className="fill-white" />}
                 </button>
 
                 {/* Rewind 10s */}
                 <button
                   type="button"
                   onClick={() => handleSeekRelative(-10)}
-                  className="p-2 rounded-xl hover:bg-white/10 transition-colors text-ink-300 hover:text-white flex items-center gap-1"
+                  className="p-1.5 sm:p-2 rounded-xl hover:bg-white/10 transition-colors text-ink-300 hover:text-white flex items-center gap-0.5 cursor-pointer"
                   title="10s Rewind"
                 >
-                  <RotateCcw size={16} />
-                  <span className="text-[11px] font-bold hidden md:inline">-১০ সে.</span>
+                  <RotateCcw size={15} />
+                  <span className="text-[10px] font-bold hidden md:inline">-১০</span>
                 </button>
 
                 {/* Forward 10s */}
                 <button
                   type="button"
                   onClick={() => handleSeekRelative(10)}
-                  className="p-2 rounded-xl hover:bg-white/10 transition-colors text-ink-300 hover:text-white flex items-center gap-1"
+                  className="p-1.5 sm:p-2 rounded-xl hover:bg-white/10 transition-colors text-ink-300 hover:text-white flex items-center gap-0.5 cursor-pointer"
                   title="10s Forward"
                 >
-                  <RotateCw size={16} />
-                  <span className="text-[11px] font-bold hidden md:inline">+১০ সে.</span>
+                  <RotateCw size={15} />
+                  <span className="text-[10px] font-bold hidden md:inline">+১০</span>
                 </button>
 
-                {/* Volume Control (Speaker Icon + Slider) */}
+                {/* Volume Control */}
                 <div className="flex items-center gap-1 group/vol">
                   <button
                     type="button"
                     onClick={toggleMute}
-                    className="p-2 rounded-xl hover:bg-white/10 transition-colors text-ink-300 hover:text-white"
+                    className="p-1.5 sm:p-2 rounded-xl hover:bg-white/10 transition-colors text-ink-300 hover:text-white cursor-pointer"
                     title={isMuted || volume === 0 ? 'আনমিউট করুন' : 'মিউট করুন'}
                   >
                     {isMuted || volume === 0 ? (
-                      <VolumeX size={17} className="text-rose-400" />
+                      <VolumeX size={16} className="text-rose-400" />
                     ) : volume < 50 ? (
-                      <Volume1 size={17} />
+                      <Volume1 size={16} />
                     ) : (
-                      <Volume2 size={17} />
+                      <Volume2 size={16} />
                     )}
                   </button>
 
-                  <div className="w-14 sm:w-20 flex items-center">
+                  {/* Volume slider (hidden on small phones to save space) */}
+                  <div className="hidden sm:flex w-14 sm:w-20 items-center">
                     <input
                       type="range"
                       min={0}
@@ -609,37 +781,37 @@ export function ProtectedVideoPlayer({
                 </div>
 
                 {/* Readable Timestamp */}
-                <div className="text-[11px] sm:text-xs font-semibold text-ink-300 ml-1 whitespace-nowrap">
+                <div className="text-[10px] sm:text-xs font-semibold text-ink-300 ml-0.5 whitespace-nowrap font-mono">
                   <span className="text-white font-bold">{formatTime(currentTime)}</span>
-                  <span className="mx-1 text-ink-500">/</span>
+                  <span className="mx-0.5 text-ink-500">/</span>
                   <span>{formatTime(duration || 480)}</span>
                 </div>
               </div>
 
               {/* Right Controls */}
-              <div className="flex items-center gap-1.5 sm:gap-2.5">
+              <div className="flex items-center gap-1 sm:gap-2">
                 {/* Video Quality Selector */}
                 <div className="relative" ref={qualityMenuRef}>
                   <button
                     type="button"
                     onClick={() => setShowQualityMenu((prev) => !prev)}
-                    className={`px-2 sm:px-2.5 py-1 rounded-lg transition-colors text-xs font-bold flex items-center gap-1 sm:gap-1.5 ${
+                    className={`px-1.5 sm:px-2.5 py-1 rounded-lg transition-colors text-[11px] sm:text-xs font-bold flex items-center gap-1 cursor-pointer ${
                       showQualityMenu
                         ? 'bg-brand-600 text-white shadow-lg'
                         : 'bg-white/10 hover:bg-white/20 text-ink-200 hover:text-white'
                     }`}
-                    title="ভিডিও কোয়ালিটি নির্বাচন করুন"
+                    title="ভিডিও কোয়ালিটি"
                   >
-                    <Settings size={13} className={showQualityMenu ? 'animate-spin' : ''} />
+                    <Settings size={12} className={showQualityMenu ? 'animate-spin' : ''} />
                     <span>{getQualityShortLabel(selectedQuality)}</span>
                   </button>
 
                   {/* Dropdown Quality Menu Popup */}
                   {showQualityMenu && (
-                    <div className="absolute bottom-full right-0 mb-2.5 w-60 rounded-2xl bg-ink-950/95 border border-white/20 p-2 shadow-2xl backdrop-blur-2xl z-50">
-                      <div className="px-3 py-2 border-b border-white/10 mb-1 flex items-center justify-between">
+                    <div className="absolute bottom-full right-0 mb-2 w-56 sm:w-60 rounded-2xl bg-ink-950/98 border border-white/20 p-2 shadow-2xl backdrop-blur-2xl z-50">
+                      <div className="px-3 py-1.5 border-b border-white/10 mb-1 flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
-                          <Settings size={13} className="text-brand-400" />
+                          <Settings size={12} className="text-brand-400" />
                           <span className="text-xs font-bold text-white">ভিডিও কোয়ালিটি</span>
                         </div>
                         <span className="text-[10px] font-bold text-brand-300 bg-brand-500/20 px-1.5 py-0.5 rounded border border-brand-500/30">
@@ -655,7 +827,7 @@ export function ProtectedVideoPlayer({
                               key={opt.id}
                               type="button"
                               onClick={() => handleQualitySelect(opt.id)}
-                              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-all ${
+                              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left text-xs transition-all cursor-pointer ${
                                 isActive
                                   ? 'bg-brand-600/30 text-white font-bold border border-brand-500/40 shadow-sm'
                                   : 'text-ink-300 hover:bg-white/10 hover:text-white'
@@ -695,32 +867,43 @@ export function ProtectedVideoPlayer({
                 <button
                   type="button"
                   onClick={cycleSpeed}
-                  className="px-2 sm:px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-xs font-bold text-brand-300"
+                  className="px-1.5 sm:px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-[11px] sm:text-xs font-bold text-brand-300 cursor-pointer"
                   title="Playback Speed"
                 >
                   {playbackRate}x
                 </button>
 
-                {/* Next lesson button */}
+                {/* Next lesson button (desktop / tablet) */}
                 {hasNextLesson && onNextLesson && (
                   <button
                     type="button"
                     onClick={onNextLesson}
-                    className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs transition-colors shadow-sm"
+                    className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs transition-colors shadow-sm cursor-pointer"
                   >
                     <span>পরবর্তী ক্লাস</span>
                     <RotateCw size={13} className="rotate-90" />
                   </button>
                 )}
 
-                {/* Fullscreen */}
+                {/* Dedicated Mobile Rotate / Landscape Screen Button */}
+                <button
+                  type="button"
+                  onClick={toggleRotateLandscape}
+                  className="p-1.5 sm:p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-amber-300 hover:text-white flex items-center gap-1 cursor-pointer"
+                  title="স্ক্রিন ঘোরান (ল্যান্ডস্কেপ)"
+                >
+                  <Smartphone size={16} className="rotate-90 text-amber-400" />
+                  <span className="text-[10px] font-bold hidden sm:inline">রোটেট</span>
+                </button>
+
+                {/* Fullscreen Button */}
                 <button
                   type="button"
                   onClick={toggleFullscreen}
-                  className="p-2 rounded-xl hover:bg-white/10 transition-colors text-ink-300 hover:text-white"
-                  title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+                  className="p-1.5 sm:p-2 rounded-xl hover:bg-white/10 transition-colors text-ink-300 hover:text-white cursor-pointer"
+                  title={isAnyFullscreen ? 'ছোট করুন' : 'ফুলস্ক্রিন'}
                 >
-                  {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+                  {isAnyFullscreen ? <Minimize2 size={17} /> : <Maximize2 size={17} />}
                 </button>
               </div>
             </div>

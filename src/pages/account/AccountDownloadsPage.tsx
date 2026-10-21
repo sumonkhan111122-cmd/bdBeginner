@@ -17,6 +17,7 @@ import { Link } from 'react-router-dom';
 import { AccountLayout } from '@/components/account/AccountLayout';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { getCustomerOrders } from '@/services/orders';
+import { isOrderPaidOrConfirmed } from '@/lib/orders';
 import { listOrderDownloadsAuth, openDownloadLinkAuth, type DownloadLinkMetadata } from '@/services/downloads';
 import { useMembership } from '@/context/MembershipContext';
 import type { OrderRow } from '@/types/orders';
@@ -51,7 +52,7 @@ export function AccountDownloadsPage() {
 
     try {
       const orders = await getCustomerOrders(userId || '', userEmail || undefined);
-      const paidOrders = orders.filter((o) => o.payment_status === 'paid');
+      const paidOrders = orders.filter(isOrderPaidOrConfirmed);
 
       const results = await Promise.all(
         paidOrders.map(async (order) => {

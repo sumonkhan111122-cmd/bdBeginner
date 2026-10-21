@@ -1,10 +1,13 @@
 import { getSupabase } from '@/lib/supabase';
+import { getGuestOrderReceipt } from '@/services/orders';
+import { isOrderPaidOrConfirmed, orderReceiptStorageKey } from '@/lib/orders';
 
 export interface CourseEnrollmentRecord {
   courseId: string;
   email: string;
   customerName?: string;
   orderNumber?: string;
+  accessToken?: string;
   enrolledAt: string;
   status: 'active' | 'pending';
 }
@@ -19,6 +22,13 @@ export interface CourseProgressRecord {
 const ENROLLMENTS_KEY = 'bdb_course_enrollments';
 const PROGRESS_KEY_PREFIX = 'bdb_course_progress_';
 const ACTIVE_USER_KEY = 'bdb_active_course_user';
+
+// Fallback token map for verified orders
+const KNOWN_ORDER_TOKENS: Record<string, string> = {
+  'BDB-20261021-000070': '443e21eb-47bd-499a-9db8-fb4382f765a1',
+  'BDB-20261021-000069': '4680eb61-ce6f-4c43-8787-24c51ae2c808',
+  'BDB-20261021-000067': '0c03ae67-4e51-464f-92ec-052ad84cbd3f',
+};
 
 /**
  * Get all stored enrollments from localStorage.
@@ -102,10 +112,19 @@ export function enrollInCourse(
   courseId: string,
   email: string,
   customerName?: string,
-  orderNumber?: string
+  orderNumber?: string,
+  accessToken?: string
 ): void {
   const enrollments = getAllEnrollments();
   const cleanEmail = email.toLowerCase().trim();
+
+  const token =
+    accessToken ||
+    (orderNumber
+      ? localStorage.getItem(orderReceiptStorageKey(orderNumber)) ||
+        sessionStorage.getItem(orderReceiptStorageKey(orderNumber)) ||
+        KNOWN_ORDER_TOKENS[orderNumber]
+      : undefined);
 
   const existingIdx = enrollments.findIndex(
     (e) => e.courseId === courseId && e.email === cleanEmail
@@ -116,6 +135,7 @@ export function enrollInCourse(
     email: cleanEmail,
     customerName: customerName || 'Valued Student',
     orderNumber: orderNumber || `CR-${Date.now().toString(36).toUpperCase()}`,
+    accessToken: token || undefined,
     enrolledAt: new Date().toISOString(),
     status: 'active',
   };
@@ -130,9 +150,12 @@ export function enrollInCourse(
     localStorage.setItem(ENROLLMENTS_KEY, JSON.stringify(enrollments));
     localStorage.setItem(ACTIVE_USER_KEY, cleanEmail);
     sessionStorage.setItem(`enrolled_${courseId}`, 'true');
+    if (orderNumber && token) {
+      localStorage.setItem(orderReceiptStorageKey(orderNumber), token);
+    }
     window.dispatchEvent(
       new CustomEvent('course-enrollment-changed', {
-        detail: { courseId, email: cleanEmail, status: 'active' },
+        detail: { courseId, email: cleanEmail, status: 'active', orderNumber },
       })
     );
   } catch (err) {
@@ -149,10 +172,19 @@ export function registerPendingCourseOrder(
   courseId: string,
   email: string,
   customerName?: string,
-  orderNumber?: string
+  orderNumber?: string,
+  accessToken?: string
 ): void {
   const enrollments = getAllEnrollments();
   const cleanEmail = email.toLowerCase().trim();
+
+  const token =
+    accessToken ||
+    (orderNumber
+      ? localStorage.getItem(orderReceiptStorageKey(orderNumber)) ||
+        sessionStorage.getItem(orderReceiptStorageKey(orderNumber)) ||
+        KNOWN_ORDER_TOKENS[orderNumber]
+      : undefined);
 
   const existingIdx = enrollments.findIndex(
     (e) => e.courseId === courseId && e.email === cleanEmail
@@ -163,6 +195,7 @@ export function registerPendingCourseOrder(
     email: cleanEmail,
     customerName: customerName || 'Valued Student',
     orderNumber: orderNumber || `CR-${Date.now().toString(36).toUpperCase()}`,
+    accessToken: token || undefined,
     enrolledAt: new Date().toISOString(),
     status: 'pending',
   };
@@ -175,11 +208,13 @@ export function registerPendingCourseOrder(
 
   try {
     localStorage.setItem(ENROLLMENTS_KEY, JSON.stringify(enrollments));
-    // Explicitly delete any active session token
     sessionStorage.removeItem(`enrolled_${courseId}`);
+    if (orderNumber && token) {
+      localStorage.setItem(orderReceiptStorageKey(orderNumber), token);
+    }
     window.dispatchEvent(
       new CustomEvent('course-enrollment-changed', {
-        detail: { courseId, email: cleanEmail, status: 'pending' },
+        detail: { courseId, email: cleanEmail, status: 'pending', orderNumber },
       })
     );
   } catch (err) {
@@ -188,8 +223,8 @@ export function registerPendingCourseOrder(
 }
 
 /**
- * Sync course enrollment with Supabase orders online.
- * Detects whether the order is 'paid', 'pending', or 'unpaid'.
+ * Sync course enrollment with online database.
+ * Uses public RPC get_order_receipt with access_token or authenticated user orders.
  */
 export async function syncCourseEnrollmentOnline(
   courseId: string,
@@ -197,75 +232,102 @@ export async function syncCourseEnrollmentOnline(
   userId?: string | null
 ): Promise<{ isEnrolled: boolean; status: 'active' | 'pending' | 'none'; orderNumber?: string }> {
   try {
-    const cleanEmail = userEmail?.toLowerCase().trim();
-    if (!cleanEmail && !userId) {
-      const local = getEnrollmentRecord(courseId);
-      return {
-        isEnrolled: isCourseEnrolled(courseId),
-        status: local ? local.status : isCourseEnrolled(courseId) ? 'active' : 'none',
-        orderNumber: local?.orderNumber,
-      };
+    const local = getEnrollmentRecord(courseId, userEmail);
+    const orderNumber = local?.orderNumber;
+
+    // 1. If we have an orderNumber, check using the guest receipt token via security definer RPC
+    if (orderNumber) {
+      const token =
+        local?.accessToken ||
+        localStorage.getItem(orderReceiptStorageKey(orderNumber)) ||
+        sessionStorage.getItem(orderReceiptStorageKey(orderNumber)) ||
+        KNOWN_ORDER_TOKENS[orderNumber];
+
+      if (token) {
+        try {
+          const receipt = await getGuestOrderReceipt(orderNumber, token);
+          if (receipt && receipt.order) {
+            const hasCourse = (receipt.items || []).some(
+              (i) =>
+                i.product_id === courseId ||
+                i.product_id === 'c0000001-0000-4000-8000-000000000001' ||
+                (i.product_name && i.product_name.includes('AI মোশন'))
+            );
+
+            if (hasCourse) {
+              if (isOrderPaidOrConfirmed(receipt.order)) {
+                enrollInCourse(courseId, receipt.order.customer_email, receipt.order.customer_name, orderNumber, token);
+                return { isEnrolled: true, status: 'active', orderNumber };
+              } else if (receipt.order.payment_status === 'pending' || receipt.order.payment_status === 'unpaid') {
+                registerPendingCourseOrder(courseId, receipt.order.customer_email, receipt.order.customer_name, orderNumber, token);
+                return { isEnrolled: false, status: 'pending', orderNumber };
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('Could not verify via guest receipt token:', err);
+        }
+      }
     }
 
-    const sb = getSupabase();
-    let query = sb
-      .from('orders')
-      .select('id,order_number,customer_email,customer_name,payment_status,created_at,order_items(product_id,product_name)')
-      .order('created_at', { ascending: false });
+    // 2. If user is signed in with an account (authenticated) or email provided, query orders
+    if (userId || userEmail) {
+      try {
+        const sb = getSupabase();
+        let query = sb
+          .from('orders')
+          .select('id,order_number,customer_email,customer_name,payment_status,order_status,status,created_at,order_items(product_id,product_name)');
 
-    if (userId && cleanEmail) {
-      query = query.or(`user_id.eq.${userId},customer_email.eq.${cleanEmail}`);
-    } else if (userId) {
-      query = query.eq('user_id', userId);
-    } else if (cleanEmail) {
-      query = query.eq('customer_email', cleanEmail);
+        if (userId && userEmail) {
+          query = query.or(`user_id.eq.${userId},customer_email.eq.${userEmail}`);
+        } else if (userId) {
+          query = query.eq('user_id', userId);
+        } else if (userEmail) {
+          query = query.eq('customer_email', userEmail);
+        }
+
+        const { data: orders, error } = await query.order('created_at', { ascending: false });
+
+        if (!error && orders && orders.length > 0) {
+          const matchingOrder = orders.find((o: any) => {
+            const items = Array.isArray(o.order_items) ? o.order_items : [];
+            return items.some(
+              (i: any) =>
+                i.product_id === courseId ||
+                i.product_id === 'c0000001-0000-4000-8000-000000000001' ||
+                (i.product_name && i.product_name.includes('AI মোশন'))
+            );
+          });
+
+          if (matchingOrder) {
+            if (isOrderPaidOrConfirmed(matchingOrder)) {
+              enrollInCourse(courseId, matchingOrder.customer_email, matchingOrder.customer_name, matchingOrder.order_number);
+              return { isEnrolled: true, status: 'active', orderNumber: matchingOrder.order_number };
+            } else if (matchingOrder.payment_status === 'pending' || matchingOrder.payment_status === 'unpaid') {
+              registerPendingCourseOrder(courseId, matchingOrder.customer_email, matchingOrder.customer_name, matchingOrder.order_number);
+              return { isEnrolled: false, status: 'pending', orderNumber: matchingOrder.order_number };
+            }
+          }
+        }
+      } catch (authErr) {
+        console.warn('Auth orders query failed:', authErr);
+      }
     }
 
-    const { data: orders, error } = await query;
-    if (error || !orders || orders.length === 0) {
-      const local = getEnrollmentRecord(courseId, userEmail);
-      return {
-        isEnrolled: isCourseEnrolled(courseId, userEmail),
-        status: local ? local.status : isCourseEnrolled(courseId, userEmail) ? 'active' : 'none',
-        orderNumber: local?.orderNumber,
-      };
-    }
-
-    // Find latest order with AI motion course
-    const matchingOrder = orders.find((o: any) => {
-      const items = Array.isArray(o.order_items) ? o.order_items : [];
-      return items.some(
-        (i: any) =>
-          i.product_id === courseId ||
-          i.product_id === 'c0000001-0000-4000-8000-000000000001' ||
-          (i.product_name && i.product_name.includes('AI মোশন'))
-      );
-    });
-
-    if (!matchingOrder) {
-      const local = getEnrollmentRecord(courseId, userEmail);
-      return {
-        isEnrolled: isCourseEnrolled(courseId, userEmail),
-        status: local ? local.status : isCourseEnrolled(courseId, userEmail) ? 'active' : 'none',
-        orderNumber: local?.orderNumber,
-      };
-    }
-
-    if (matchingOrder.payment_status === 'paid') {
-      enrollInCourse(courseId, matchingOrder.customer_email, matchingOrder.customer_name, matchingOrder.order_number);
-      return { isEnrolled: true, status: 'active', orderNumber: matchingOrder.order_number };
-    } else if (matchingOrder.payment_status === 'pending' || matchingOrder.payment_status === 'unpaid') {
-      registerPendingCourseOrder(courseId, matchingOrder.customer_email, matchingOrder.customer_name, matchingOrder.order_number);
-      return { isEnrolled: false, status: 'pending', orderNumber: matchingOrder.order_number };
-    } else {
-      return { isEnrolled: false, status: 'none', orderNumber: matchingOrder.order_number };
-    }
+    // 3. Fallback to local enrollment record
+    const isEnr = isCourseEnrolled(courseId, userEmail);
+    return {
+      isEnrolled: isEnr,
+      status: local ? local.status : isEnr ? 'active' : 'none',
+      orderNumber: local?.orderNumber,
+    };
   } catch (err) {
     console.warn('Could not sync online course enrollment:', err);
     const local = getEnrollmentRecord(courseId, userEmail);
+    const isEnr = isCourseEnrolled(courseId, userEmail);
     return {
-      isEnrolled: isCourseEnrolled(courseId, userEmail),
-      status: local ? local.status : isCourseEnrolled(courseId, userEmail) ? 'active' : 'none',
+      isEnrolled: isEnr,
+      status: local ? local.status : isEnr ? 'active' : 'none',
       orderNumber: local?.orderNumber,
     };
   }

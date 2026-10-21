@@ -447,11 +447,11 @@ export function CourseLearningPortal({
       {/* 2. MAIN WIDESCREEN LMS WORKSPACE */}
       <main
         className={`${
-          isWideMode ? 'w-full px-2 sm:px-4' : 'max-w-[1700px] px-3 sm:px-6'
-        } py-4 sm:py-6 mx-auto transition-all duration-300`}
+          isWideMode ? 'w-full px-0 sm:px-4' : 'max-w-[1700px] px-0 sm:px-6'
+        } py-1 sm:py-6 mx-auto transition-all duration-300`}
       >
         <div
-          className={`grid gap-5 lg:gap-6 items-start ${
+          className={`grid gap-4 sm:gap-6 items-start ${
             showSidebar ? 'grid-cols-1 lg:grid-cols-12' : 'grid-cols-1'
           }`}
         >
@@ -461,7 +461,7 @@ export function CourseLearningPortal({
               showSidebar ? 'lg:col-span-8 xl:col-span-8 2xl:col-span-9' : 'w-full max-w-[1500px] mx-auto'
             } space-y-4`}
           >
-            {/* Custom Video Player Component */}
+            {/* Custom Video Player Component (Edge-to-Edge on mobile) */}
             <div className="w-full">
               <ProtectedVideoPlayer
                 courseId={AI_MOTION_COURSE.id}
@@ -483,7 +483,7 @@ export function CourseLearningPortal({
 
             {/* Clean Under-Player Action Toolbar */}
             <div
-              className={`flex flex-wrap items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl border ${theme.cardBg}`}
+              className={`flex flex-wrap items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl border ${theme.cardBg} mx-3 sm:mx-0`}
             >
               {/* Mark Completed & Live Remaining Tracker */}
               <div className="flex flex-wrap items-center gap-2.5">
@@ -577,7 +577,7 @@ export function CourseLearningPortal({
             </div>
 
             {/* TABBED DETAILS SECTION (Overview, Resources, Prompts, Support) */}
-            <div className={`rounded-2xl border overflow-hidden ${theme.cardBg}`}>
+            <div className={`rounded-2xl border overflow-hidden ${theme.cardBg} mx-3 sm:mx-0`}>
               {/* Tab Navigation: 1st Source Files, 2nd Overview, 3rd Prompts, 4th Support */}
               <div className={`flex border-b overflow-x-auto ${theme.tabBarBg}`}>
                 {/* 1st Tab: Source Files */}
@@ -1351,7 +1351,7 @@ export function CourseLearningPortal({
 
           {/* RIGHT COLUMN: Minimalist Course Playlist Sidebar (Module 1 with all 10 videos) */}
           {showSidebar && (
-            <aside className="lg:col-span-4 xl:col-span-4 2xl:col-span-3 space-y-3">
+            <aside className="lg:col-span-4 xl:col-span-4 2xl:col-span-3 space-y-3 mx-3 sm:mx-0">
               <div
                 className={`rounded-2xl border p-4 sm:p-5 sticky top-20 max-h-[calc(100vh-5.5rem)] overflow-y-auto backdrop-blur-xl ${theme.cardBg}`}
               >

@@ -6,7 +6,7 @@ import { useOrderAmountFormatter } from '@/hooks/useOrderAmountFormatter';
 import { OrderStatusBadge } from '@/components/orders/OrderStatusBadge';
 import { OrderEmailLogs } from '@/components/admin/OrderEmailLogs';
 import { formatOrderDate, getHistoryOrderStatus, getOrderStatus } from '@/lib/orders';
-import { getAdminOrderById, updateAdminOrderStatus, triggerOrderNotification, deleteAdminOrders } from '@/services/orders';
+import { getAdminOrderById, updateAdminOrderStatus, approveAndConfirmAdminOrder, triggerOrderNotification, deleteAdminOrders } from '@/services/orders';
 import { fetchOrderEmailLogs, type OrderEmailLogRow } from '@/services/admin';
 import { adminListOrderFulfillments } from '@/services/fulfillment';
 import { reviewManualPayment, MANUAL_REJECTION_REASONS, type ManualRejectionReasonCode } from '@/services/payment';
@@ -79,6 +79,21 @@ function AdminOrderContent({ detail, onReload }: { detail: OrderWithDetails; onR
     } finally { setSaving(false); }
   };
 
+  const handleQuickApprove = async () => {
+    setSaving(true); setMessage(null); setError(null);
+    try {
+      await approveAndConfirmAdminOrder(order);
+      setOrderStatus('completed');
+      setPaymentStatus('paid');
+      setFulfillmentStatus('fulfilled');
+      await onReload();
+      setMessage('অর্ডার ও পেমেন্ট সফলভাবে কনফার্ম ও অ্যাপ্রুভ করা হয়েছে! কাস্টমার এখন কোর্স ও ডাউনলোড এক্সেস করতে পারবে।');
+    } catch (saveError) {
+      console.error('Failed to quick approve order', saveError);
+      setError('অর্ডার কনফার্ম করতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।');
+    } finally { setSaving(false); }
+  };
+
   const submitReview = async () => {
     if (!reviewingTxn || !reviewAction) return;
     if (reviewAction === 'reject' && (!reasonCode || (reasonCode === 'other' && !reasonText.trim()))) {
@@ -130,8 +145,20 @@ function AdminOrderContent({ detail, onReload }: { detail: OrderWithDetails; onR
           <h1 className="font-display text-2xl font-bold text-ink-900">{order.order_number}</h1>
           <p className="mt-1 text-sm text-ink-500">Created {formatOrderDate(order.created_at)}</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {order.payment_status !== 'paid' && (
+            <button
+              type="button"
+              onClick={handleQuickApprove}
+              disabled={saving}
+              className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50"
+            >
+              <CheckCircle2 size={15} />
+              {saving ? 'অনুমোদন হচ্ছে…' : 'অর্ডার কনফার্ম ও পেমেন্ট অ্যাপ্রুভ করুন'}
+            </button>
+          )}
           <OrderStatusBadge value={getOrderStatus(order)} />
+          <OrderStatusBadge value={order.payment_status} />
           <button
             type="button"
             onClick={handleDelete}
@@ -336,7 +363,68 @@ function AdminOrderContent({ detail, onReload }: { detail: OrderWithDetails; onR
             </dl>
           </section>
           <section className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft"><h2 className="font-display text-base font-bold text-ink-900">Totals</h2><dl className="mt-4 space-y-3 text-sm"><div className="flex justify-between"><dt className="text-ink-500">Subtotal</dt><dd>{formatAmount(Number(order.subtotal))}</dd></div>{Number(order.discount_total || 0) > 0 ? <><div className="flex justify-between"><dt className="text-success-600">{order.discount_source === 'coupon' ? `Coupon: ${order.discount_code}` : order.discount_name || 'Promotion'}</dt><dd className="font-medium text-success-600">−{formatAmount(Number(order.discount_total))}</dd></div>{order.discount_source === 'coupon' && order.discount_name && <p className="text-xs text-ink-500">{order.discount_name}</p>}</> : <div className="flex justify-between"><dt className="text-ink-500">Discount</dt><dd>{formatAmount(0)}</dd></div>}<div className="flex justify-between border-t border-ink-100 pt-3 text-base font-bold"><dt>Total</dt><dd>{formatAmount(Number(order.total))}</dd></div><div className="flex justify-between"><dt className="text-ink-500">Currency</dt><dd className="font-medium">{order.currency_code}</dd></div></dl></section>
-          <section className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft"><h2 className="font-display text-base font-bold text-ink-900">Status Management</h2><div className="mt-4 space-y-4"><label className="block text-sm font-semibold text-ink-700">Order Status<select value={orderStatus} onChange={(e) => setOrderStatus(e.target.value as OrderStatus)} className={`${selectClass} mt-1.5`}>{orderStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select></label><label className="block text-sm font-semibold text-ink-700">Payment Status<select value={paymentStatus} onChange={(e) => setPaymentStatus(e.target.value as PaymentStatus)} className={`${selectClass} mt-1.5`}>{paymentStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select></label><label className="block text-sm font-semibold text-ink-700">Fulfillment Status<select value={fulfillmentStatus} onChange={(e) => setFulfillmentStatus(e.target.value as FulfillmentStatus)} className={`${selectClass} mt-1.5`}>{fulfillmentStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select></label><label className="block text-sm font-semibold text-ink-700">Admin Note<textarea value={adminNote} onChange={(e) => setAdminNote(e.target.value)} rows={4} maxLength={2000} className="mt-1.5 w-full rounded-xl border border-ink-200 px-3.5 py-2.5 text-sm font-normal text-ink-800 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20" placeholder="Internal note—not visible to customers" /></label></div>{message && <div className="mt-4 flex items-center gap-2 rounded-xl border border-success-200 bg-success-50 p-3 text-sm text-success-700"><CheckCircle2 size={16} />{message}</div>}{error && <div className="mt-4 flex items-center gap-2 rounded-xl border border-error-200 bg-error-50 p-3 text-sm text-error-700"><AlertCircle size={16} />{error}</div>}<button type="button" onClick={handleSave} disabled={saving} className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50">{saving ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> Saving…</> : <><Save size={16} /> Save Status</>}</button></section>
+          <section className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft">
+            <h2 className="font-display text-base font-bold text-ink-900">Status Management</h2>
+            <div className="mt-4 space-y-4">
+              <label className="block text-sm font-semibold text-ink-700">
+                Order Status
+                <select
+                  value={orderStatus}
+                  onChange={(e) => {
+                    const next = e.target.value as OrderStatus;
+                    setOrderStatus(next);
+                    if (next === 'confirmed' || next === 'completed') {
+                      setPaymentStatus('paid');
+                      setFulfillmentStatus('fulfilled');
+                    }
+                  }}
+                  className={`${selectClass} mt-1.5`}
+                >
+                  {orderStatuses.map((status) => <option key={status} value={status}>{status}</option>)}
+                </select>
+              </label>
+              <label className="block text-sm font-semibold text-ink-700">
+                Payment Status
+                <select value={paymentStatus} onChange={(e) => setPaymentStatus(e.target.value as PaymentStatus)} className={`${selectClass} mt-1.5`}>
+                  {paymentStatuses.map((status) => <option key={status} value={status}>{status}</option>)}
+                </select>
+              </label>
+              <label className="block text-sm font-semibold text-ink-700">
+                Fulfillment Status
+                <select value={fulfillmentStatus} onChange={(e) => setFulfillmentStatus(e.target.value as FulfillmentStatus)} className={`${selectClass} mt-1.5`}>
+                  {fulfillmentStatuses.map((status) => <option key={status} value={status}>{status}</option>)}
+                </select>
+              </label>
+              <label className="block text-sm font-semibold text-ink-700">
+                Admin Note
+                <textarea value={adminNote} onChange={(e) => setAdminNote(e.target.value)} rows={4} maxLength={2000} className="mt-1.5 w-full rounded-xl border border-ink-200 px-3.5 py-2.5 text-sm font-normal text-ink-800 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20" placeholder="Internal note—not visible to customers" />
+              </label>
+            </div>
+            {message && <div className="mt-4 flex items-center gap-2 rounded-xl border border-success-200 bg-success-50 p-3 text-sm text-success-700"><CheckCircle2 size={16} />{message}</div>}
+            {error && <div className="mt-4 flex items-center gap-2 rounded-xl border border-error-200 bg-error-50 p-3 text-sm text-error-700"><AlertCircle size={16} />{error}</div>}
+            
+            <div className="mt-5 flex flex-col gap-2.5">
+              {paymentStatus !== 'paid' && (
+                <button
+                  type="button"
+                  onClick={handleQuickApprove}
+                  disabled={saving}
+                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50"
+                >
+                  <CheckCircle2 size={16} />
+                  {saving ? 'অনুমোদন হচ্ছে…' : 'অর্ডার কনফার্ম ও পেমেন্ট অ্যাপ্রুভ করুন'}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saving}
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
+              >
+                {saving ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> Saving…</> : <><Save size={16} /> Save Status</>}
+              </button>
+            </div>
+          </section>
         </div>
       </div>
     </div>

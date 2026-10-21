@@ -24,7 +24,7 @@ export function AccountOrdersPage() {
     if (authLoading || !session?.user) return;
     let active = true;
     setLoading(true);
-    getCustomerOrders(session.user.id)
+    getCustomerOrders(session.user.id, session.user.email)
       .then((data) => { if (active) setOrders(data); })
       .catch((loadError) => {
         console.error('Failed to load customer orders', loadError);

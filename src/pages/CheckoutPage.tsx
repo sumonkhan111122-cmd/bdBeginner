@@ -220,6 +220,9 @@ export function CheckoutPage() {
       }
 
       sessionStorage.setItem(orderReceiptStorageKey(result.order_number), result.access_token);
+      try {
+        localStorage.setItem(orderReceiptStorageKey(result.order_number), result.access_token);
+      } catch {}
 
       // Zero-total order: already marked paid by RPC, go straight to success
       if (result.payment_status === 'paid' || result.total === 0) {

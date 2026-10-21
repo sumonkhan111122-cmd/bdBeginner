@@ -9,13 +9,15 @@ export function AccountSecurityPage() {
   const providers = session?.user.app_metadata?.providers || [];
   const hasGoogle = providers.includes('google');
   const hasEmail = providers.includes('email');
+  const hasPassword = Boolean(session?.user?.user_metadata?.has_password);
   
   // Clean string helper for labels
   const getProviderLabel = () => {
-    if (hasGoogle && hasEmail) return 'Google & Email OTP';
-    if (hasGoogle) return 'Google';
-    if (hasEmail) return 'Email OTP';
-    return 'Email account';
+    const list: string[] = [];
+    if (hasPassword) list.push('Password');
+    if (hasEmail) list.push('Email OTP');
+    if (hasGoogle) list.push('Google');
+    return list.length > 0 ? list.join(' • ') : 'Email account';
   };
 
   return (
@@ -53,9 +55,9 @@ export function AccountSecurityPage() {
                 
                 <div className="mt-3 flex flex-col gap-2">
                   <div className="flex items-center gap-2 text-sm">
-                    <div className={`h-2 w-2 rounded-full ${hasGoogle ? 'bg-success-500' : 'bg-ink-200'}`} />
-                    <span className={hasGoogle ? 'text-ink-700 font-medium' : 'text-ink-400'}>
-                      Google connected
+                    <div className={`h-2 w-2 rounded-full ${hasPassword ? 'bg-success-500' : 'bg-ink-200'}`} />
+                    <span className={hasPassword ? 'text-ink-700 font-medium' : 'text-ink-400'}>
+                      {hasPassword ? 'Password login enabled' : 'Password not set (OTP only)'}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
@@ -64,15 +66,40 @@ export function AccountSecurityPage() {
                       Email OTP available
                     </span>
                   </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className={`h-2 w-2 rounded-full ${hasGoogle ? 'bg-success-500' : 'bg-ink-200'}`} />
+                    <span className={hasGoogle ? 'text-ink-700 font-medium' : 'text-ink-400'}>
+                      Google connected
+                    </span>
+                  </div>
                 </div>
+
                 <div className="mt-5 border-t border-ink-100 pt-5">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-sm font-semibold text-ink-900">Account Password</p>
-                      <p className="text-xs text-ink-500">Set or change your password to enable email/password sign in.</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-semibold text-ink-900">Account Password</p>
+                        {hasPassword ? (
+                          <span className="inline-flex items-center rounded-full bg-success-50 px-2 py-0.5 text-[11px] font-medium text-success-700 border border-success-200">
+                            Enabled
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 border border-amber-200">
+                            Not Set
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-ink-500 mt-0.5">
+                        {hasPassword
+                          ? 'Change your password anytime to keep your BD Beginner account secure.'
+                          : 'Set a password to sign in directly with Email + Password without waiting for OTP codes.'}
+                      </p>
                     </div>
-                    <Link to="/account/set-password" className="inline-flex items-center gap-1.5 rounded-lg border border-ink-200 px-3 py-1.5 text-xs font-semibold text-ink-700 hover:bg-ink-50">
-                      Set Password <ArrowRight size={14} />
+                    <Link
+                      to="/account/set-password"
+                      className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-ink-200 px-3 py-1.5 text-xs font-semibold text-ink-700 hover:bg-ink-50 transition-colors"
+                    >
+                      {hasPassword ? 'Change Password' : 'Set Password'} <ArrowRight size={14} />
                     </Link>
                   </div>
                 </div>

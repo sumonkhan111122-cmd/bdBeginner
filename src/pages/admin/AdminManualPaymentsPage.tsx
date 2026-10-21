@@ -83,11 +83,26 @@ export function AdminManualPaymentsPage() {
     setError(null);
     setMessage(null);
     try {
+      const paymentObj = payments.find((p) => p.id === transactionId);
       const result = await reviewManualPayment({
         action,
         transactionId,
         ...(action === 'reject' ? { reasonCode, reasonText: reasonText.trim() || undefined } : {}),
       });
+
+      if (action === 'approve' && paymentObj?.order_id) {
+        try {
+          await getSupabase().from('orders').update({
+            payment_status: 'paid',
+            order_status: 'completed',
+            fulfillment_status: 'fulfilled',
+            updated_at: new Date().toISOString(),
+          }).eq('id', paymentObj.order_id);
+        } catch (ordErr) {
+          console.warn('Direct order status update notice:', ordErr);
+        }
+      }
+
       setMessage(result.message);
       setRejectingId(null);
       setReasonText('');

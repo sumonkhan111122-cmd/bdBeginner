@@ -13,10 +13,25 @@ export function AuthCallbackPage() {
     async function handleAuthCallback() {
       try {
         const sb = getSupabase();
-        
-        // Supabase-js automatically parses the hash/query parameters 
-        // on initialization and exchange the code for a session if needed.
-        // We just need to wait and get the current session.
+
+        // 1. Check if this is a recovery redirect (via query param or hash)
+        const searchParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const isRecovery =
+          searchParams.get('type') === 'recovery' ||
+          hashParams.get('type') === 'recovery';
+
+        const hashError = hashParams.get('error_description') || hashParams.get('error');
+        if (hashError) {
+          if (isRecovery) {
+            navigate(`/reset-password${window.location.hash}`, { replace: true });
+            return;
+          }
+          throw new Error(decodeURIComponent(hashError.replace(/\+/g, ' ')));
+        }
+
+        // 2. Supabase-js automatically parses the hash/query parameters 
+        // on initialization and exchanges code for session if needed.
         const { data: { session }, error: sessionError } = await sb.auth.getSession();
         
         if (sessionError) {
@@ -24,24 +39,40 @@ export function AuthCallbackPage() {
         }
 
         if (session && mounted) {
-          // Authentication successful.
-          navigate('/account', { replace: true });
-        } else if (mounted) {
-          // No session and no error, maybe still processing or redirect was missing tokens.
-          // Listen briefly for the auth state change in case it's processing async.
+          if (isRecovery) {
+            navigate(`/reset-password${window.location.hash}`, { replace: true });
+          } else {
+            navigate('/account', { replace: true });
+          }
+          return;
+        }
+
+        if (mounted) {
+          // Listen for auth state change in case it's processing async
           const { data: listener } = sb.auth.onAuthStateChange((event, newSession) => {
-            if (event === 'SIGNED_IN' && newSession && mounted) {
-              navigate('/account', { replace: true });
+            if (!mounted) return;
+            if (event === 'PASSWORD_RECOVERY') {
+              navigate(`/reset-password${window.location.hash}`, { replace: true });
+            } else if (event === 'SIGNED_IN' && newSession) {
+              if (isRecovery) {
+                navigate(`/reset-password${window.location.hash}`, { replace: true });
+              } else {
+                navigate('/account', { replace: true });
+              }
             }
           });
           
           // Timeout to show error if it never resolves
           setTimeout(() => {
             if (mounted) {
-              setError('Authentication timed out. Please try signing in again.');
+              if (isRecovery) {
+                navigate(`/reset-password${window.location.hash}`, { replace: true });
+              } else {
+                setError('Authentication timed out. Please try signing in again.');
+              }
               listener.subscription.unsubscribe();
             }
-          }, 5000);
+          }, 4000);
         }
       } catch (err: unknown) {
         console.error('Auth callback error', err);

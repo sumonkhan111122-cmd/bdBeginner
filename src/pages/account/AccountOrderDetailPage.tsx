@@ -6,7 +6,7 @@ import { OrderItemsTable } from '@/components/orders/OrderItemsTable';
 import { useOrderAmountFormatter } from '@/hooks/useOrderAmountFormatter';
 import { OrderStatusBadge } from '@/components/orders/OrderStatusBadge';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
-import { formatOrderDate, getHistoryOrderStatus, getOrderStatus } from '@/lib/orders';
+import { formatOrderDate, getHistoryOrderStatus, getOrderStatus, isOrderPaidOrConfirmed } from '@/lib/orders';
 import { getCustomerOrderById } from '@/services/orders';
 import { getManualPaymentState, initiateBkashPayment, type ManualPaymentState } from '@/services/payment';
 import { fetchPublicPaymentSettings, getEnabledManualMethods } from '@/services/paymentSettings';
@@ -20,6 +20,7 @@ import type { PaymentMethodSetting } from '@/types/settings';
 function CustomerOrderContent({ detail }: { detail: OrderWithDetails }) {
   const { order, items, history } = detail;
   const formatAmount = useOrderAmountFormatter(order.currency_code);
+  const isPaidOrConfirmed = isOrderPaidOrConfirmed(order);
   const [downloads, setDownloads] = useState<DownloadLinkMetadata[]>([]);
   const [downloadsLoading, setDownloadsLoading] = useState(true);
   const [downloadError, setDownloadError] = useState<string | null>(null);
@@ -37,14 +38,14 @@ function CustomerOrderContent({ detail }: { detail: OrderWithDetails }) {
   useEffect(() => {
     let active = true;
     fetchPublicPaymentSettings().then((data) => { if (active) setPaymentSettings(data); }).catch(() => { if (active) setPaymentSettings([]); });
-    if (order.payment_status !== 'paid' && order.payment_status !== 'refunded') {
+    if (!isPaidOrConfirmed && order.payment_status !== 'refunded') {
       getManualPaymentState(order.order_number).then((data) => { if (active) setManualState(data); }).catch(() => { if (active) setManualState(null); });
     }
     return () => { active = false; };
-  }, [order.order_number, order.payment_status]);
+  }, [order.order_number, isPaidOrConfirmed, order.payment_status]);
 
   useEffect(() => {
-    if (!hasDigitalDownloads || order.payment_status !== 'paid') {
+    if (!hasDigitalDownloads || !isPaidOrConfirmed) {
       setDownloadsLoading(false);
       return;
     }
@@ -110,7 +111,7 @@ function CustomerOrderContent({ detail }: { detail: OrderWithDetails }) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `bdBeginner-${order.payment_status === 'paid' ? 'Invoice' : 'OrderSummary'}-${order.order_number}.pdf`; 
+      a.download = `bdBeginner-${isPaidOrConfirmed ? 'Invoice' : 'OrderSummary'}-${order.order_number}.pdf`; 
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -146,7 +147,7 @@ function CustomerOrderContent({ detail }: { detail: OrderWithDetails }) {
           <section className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft"><h2 className="font-display text-base font-bold text-ink-900">Customer Information</h2><dl className="mt-4 space-y-3 text-sm"><div><dt className="text-xs uppercase tracking-wider text-ink-400">Name</dt><dd className="mt-0.5 font-medium text-ink-800">{order.customer_name}</dd></div><div><dt className="text-xs uppercase tracking-wider text-ink-400">Email</dt><dd className="mt-0.5 break-all font-medium text-ink-800">{order.customer_email}</dd></div>{order.customer_phone && <div><dt className="text-xs uppercase tracking-wider text-ink-400">Phone</dt><dd className="mt-0.5 font-medium text-ink-800">{order.customer_phone}</dd></div>}</dl></section>
           <section className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft"><h2 className="font-display text-base font-bold text-ink-900">Order Summary</h2><dl className="mt-4 space-y-3 text-sm"><div className="flex justify-between"><dt className="text-ink-500">Subtotal</dt><dd>{formatAmount(Number(order.subtotal))}</dd></div>{Number(order.discount_total || 0) > 0 && <div className="flex justify-between"><dt className="flex items-center gap-1 text-success-600">{order.discount_source === 'coupon' ? `Coupon (${order.discount_code})` : order.discount_name || 'Discount'}</dt><dd className="text-success-600">−{formatAmount(Number(order.discount_total))}</dd></div>}{Number(order.discount_total || 0) === 0 && <div className="flex justify-between"><dt className="text-ink-500">Discount</dt><dd>{formatAmount(0)}</dd></div>}<div className="flex justify-between border-t border-ink-100 pt-3 font-bold"><dt>Total</dt><dd>{formatAmount(Number(order.total))}</dd></div></dl><div className="mt-5 space-y-3"><div><p className="mb-1 text-xs text-ink-400">Payment</p><OrderStatusBadge value={order.payment_status} /></div><div><p className="mb-1 text-xs text-ink-400">Fulfillment</p><OrderStatusBadge value={order.fulfillment_status} /></div></div></section>
           
-          {(order.payment_status === 'unpaid' || order.payment_status === 'failed') && (
+          {!isPaidOrConfirmed && (order.payment_status === 'unpaid' || order.payment_status === 'failed') && (
             <section className="rounded-2xl border border-warning-200 bg-warning-50/50 p-5 shadow-soft">
               <h2 className="font-display text-base font-bold text-ink-900">Payment Required</h2>
               <p className="mt-1 text-xs text-ink-600">Your order is currently {order.payment_status}. Please complete payment.</p>
@@ -192,7 +193,7 @@ function CustomerOrderContent({ detail }: { detail: OrderWithDetails }) {
             </section>
           )}
 
-          {order.payment_status === 'pending' && <section className="rounded-2xl border border-warning-200 bg-warning-50/50 p-5 shadow-soft"><h2 className="font-display text-base font-bold text-ink-900">Payment Verification Pending</h2><p className="mt-1 text-xs text-ink-600">Access remains locked until the submitted payment is approved.</p></section>}
+          {!isPaidOrConfirmed && order.payment_status === 'pending' && <section className="rounded-2xl border border-warning-200 bg-warning-50/50 p-5 shadow-soft"><h2 className="font-display text-base font-bold text-ink-900">Payment Verification Pending</h2><p className="mt-1 text-xs text-ink-600">Access remains locked until the submitted payment is approved.</p></section>}
 
           <ManualPaymentModal
             isOpen={showManualPayment}
@@ -214,7 +215,7 @@ function CustomerOrderContent({ detail }: { detail: OrderWithDetails }) {
             <DownloadCloud size={18} className="text-ink-400" /> Digital Downloads
           </h2>
           
-          {order.payment_status !== 'paid' ? (
+          {!isPaidOrConfirmed ? (
             <div className="mt-4 rounded-xl border border-warning-200 bg-warning-50 p-4 text-sm text-warning-800">
               <span className="font-semibold">Downloads will be available after payment is confirmed.</span>
             </div>
@@ -288,7 +289,7 @@ export function AccountOrderDetailPage() {
     if (authLoading || !session?.user || !id) return;
     let active = true;
     setLoading(true);
-    getCustomerOrderById(id, session.user.id)
+    getCustomerOrderById(id, session.user.id, session.user.email)
       .then((data) => { if (!data) throw new Error('Not found'); if (active) setDetail(data); })
       .catch(() => { if (active) setError('This order could not be found or is not available to this account.'); })
       .finally(() => { if (active) setLoading(false); });

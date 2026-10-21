@@ -4,6 +4,7 @@ import {
   ArrowUp,
   ArrowUpDown,
   AlertCircle,
+  CheckCircle2,
   Eye,
   Search,
   ShoppingBag,
@@ -18,7 +19,7 @@ import { OrderStatusBadge } from '@/components/orders/OrderStatusBadge';
 import { useSiteSettings } from '@/context/SiteSettingsContext';
 import { formatCurrency } from '@/lib/currency';
 import { formatOrderDate, getOrderItemCount, getOrderStatus } from '@/lib/orders';
-import { getAdminOrders, deleteAdminOrders } from '@/services/orders';
+import { getAdminOrders, deleteAdminOrders, approveAndConfirmAdminOrder } from '@/services/orders';
 import { isAiMotionCourseOrder, computeCourseMetrics } from '@/services/courseAnalytics';
 import { Pagination } from '@/components/ui/Pagination';
 import type { OrderRow } from '@/types/orders';
@@ -189,6 +190,21 @@ export function AdminOrdersPage() {
       setError(err instanceof Error ? err.message : 'Failed to delete order.');
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+
+  const handleQuickApproveRow = async (order: OrderRow) => {
+    setApprovingId(order.id);
+    try {
+      await approveAndConfirmAdminOrder(order);
+      await loadOrders();
+    } catch (err: unknown) {
+      console.error('Failed to approve order:', err);
+      alert('Failed to approve order. Please try again.');
+    } finally {
+      setApprovingId(null);
     }
   };
 
@@ -474,6 +490,18 @@ export function AdminOrdersPage() {
 
                       <td className="px-5 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="inline-flex items-center justify-end gap-1.5">
+                          {order.payment_status !== 'paid' && (
+                            <button
+                              type="button"
+                              onClick={() => handleQuickApproveRow(order)}
+                              disabled={approvingId === order.id}
+                              className="inline-flex h-8 items-center gap-1 rounded-lg bg-emerald-600 px-2.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                              title="অর্ডার কনফার্ম ও পেমেন্ট অ্যাপ্রুভ করুন"
+                            >
+                              <CheckCircle2 size={13} />
+                              {approvingId === order.id ? 'Saving…' : 'Approve'}
+                            </button>
+                          )}
                           <Link
                             to={`/admin/orders/${order.id}`}
                             className="inline-flex h-8 items-center gap-1 rounded-lg border border-ink-200 px-2.5 text-xs font-semibold text-ink-700 hover:bg-ink-50"

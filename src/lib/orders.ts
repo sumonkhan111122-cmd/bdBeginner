@@ -4,6 +4,26 @@ export function getOrderStatus(order: Pick<OrderRow, 'order_status' | 'status'>)
   return order.order_status ?? order.status ?? 'pending';
 }
 
+export function isOrderPaidOrConfirmed(order: {
+  payment_status?: string | null;
+  order_status?: string | null;
+  status?: string | null;
+} | null | undefined): boolean {
+  if (!order) return false;
+  const pStatus = (order.payment_status || '').toLowerCase().trim();
+  const oStatus = (order.order_status || order.status || '').toLowerCase().trim();
+
+  if (pStatus === 'paid' || pStatus === 'completed' || pStatus === 'succeeded') {
+    return true;
+  }
+
+  if (oStatus === 'confirmed' || oStatus === 'completed' || oStatus === 'processing') {
+    return true;
+  }
+
+  return false;
+}
+
 export function getHistoryOrderStatus(
   history: Pick<OrderStatusHistoryRow, 'order_status' | 'status'>,
 ): string {

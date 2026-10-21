@@ -45,6 +45,7 @@ const AccountProfilePage = lazyPage(() => import('@/pages/account/AccountProfile
 const AccountSecurityPage = lazyPage(() => import('@/pages/account/AccountSecurityPage'), 'AccountSecurityPage');
 const SetPasswordPage = lazyPage(() => import('@/pages/account/SetPasswordPage'), 'SetPasswordPage');
 const LoginPage = lazyPage(() => import('@/pages/auth/LoginPage'), 'LoginPage');
+const ResetPasswordPage = lazyPage(() => import('@/pages/auth/ResetPasswordPage'), 'ResetPasswordPage');
 const AuthCallbackPage = lazyPage(() => import('@/pages/auth/AuthCallbackPage'), 'AuthCallbackPage');
 const TermsPage = lazyPage(() => import('@/pages/LegalPages'), 'TermsPage');
 const PrivacyPage = lazyPage(() => import('@/pages/LegalPages'), 'PrivacyPage');
@@ -143,6 +144,10 @@ export default function App() {
         <Route path="/account/security" element={<AccountSecurityPage />} />
         <Route path="/account/set-password" element={<SetPasswordPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<LoginPage />} />
+        <Route path="/register" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<LoginPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
         <Route path="/support" element={<SupportPage />} />
         <Route path="/about" element={<AboutPage />} />

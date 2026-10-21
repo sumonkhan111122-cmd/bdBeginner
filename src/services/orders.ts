@@ -382,13 +382,25 @@ export async function updateAdminOrderStatus(
     adminNote: string | null;
   },
 ): Promise<OrderRow> {
+  // If order status is confirmed or completed, ensure payment status is marked paid
+  let resolvedPaymentStatus = input.paymentStatus;
+  let resolvedFulfillmentStatus = input.fulfillmentStatus;
+  if (input.orderStatus === 'confirmed' || input.orderStatus === 'completed') {
+    if (resolvedPaymentStatus === 'pending' || resolvedPaymentStatus === 'unpaid') {
+      resolvedPaymentStatus = 'paid';
+    }
+    if (resolvedFulfillmentStatus === 'unfulfilled') {
+      resolvedFulfillmentStatus = 'fulfilled';
+    }
+  }
+
   const statusKey = Object.prototype.hasOwnProperty.call(order, 'order_status')
     ? 'order_status'
     : 'status';
   const payload: Record<string, unknown> = {
     [statusKey]: input.orderStatus,
-    payment_status: input.paymentStatus,
-    fulfillment_status: input.fulfillmentStatus,
+    payment_status: resolvedPaymentStatus,
+    fulfillment_status: resolvedFulfillmentStatus,
     admin_note: input.adminNote,
   };
   const { data, error } = await getSupabase()
@@ -401,19 +413,53 @@ export async function updateAdminOrderStatus(
   
   const updatedOrder = data as OrderRow;
   
+  // If payment status is paid (or order is confirmed/completed), synchronize any pending manual payment transactions
+  if (resolvedPaymentStatus === 'paid' || input.orderStatus === 'confirmed' || input.orderStatus === 'completed') {
+    try {
+      const { data: pendingTxs } = await getSupabase()
+        .from('payment_transactions')
+        .select('id')
+        .eq('order_id', order.id)
+        .eq('status', 'pending');
+
+      if (pendingTxs && pendingTxs.length > 0) {
+        for (const tx of pendingTxs) {
+          try {
+            await getSupabase().functions.invoke('manual-payment', {
+              body: { action: 'approve', transactionId: tx.id },
+            });
+          } catch (fnErr) {
+            console.warn('Could not approve transaction via manual-payment function:', tx.id, fnErr);
+          }
+        }
+      }
+    } catch (txErr) {
+      console.warn('Could not sync pending payment transactions:', txErr);
+    }
+  }
+
   // Trigger notifications if statuses actually changed
   const oldOrderStatus = (order.order_status || order.status) as OrderStatus;
   if (input.orderStatus !== oldOrderStatus) {
     triggerOrderNotification(`order_status_${input.orderStatus}_customer` as Parameters<typeof triggerOrderNotification>[0], order.order_number);
   }
-  if (input.paymentStatus !== order.payment_status) {
-    triggerOrderNotification(`payment_status_${input.paymentStatus}_customer` as Parameters<typeof triggerOrderNotification>[0], order.order_number);
+  if (resolvedPaymentStatus !== order.payment_status) {
+    triggerOrderNotification(`payment_status_${resolvedPaymentStatus}_customer` as Parameters<typeof triggerOrderNotification>[0], order.order_number);
   }
-  if (input.fulfillmentStatus !== order.fulfillment_status) {
-    triggerOrderNotification(`fulfillment_status_${input.fulfillmentStatus}_customer` as Parameters<typeof triggerOrderNotification>[0], order.order_number);
+  if (resolvedFulfillmentStatus !== order.fulfillment_status) {
+    triggerOrderNotification(`fulfillment_status_${resolvedFulfillmentStatus}_customer` as Parameters<typeof triggerOrderNotification>[0], order.order_number);
   }
   
   return updatedOrder;
+}
+
+export async function approveAndConfirmAdminOrder(order: OrderRow): Promise<OrderRow> {
+  return updateAdminOrderStatus(order, {
+    orderStatus: 'completed',
+    paymentStatus: 'paid',
+    fulfillmentStatus: 'fulfilled',
+    adminNote: order.admin_note || null,
+  });
 }
 
 export async function deleteAdminOrders(orderIds: string[]): Promise<void> {

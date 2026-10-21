@@ -1,4 +1,5 @@
 import type { OrderRow } from '@/types/orders';
+import { isOrderPaidOrConfirmed } from '@/lib/orders';
 
 export const AI_MOTION_COURSE_ID = 'c0000001-0000-4000-8000-000000000001';
 
@@ -133,9 +134,9 @@ export function computeCourseMetrics(orders: OrderRow[]): CoursePerformanceMetri
   let totalUnitsSold = 0;
 
   courseOrders.forEach((o) => {
-    const isPaid = o.payment_status === 'paid';
-    const isPending = o.payment_status === 'pending' || o.payment_status === 'unpaid';
-    const isFailed = o.payment_status === 'failed' || o.payment_status === 'refunded';
+    const isPaid = isOrderPaidOrConfirmed(o);
+    const isPending = !isPaid && (o.payment_status === 'pending' || o.payment_status === 'unpaid');
+    const isFailed = !isPaid && (o.payment_status === 'failed' || o.payment_status === 'refunded');
 
     if (isPaid) {
       paidOrders++;

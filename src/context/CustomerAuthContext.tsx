@@ -20,6 +20,10 @@ type CustomerAuthState = {
   error: string | null;
   requestOtp: (email: string, captchaToken?: string) => Promise<{ ok: boolean; error?: string }>;
   verifyOtp: (email: string, token: string) => Promise<{ ok: boolean; error?: string }>;
+  signInWithPassword: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  signUp: (email: string, password: string, fullName: string) => Promise<{ ok: boolean; error?: string; requiresEmailConfirmation?: boolean }>;
+  resetPasswordForEmail: (email: string) => Promise<{ ok: boolean; error?: string }>;
+  updatePassword: (password: string) => Promise<{ ok: boolean; error?: string }>;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (updates: Partial<CustomerProfile>) => Promise<{ ok: boolean; error?: string }>;
@@ -130,6 +134,143 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
     return { ok: true };
   }, []);
 
+  const signInWithPassword = useCallback(async (email: string, password: string) => {
+    setError(null);
+    let sb;
+    try {
+      sb = getSupabase();
+    } catch {
+      return { ok: false, error: 'Unable to connect to service. Please try again.' };
+    }
+
+    const { data, error: signInError } = await sb.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+
+    if (signInError) {
+      console.error('Password sign in error:', signInError);
+      const msg = signInError.message.toLowerCase();
+      if (msg.includes('invalid login credentials') || msg.includes('invalid credentials')) {
+        return { ok: false, error: 'Incorrect email or password. Please check your credentials or use OTP login.' };
+      }
+      if (msg.includes('email not confirmed')) {
+        return { ok: false, error: 'Please verify your email address before logging in. Check your inbox for the confirmation email.' };
+      }
+      if (msg.includes('too many requests') || msg.includes('rate limit')) {
+        return { ok: false, error: 'Too many login attempts. Please wait a few moments and try again.' };
+      }
+      return { ok: false, error: signInError.message || 'Failed to sign in. Please try again.' };
+    }
+
+    if (!data.session?.user) {
+      return { ok: false, error: 'Sign in failed. Please try again.' };
+    }
+
+    return { ok: true };
+  }, []);
+
+  const signUp = useCallback(async (email: string, password: string, fullName: string) => {
+    setError(null);
+    let sb;
+    try {
+      sb = getSupabase();
+    } catch {
+      return { ok: false, error: 'Unable to connect to service. Please try again.' };
+    }
+
+    const trimmedEmail = email.trim();
+    const trimmedName = fullName.trim();
+
+    const { data, error: signUpError } = await sb.auth.signUp({
+      email: trimmedEmail,
+      password,
+      options: {
+        data: {
+          full_name: trimmedName,
+          has_password: true,
+        },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (signUpError) {
+      console.error('Sign up error:', signUpError);
+      const msg = signUpError.message.toLowerCase();
+      if (msg.includes('user already registered') || msg.includes('already exists')) {
+        return { 
+          ok: false, 
+          error: 'An account with this email already exists. Please sign in with your password or use OTP.' 
+        };
+      }
+      return { ok: false, error: signUpError.message || 'Failed to create account. Please try again.' };
+    }
+
+    const requiresEmailConfirmation = !data.session;
+
+    if (data.session?.user) {
+      try {
+        await sb
+          .from('customer_profiles')
+          .upsert({
+            user_id: data.session.user.id,
+            email: trimmedEmail,
+            full_name: trimmedName || null,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'user_id' });
+      } catch (e) {
+        console.warn('Customer profile upsert fallback:', e);
+      }
+    }
+
+    return { ok: true, requiresEmailConfirmation };
+  }, []);
+
+  const resetPasswordForEmail = useCallback(async (email: string) => {
+    setError(null);
+    let sb;
+    try {
+      sb = getSupabase();
+    } catch {
+      return { ok: false, error: 'Unable to connect to service. Please try again.' };
+    }
+
+    const { error: resetError } = await sb.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
+    });
+
+    if (resetError) {
+      console.error('Password reset request error:', resetError);
+      return { ok: false, error: resetError.message || 'Failed to send password reset email. Please try again.' };
+    }
+
+    return { ok: true };
+  }, []);
+
+  const updatePassword = useCallback(async (newPassword: string) => {
+    setError(null);
+    let sb;
+    try {
+      sb = getSupabase();
+    } catch {
+      return { ok: false, error: 'Unable to connect to service. Please try again.' };
+    }
+
+    const { error: updateError } = await sb.auth.updateUser({
+      password: newPassword,
+      data: {
+        has_password: true,
+      },
+    });
+
+    if (updateError) {
+      console.error('Update password error:', updateError);
+      return { ok: false, error: updateError.message || 'Failed to update password.' };
+    }
+
+    return { ok: true };
+  }, []);
+
   const signInWithGoogle = useCallback(async () => {
     setError(null);
     let sb;
@@ -192,11 +333,31 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
       error,
       requestOtp,
       verifyOtp,
+      signInWithPassword,
+      signUp,
+      resetPasswordForEmail,
+      updatePassword,
       signInWithGoogle,
       logout,
       updateProfile,
     }),
-    [session, user, profile, adminLoading, profileLoading, error, requestOtp, verifyOtp, signInWithGoogle, logout, updateProfile]
+    [
+      session,
+      user,
+      profile,
+      adminLoading,
+      profileLoading,
+      error,
+      requestOtp,
+      verifyOtp,
+      signInWithPassword,
+      signUp,
+      resetPasswordForEmail,
+      updatePassword,
+      signInWithGoogle,
+      logout,
+      updateProfile,
+    ]
   );
 
   return <CustomerAuthContext.Provider value={value}>{children}</CustomerAuthContext.Provider>;

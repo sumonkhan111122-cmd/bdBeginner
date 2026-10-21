@@ -26,6 +26,7 @@ import {
   Eye,
   X,
   MessageCircle,
+  RotateCw,
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/Button';
@@ -83,10 +84,12 @@ export function AiMotionMasterclassPage() {
     return isEnr ? 'learning' : 'landing';
   });
 
-  // Sync online enrollment status from Supabase
+  // Sync online enrollment status from Supabase with auto-polling for pending orders
   useEffect(() => {
     let active = true;
-    syncCourseEnrollmentOnline(AI_MOTION_COURSE.id, session?.user?.email, session?.user?.id).then((result) => {
+
+    const checkStatus = async () => {
+      const result = await syncCourseEnrollmentOnline(AI_MOTION_COURSE.id, session?.user?.email, session?.user?.id);
       if (!active) return;
       if (result.status === 'active') {
         setEnrolled(true);
@@ -99,9 +102,21 @@ export function AiMotionMasterclassPage() {
         setEnrolled(isVip || isCourseEnrolled(AI_MOTION_COURSE.id, session?.user?.email));
         setPendingOrder(null);
       }
-    });
+    };
+
+    checkStatus();
+
+    // Auto-poll every 6 seconds while pending so admin approval immediately unlocks the course
+    const interval = setInterval(() => {
+      const record = getEnrollmentRecord(AI_MOTION_COURSE.id, session?.user?.email);
+      if (record?.status === 'pending') {
+        checkStatus();
+      }
+    }, 6000);
+
     return () => {
       active = false;
+      clearInterval(interval);
     };
   }, [session?.user?.email, session?.user?.id, isVip]);
 
@@ -222,19 +237,37 @@ export function AiMotionMasterclassPage() {
                   অ্যাপ্রুভ করার সাথে সাথেই লার্নিং পোর্টাল স্বয়ংক্রিয়ভাবে খুলে যাবে।
                 </span>
               </div>
-              <a
-                href={`https://wa.me/8801798583122?text=${encodeURIComponent(
-                  `আসসালামু আলাইকুম, আমি AI মোশন কোর্সের জন্য ম্যানুয়াল পেমেন্ট করেছি। অর্ডার নম্বর: ${
-                    pendingOrder.orderNumber || ''
-                  }। দয়া করে ভেরিফাই ও অ্যাপ্রুভ করে দিন।`
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-1.5 bg-white text-amber-900 rounded-xl font-bold text-xs hover:bg-amber-50 transition-colors shadow-sm flex items-center gap-1.5"
-              >
-                <MessageCircle size={14} />
-                <span>WhatsApp সাপোর্ট</span>
-              </a>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const res = await syncCourseEnrollmentOnline(AI_MOTION_COURSE.id, session?.user?.email, session?.user?.id);
+                    if (res.isEnrolled) {
+                      alert('অভিনন্দন! আপনার পেমেন্ট ভেরিফাই হয়েছে এবং কোর্সটি সফলভাবে আনলক হয়েছে 🎉');
+                    } else {
+                      alert('অর্ডারটি এখনও পেন্ডিং রয়েছে। অ্যাডমিন TrxID মিলিয়ে দেখার পর স্বয়ংক্রিয়ভাবে অ্যাপ্রুভ হয়ে যাবে।');
+                    }
+                  }}
+                  className="px-3.5 py-1.5 bg-black/25 hover:bg-black/40 border border-white/20 text-white rounded-xl font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                  title="স্ট্যাটাস পুনরায় যাচাই করুন"
+                >
+                  <RotateCw size={13} />
+                  <span>স্ট্যাটাস রিফ্রেশ করুন</span>
+                </button>
+                <a
+                  href={`https://wa.me/8801798583122?text=${encodeURIComponent(
+                    `আসসালামু আলাইকুম, আমি AI মোশন কোর্সের জন্য ম্যানুয়াল পেমেন্ট করেছি। অর্ডার নম্বর: ${
+                      pendingOrder.orderNumber || ''
+                    }। দয়া করে ভেরিফাই ও অ্যাপ্রুভ করে দিন।`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-1.5 bg-white text-amber-900 rounded-xl font-bold text-xs hover:bg-amber-50 transition-colors shadow-sm flex items-center gap-1.5"
+                >
+                  <MessageCircle size={14} />
+                  <span>WhatsApp সাপোর্ট</span>
+                </a>
+              </div>
             </div>
           </div>
         )}
@@ -725,42 +758,50 @@ export function AiMotionMasterclassPage() {
           </button>
         </div>
 
-        {/* FREE DEMO VIDEO MODAL (Single lesson 1: B1l3tNihOZI, anti-branding protected) */}
+        {/* FREE DEMO VIDEO MODAL (Mobile-first edge-to-edge layout with full rotation support) */}
         {isDemoModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/90 backdrop-blur-xl overflow-y-auto">
-            <div className="relative w-full max-w-4xl rounded-3xl bg-[#0b1329] border border-white/10 p-5 sm:p-7 shadow-2xl text-white my-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 md:p-6 bg-black/95 backdrop-blur-2xl overflow-y-auto">
+            <div className="relative w-full max-w-5xl sm:rounded-3xl bg-[#070b14] sm:bg-[#0b1329] border-0 sm:border border-white/15 p-0 sm:p-6 shadow-2xl text-white my-auto flex flex-col min-h-screen sm:min-h-0">
               
               {/* Header */}
-              <div className="flex items-center justify-between pb-4 border-b border-white/10">
-                <div className="flex items-center gap-2.5">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500/20 text-brand-400">
+              <div className="flex items-center justify-between px-4 py-3 sm:px-0 sm:pt-0 sm:pb-4 border-b border-white/10 shrink-0 bg-[#070b14]/95 sm:bg-transparent backdrop-blur-md sticky top-0 z-20">
+                <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                  <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-brand-500/20 text-brand-400 shrink-0 border border-brand-500/30">
                     <Play size={16} className="fill-current" />
                   </span>
-                  <div>
-                    <h3 className="text-base sm:text-lg font-bold text-white">
-                      ১ম ক্লাস (ফ্রি ডেমো): {demoLesson.title}
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20">
+                        ফ্রি ডেমো ক্লাস
+                      </span>
+                      <span className="text-xs text-ink-400 font-mono hidden sm:inline">
+                        সময়: {demoLesson.duration}
+                      </span>
+                    </div>
+                    <h3 className="text-sm sm:text-base font-bold text-white truncate mt-0.5">
+                      ১ম ক্লাস: {demoLesson.title}
                     </h3>
-                    <p className="text-xs text-ink-400 font-mono">
-                      সময়: {demoLesson.duration} • ফ্রি ডেমো ক্লাস
-                    </p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setIsDemoModalOpen(false)}
-                  className="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-ink-300 hover:text-white transition-colors cursor-pointer"
-                  title="Close Demo"
-                >
-                  <X size={18} />
-                </button>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsDemoModalOpen(false)}
+                    className="h-9 w-9 rounded-full sm:rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-ink-200 hover:text-white transition-all flex items-center justify-center cursor-pointer border border-white/15"
+                    title="বন্ধ করুন"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
               </div>
 
-              {/* Video Player: Protected against YouTube titles, channels, and logo */}
-              <div className="my-5">
+              {/* Video Player: 100% full width edge-to-edge on mobile! */}
+              <div className="w-full my-0 sm:my-4 overflow-hidden sm:rounded-2xl shrink-0">
                 <ProtectedVideoPlayer
                   courseId={AI_MOTION_COURSE.id}
                   lessonId={demoLesson.id}
-                  title={`${demoLesson.lessonNumber}. ${demoLesson.title}`}
+                  title={`১ম ক্লাস (ফ্রি ডেমো): ${demoLesson.title}`}
                   youtubeId={demoLesson.youtubeId || 'B1l3tNihOZI'}
                   videoUrl={demoLesson.videoUrl}
                   isLocked={false}
@@ -769,26 +810,31 @@ export function AiMotionMasterclassPage() {
               </div>
 
               {/* Bottom Conversion Prompt */}
-              <div className="rounded-2xl border border-brand-500/30 bg-gradient-to-r from-brand-950/60 via-[#070b14] to-brand-950/60 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div>
-                  <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block mb-1">
-                    বাকি ৯টি ক্লাস ও সকল প্রজেক্ট ফাইল পান
-                  </span>
-                  <p className="text-xs sm:text-sm text-ink-200">
-                    সম্পূর্ণ কোর্সের ১০টি ক্লাস (১ ঘণ্টা ৩০ মিনিট) ও সকল সোর্স ফাইলের আজীবন এক্সেস পেতে এখনই এনরোল করুন।
-                  </p>
+              <div className="p-3.5 sm:p-0 mt-2 sm:mt-2 grow sm:grow-0">
+                <div className="rounded-2xl border border-brand-500/30 bg-gradient-to-r from-brand-950/80 via-[#0a1020] to-brand-950/80 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 shadow-xl">
+                  <div className="w-full sm:w-auto">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <Sparkles size={14} />
+                        <span>অফার প্রাইস: মাত্র ২৯০ টাকা (নিয়মিত ৫,০০০ টাকা)</span>
+                      </span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-ink-200 leading-relaxed">
+                      সম্পূর্ণ কোর্সের ১০টি ক্লাস (দেড় ঘণ্টা), প্রম্পট লাইব্রেরি এবং সকল প্রজেক্ট ফাইলের আজীবন এক্সেস পেতে এখনই এনরোল করুন।
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsDemoModalOpen(false);
+                      handleEnrollNow();
+                    }}
+                    className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 via-brand-500 to-accent-600 px-6 py-3.5 text-sm sm:text-base font-extrabold text-white shadow-xl hover:opacity-95 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <span>সম্পূর্ণ কোর্স আনলক করুন (৳290)</span>
+                    <ArrowRight size={17} />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsDemoModalOpen(false);
-                    handleEnrollNow();
-                  }}
-                  className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 via-brand-500 to-accent-600 px-6 py-3.5 text-sm font-bold text-white shadow-xl hover:opacity-95 transition-all cursor-pointer"
-                >
-                  <span>সম্পূর্ণ কোর্স আনলক করুন (৳290)</span>
-                  <ArrowRight size={16} />
-                </button>
               </div>
 
             </div>
