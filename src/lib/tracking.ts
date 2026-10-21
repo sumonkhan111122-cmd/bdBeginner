@@ -15,7 +15,7 @@ export type TrackProduct = {
 };
 
 export type TrackOrderItem = {
-  product_id: string | number;
+  product_id?: string | number | null;
   product_name?: string;
   quantity?: number;
   unit_price?: number;
@@ -119,16 +119,30 @@ export function trackAddToCart(product: TrackProduct, quantity = 1): void {
   }
 }
 
+export type TrackCheckoutItem = {
+  id?: string | number;
+  productId?: string | number;
+  name?: string;
+  price?: number;
+  quantity?: number;
+  product?: TrackProduct;
+};
+
 export function trackInitiateCheckout(
-  items: Array<{ product: TrackProduct; quantity: number }>,
+  items: Array<TrackCheckoutItem>,
   totalValue: number,
 ): void {
   try {
-    const contentIds = items.map((i) => String(i.product.id));
+    const getProductId = (i: TrackCheckoutItem) => String(i.productId ?? i.product?.id ?? i.id ?? '');
+    const getProductName = (i: TrackCheckoutItem) => i.name ?? i.product?.name ?? 'Item';
+    const getUnitPrice = (i: TrackCheckoutItem) => Number(i.product?.salePrice ?? i.price ?? i.product?.price) || 0;
+    const getQuantity = (i: TrackCheckoutItem) => i.quantity ?? 1;
+
+    const contentIds = items.map(getProductId).filter(Boolean);
     const contents = items.map((i) => ({
-      id: String(i.product.id),
-      quantity: i.quantity,
-      item_price: Number(i.product.salePrice ?? i.product.price) || 0,
+      id: getProductId(i),
+      quantity: getQuantity(i),
+      item_price: getUnitPrice(i),
     }));
 
     if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
@@ -147,10 +161,10 @@ export function trackInitiateCheckout(
         currency: 'BDT',
         value: totalValue,
         items: items.map((i) => ({
-          item_id: String(i.product.id),
-          item_name: i.product.name,
-          price: Number(i.product.salePrice ?? i.product.price) || 0,
-          quantity: i.quantity,
+          item_id: getProductId(i),
+          item_name: getProductName(i),
+          price: getUnitPrice(i),
+          quantity: getQuantity(i),
         })),
       });
     }

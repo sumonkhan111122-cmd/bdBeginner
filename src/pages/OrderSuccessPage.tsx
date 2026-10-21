@@ -29,7 +29,7 @@ function ReceiptView({ receipt, signedIn, guestToken }: { receipt: OrderWithDeta
       trackPurchase({
         id: order.id,
         order_number: order.order_number,
-        total_amount: order.total_amount,
+        total_amount: Number(order.total) || 0,
         currency_code: order.currency_code,
         items: items.map((item) => ({
           product_id: item.product_id,
@@ -38,7 +38,7 @@ function ReceiptView({ receipt, signedIn, guestToken }: { receipt: OrderWithDeta
         })),
       });
     }
-  }, [order.payment_status, order.id, order.order_number, order.total_amount, order.currency_code, items, clearCart]);
+  }, [order.payment_status, order.id, order.order_number, order.total, order.currency_code, items, clearCart]);
 
   const [downloads, setDownloads] = useState<DownloadLinkMetadata[]>([]);
   const [downloadsLoading, setDownloadsLoading] = useState(true);

@@ -14,7 +14,7 @@ import { PlaceholderPage } from '@/pages/PlaceholderPage';
 const lazyPage = <T extends Record<string, unknown>, K extends keyof T>(
   loader: () => Promise<T>,
   exportName: K,
-) => lazy(async () => ({ default: (await loader())[exportName] as ComponentType }));
+) => lazy(async () => ({ default: (await loader())[exportName] as ComponentType<any> }));
 
 const HomePage = lazyPage(() => import('@/pages/HomePage'), 'HomePage');
 const ProductsPage = lazyPage(() => import('@/pages/ProductsPage'), 'ProductsPage');

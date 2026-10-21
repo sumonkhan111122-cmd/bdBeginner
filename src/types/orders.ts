@@ -53,7 +53,7 @@ export type OrderRow = {
   admin_note?: string | null;
   created_at: string;
   updated_at?: string;
-  order_items?: Pick<OrderItemRow, 'id' | 'quantity' | 'product_id'>[];
+  order_items?: Pick<OrderItemRow, 'id' | 'quantity' | 'product_id' | 'product_name'>[];
 };
 
 export type OrderItemRow = {

@@ -9,7 +9,7 @@ export type Category = {
   color: string;
 };
 
-export type ProductBadge = 'featured' | 'new';
+export type ProductBadge = 'featured' | 'new' | 'sale';
 
 export type DeliveryType =
   | 'instant-download'
@@ -67,6 +67,16 @@ export type Product = {
     averageRating: number;
     reviewCount: number;
   };
+  /** Legacy/alias support for rating */
+  rating?: number;
+  /** Legacy/alias support for review count */
+  reviewCount?: number;
+  /** Legacy/alias support for sales count */
+  salesCount?: number;
+  /** Legacy/alias support for product tags */
+  tags?: string[];
+  /** Legacy/alias support for discounted price */
+  salePrice?: number;
   /** @deprecated kept for backward compatibility with existing ProductCard */
   badge?: ProductBadge;
   /** @deprecated kept for backward compatibility with existing ProductCard */

@@ -9,6 +9,10 @@ const badgeConfig: Record<ProductBadge, { label: string; className: string }> = 
     label: 'New',
     className: 'bg-success-50 text-success-700 border border-success-200',
   },
+  sale: {
+    label: 'Sale',
+    className: 'bg-amber-50 text-amber-700 border border-amber-200',
+  },
 };
 
 type BadgeProps = {

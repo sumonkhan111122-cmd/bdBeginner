@@ -74,7 +74,7 @@ export function CheckoutPage() {
 
   useEffect(() => {
     if (items.length > 0) {
-      const totalVal = pricing ? pricing.total : items.reduce((sum, item) => sum + (item.product.salePrice ?? item.product.price) * item.quantity, 0);
+      const totalVal = pricing ? pricing.total : items.reduce((sum, item) => sum + item.price * item.quantity, 0);
       trackInitiateCheckout(items, totalVal);
     }
   }, [items.length]); // fires once per checkout entry
