@@ -1,11 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Package, CheckCircle, FileEdit, Archive, FolderTree, Plus,
   AlertTriangle, Image as ImageIcon, Settings, Search,
-  Link as LinkIcon, ShoppingBag, Clock3, LoaderCircle, Star, BarChart3
+  Link as LinkIcon, ShoppingBag, Clock3, LoaderCircle, Star, BarChart3,
+  Film, Sparkles, TrendingUp, Users, Eye, ArrowRight
 } from 'lucide-react';
 import { fetchDashboardStats, type DashboardStats } from '@/services/admin';
+import { getAdminOrders } from '@/services/orders';
+import { computeCourseMetrics } from '@/services/courseAnalytics';
+import { OrderStatusBadge } from '@/components/orders/OrderStatusBadge';
+import { formatOrderDate, getOrderStatus } from '@/lib/orders';
+import type { OrderRow } from '@/types/orders';
 
 const statusStyles: Record<string, string> = {
   published: 'bg-success-50 text-success-700 border-success-200',
@@ -15,14 +21,20 @@ const statusStyles: Record<string, string> = {
 
 export function AdminDashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     let active = true;
-    fetchDashboardStats()
-      .then((data) => {
-        if (active) setStats(data);
+    Promise.all([
+      fetchDashboardStats(),
+      getAdminOrders().catch(() => []),
+    ])
+      .then(([statsData, ordersData]) => {
+        if (!active) return;
+        setStats(statsData);
+        setOrders(ordersData);
       })
       .catch((err: unknown) => {
         console.error('Dashboard stats failed', err);
@@ -35,6 +47,8 @@ export function AdminDashboardPage() {
       active = false;
     };
   }, []);
+
+  const courseMetrics = useMemo(() => computeCourseMetrics(orders), [orders]);
 
   return (
     <div className="px-5 py-8 lg:px-8 lg:py-10">
@@ -118,6 +132,213 @@ export function AdminDashboardPage() {
               <SummaryCard label="Processing Orders" value={stats.orders.processing} icon={LoaderCircle} accent="text-brand-700 bg-brand-50" />
               <SummaryCard label="Completed Orders" value={stats.orders.completed} icon={CheckCircle} accent="text-success-700 bg-success-50" />
               <SummaryCard label="Manual Payments" value={stats.orders.pendingManualPayments} icon={AlertTriangle} accent={stats.orders.pendingManualPayments > 0 ? "text-error-700 bg-error-50" : "text-ink-600 bg-ink-50"} />
+            </div>
+          </section>
+
+          {/* DEDICATED AI MOTION MASTERCLASS PERFORMANCE HUB */}
+          <section className="rounded-2xl border border-brand-200 bg-gradient-to-r from-brand-50/90 via-white to-amber-50/60 p-6 shadow-soft">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-5 border-b border-ink-100">
+              <div className="flex items-center gap-3.5">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-md">
+                  <Film size={22} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="font-display text-lg font-bold text-ink-900">
+                      AI মোশন গ্রাফিক্স মাস্টারক্লাস — লাইভ ট্র্যাকার
+                    </h2>
+                    <span className="rounded-full bg-brand-100 border border-brand-200 px-2.5 py-0.5 text-xs font-bold text-brand-700">
+                      ৳১৯৯
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-xs text-ink-500">
+                    এই নির্দিষ্ট প্রোডাক্টের সেলস, অর্ডার ও পেইজ ভিউজের সম্পূর্ণ তথ্য
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Link
+                  to="/admin/orders?course=ai-motion"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs sm:text-sm font-bold text-white shadow-sm hover:bg-brand-500 transition-colors"
+                >
+                  <span>অর্ডারস সেকশনে বিস্তারিত দেখুন</span>
+                  <ArrowRight size={15} />
+                </Link>
+                <a
+                  href="/course/ai-motion"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-ink-50"
+                  title="কোর্স পেজ লাইভ দেখুন"
+                >
+                  <Eye size={14} />
+                  <span>লাইভ পেজ</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Metrics Grid */}
+            <div className="mt-5 grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-5">
+              <div className="rounded-xl border border-ink-100 bg-white p-4 shadow-xs">
+                <div className="flex items-center justify-between text-ink-400">
+                  <span className="text-xs font-semibold text-ink-500">মোট কোর্স অর্ডার</span>
+                  <ShoppingBag size={17} className="text-brand-600" />
+                </div>
+                <div className="mt-2 flex items-baseline gap-2">
+                  <span className="font-display text-2xl font-bold text-ink-900">
+                    {courseMetrics.totalOrders}
+                  </span>
+                  <span className="text-xs text-ink-400">টি</span>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-4 shadow-xs">
+                <div className="flex items-center justify-between text-emerald-600">
+                  <span className="text-xs font-semibold text-emerald-800">সফল ক্রয় (Paid)</span>
+                  <CheckCircle size={17} />
+                </div>
+                <div className="mt-2 flex items-baseline gap-2">
+                  <span className="font-display text-2xl font-bold text-emerald-700">
+                    {courseMetrics.paidOrders}
+                  </span>
+                  <span className="text-xs text-emerald-600 font-semibold">জন ক্রেতা</span>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-amber-100 bg-amber-50/40 p-4 shadow-xs">
+                <div className="flex items-center justify-between text-amber-600">
+                  <span className="text-xs font-semibold text-amber-800">পেন্ডিং ভেরিফিকেশন</span>
+                  <Clock3 size={17} />
+                </div>
+                <div className="mt-2 flex items-baseline gap-2">
+                  <span className="font-display text-2xl font-bold text-amber-700">
+                    {courseMetrics.pendingOrders}
+                  </span>
+                  <span className="text-xs text-amber-600">টি অর্ডার</span>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-brand-100 bg-brand-50/40 p-4 shadow-xs">
+                <div className="flex items-center justify-between text-brand-600">
+                  <span className="text-xs font-semibold text-brand-800">মোট রেভিনিউ</span>
+                  <TrendingUp size={17} />
+                </div>
+                <div className="mt-2">
+                  <span className="font-display text-2xl font-black text-brand-700">
+                    ৳{courseMetrics.totalRevenue.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-sky-100 bg-sky-50/40 p-4 shadow-xs">
+                <div className="flex items-center justify-between text-sky-600">
+                  <span className="text-xs font-semibold text-sky-800">পেজ ভিউজ (দেখেছে)</span>
+                  <Eye size={17} />
+                </div>
+                <div className="mt-2 flex items-baseline gap-2">
+                  <span className="font-display text-2xl font-bold text-sky-900">
+                    {courseMetrics.views.totalViews}
+                  </span>
+                  <span className="text-xs text-sky-700">বার ({courseMetrics.views.uniqueVisitors} জন)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Orders of this course */}
+            <div className="mt-5 pt-4 border-t border-ink-100">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-ink-600">
+                  এই কোর্সের সর্বশেষ ক্রেতাসমূহ ({courseMetrics.courseOrders.length} টি অর্ডার)
+                </h3>
+                {courseMetrics.courseOrders.length > 0 && (
+                  <Link
+                    to="/admin/orders?course=ai-motion"
+                    className="text-xs font-bold text-brand-600 hover:text-brand-700"
+                  >
+                    সকল কোর্স অর্ডার দেখুন ({courseMetrics.courseOrders.length}) →
+                  </Link>
+                )}
+              </div>
+
+              {courseMetrics.courseOrders.length === 0 ? (
+                <div className="rounded-xl bg-white/70 border border-ink-100 p-6 text-center">
+                  <Film size={26} className="mx-auto text-ink-300 mb-2" />
+                  <p className="text-sm font-semibold text-ink-700">
+                    এখনও কোনো কাস্টমার এই কোর্সটি ক্রয় করেননি।
+                  </p>
+                  <p className="mt-1 text-xs text-ink-400">
+                    কোর্স পেজে মোট {courseMetrics.views.totalViews} বার ভিউ এবং {courseMetrics.views.uniqueVisitors} জন ভিজিটর হয়েছে।
+                  </p>
+                  <div className="mt-3 flex justify-center gap-3">
+                    <a
+                      href="/course/ai-motion"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 hover:underline"
+                    >
+                      কোর্স পেজ প্রিভিউ করুন <ArrowRight size={13} />
+                    </a>
+                  </div>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-ink-100 bg-white">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-ink-100 bg-ink-50/70 text-left font-semibold uppercase text-ink-400">
+                        <th className="px-4 py-2.5">অর্ডার নং</th>
+                        <th className="px-4 py-2.5">ক্রেতার নাম</th>
+                        <th className="px-4 py-2.5">ইমেইল ও ফোন</th>
+                        <th className="px-4 py-2.5">পেমেন্ট মেথড</th>
+                        <th className="px-4 py-2.5">পেমেন্ট স্ট্যাটাস</th>
+                        <th className="px-4 py-2.5">তারিখ</th>
+                        <th className="px-4 py-2.5 text-right">অ্যাকশন</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-ink-50">
+                      {courseMetrics.courseOrders.slice(0, 5).map((order) => (
+                        <tr key={order.id} className="hover:bg-ink-50/50">
+                          <td className="px-4 py-3 font-bold text-ink-900">
+                            {order.order_number}
+                          </td>
+                          <td className="px-4 py-3 font-medium text-ink-800">
+                            {order.customer_name}
+                          </td>
+                          <td className="px-4 py-3 text-ink-500">
+                            <div>{order.customer_email}</div>
+                            {order.customer_phone && (
+                              <div className="font-mono text-[10px] text-ink-400">{order.customer_phone}</div>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 font-semibold uppercase text-[11px]">
+                            {order.payment_method === 'bkash' ? (
+                              <span className="text-[#E2136E]">bKash Auto</span>
+                            ) : order.payment_method === 'manual' || order.payment_method === 'bkash_personal' ? (
+                              <span className="text-brand-600">bKash Manual</span>
+                            ) : (
+                              order.payment_method || 'Manual'
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <OrderStatusBadge value={order.payment_status} />
+                          </td>
+                          <td className="px-4 py-3 text-ink-400 whitespace-nowrap">
+                            {formatOrderDate(order.created_at)}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <Link
+                              to={`/admin/orders/${order.id}`}
+                              className="inline-flex items-center gap-1 rounded-lg border border-ink-200 px-2 py-1 text-xs font-semibold text-ink-700 hover:bg-ink-50"
+                            >
+                              <Eye size={12} /> ভিউ
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </section>
 

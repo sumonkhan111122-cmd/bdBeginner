@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AlertCircle, CheckCircle2, ShoppingBag, DownloadCloud, Package } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ShoppingBag, DownloadCloud, Package, Film, ArrowRight, Clock, CreditCard, MessageCircle, RotateCw } from 'lucide-react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { OrderItemsTable } from '@/components/orders/OrderItemsTable';
@@ -15,6 +15,7 @@ import { listOrderDownloadsAuth, listOrderDownloadsGuest, openDownloadLinkAuth, 
 import { ManualPaymentModal } from '@/components/checkout/ManualPaymentModal';
 import { useCart } from '@/context/CartContext';
 import { trackPurchase } from '@/lib/tracking';
+import { enrollInCourse, registerPendingCourseOrder } from '@/services/courseEnrollment';
 import type { OrderWithDetails } from '@/types/orders';
 import type { PaymentMethodSetting } from '@/types/settings';
 
@@ -22,6 +23,33 @@ function ReceiptView({ receipt, signedIn, guestToken }: { receipt: OrderWithDeta
   const { order, items } = receipt;
   const { clearCart } = useCart();
   const formatAmount = useOrderAmountFormatter(order.currency_code);
+
+  const hasAiMotionCourse = items.some(
+    (i) => i.product_id === 'c0000001-0000-4000-8000-000000000001' ||
+    (i.product_name && i.product_name.includes('AI মোশন'))
+  );
+
+  useEffect(() => {
+    if (hasAiMotionCourse) {
+      if (order.payment_status === 'paid') {
+        // Enrolls only when paid
+        enrollInCourse(
+          'c0000001-0000-4000-8000-000000000001',
+          order.customer_email,
+          order.customer_name || undefined,
+          order.order_number
+        );
+      } else {
+        // Pending or unpaid: strictly registered as pending, never active!
+        registerPendingCourseOrder(
+          'c0000001-0000-4000-8000-000000000001',
+          order.customer_email,
+          order.customer_name || undefined,
+          order.order_number
+        );
+      }
+    }
+  }, [hasAiMotionCourse, order.payment_status, order.customer_email, order.customer_name, order.order_number]);
 
   useEffect(() => {
     if (order.payment_status === 'paid') {
@@ -130,25 +158,152 @@ function ReceiptView({ receipt, signedIn, guestToken }: { receipt: OrderWithDeta
     <Layout>
       <div className="container-page py-10 sm:py-14">
         <div className="mx-auto max-w-4xl">
-          <div className="text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-success-50 text-success-600"><CheckCircle2 size={32} /></div>
+          <div className="text-center font-['Hind_Siliguri',sans-serif]">
             {order.payment_status === 'paid' ? (
               <>
-                <h1 className="mt-5 font-display text-2xl font-bold text-ink-900 sm:text-3xl">Thank you—order received</h1>
-                <p className="mt-2 text-sm text-ink-500">Your payment was successful.</p>
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-success-50 text-success-600 ring-8 ring-success-500/10">
+                  <CheckCircle2 size={34} />
+                </div>
+                <h1 className="mt-5 font-display text-2xl font-bold text-ink-900 sm:text-3xl">ধন্যবাদ — পেমেন্ট ও অর্ডার সম্পন্ন হয়েছে!</h1>
+                <p className="mt-2 text-sm text-ink-500">আপনার পেমেন্ট সফলভাবে গ্রহণ করা হয়েছে।</p>
               </>
             ) : order.payment_status === 'pending' ? (
               <>
-                <h1 className="mt-5 font-display text-2xl font-bold text-ink-900 sm:text-3xl">Order Submitted</h1>
-                <p className="mt-2 text-sm text-ink-500">Payment verification pending.</p>
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 ring-8 ring-amber-500/10">
+                  <Clock size={34} className="animate-pulse" />
+                </div>
+                <h1 className="mt-5 font-display text-2xl font-bold text-ink-900 sm:text-3xl">অর্ডার সাবমিট হয়েছে • পেমেন্ট ভেরিফিকেশন পেন্ডিং</h1>
+                <p className="mt-2 text-sm text-ink-600 max-w-lg mx-auto">
+                  আপনার ম্যানুয়াল পেমেন্টের TrxID জমা হয়েছে। আমাদের অ্যাডমিন যাচাই করে অ্যাপ্রুভ করার সাথে সাথেই আপনার কোর্সটি সক্রিয় হবে।
+                </p>
               </>
             ) : (
               <>
-                <h1 className="mt-5 font-display text-2xl font-bold text-ink-900 sm:text-3xl">Complete Your Payment</h1>
-                <p className="mt-2 text-sm text-ink-500">Your order has been recorded. Complete payment below.</p>
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 ring-8 ring-brand-500/10">
+                  <CreditCard size={34} />
+                </div>
+                <h1 className="mt-5 font-display text-2xl font-bold text-ink-900 sm:text-3xl">অর্ডার সংরক্ষিত হয়েছে • পেমেন্ট সম্পন্ন করুন</h1>
+                <p className="mt-2 text-sm text-ink-500">আপনার অর্ডারটি তৈরি করা হয়েছে। নিচে বিকাশ পেমেন্ট সম্পন্ন করে TrxID প্রদান করুন।</p>
               </>
             )}
           </div>
+
+          {/* AI MOTION COURSE ACCESS / VERIFICATION BANNER */}
+          {hasAiMotionCourse && (
+            order.payment_status === 'paid' ? (
+              /* ACTIVE PAID ENROLLMENT */
+              <div className="mt-6 rounded-2xl border border-purple-500/30 bg-gradient-to-r from-purple-950/90 via-ink-900 to-brand-950/90 p-5 sm:p-6 text-white shadow-xl font-['Hind_Siliguri',sans-serif]">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-purple-600 text-white shadow-md">
+                      <Film size={24} />
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-purple-400">
+                        🎉 কোর্স এক্সেস সক্রিয় হয়েছে
+                      </span>
+                      <h3 className="text-base sm:text-lg font-bold text-white">
+                        AI মোশন গ্রাফিক্স মাস্টারক্লাস
+                      </h3>
+                      <p className="text-xs text-ink-300 mt-0.5">
+                        আপনার লাইফটাইম কোর্স এক্সেস স্বয়ংক্রিয়ভাবে সক্রিয় করা হয়েছে। সম্পূর্ণ ১০টি ক্লাস ও প্রজেক্ট ফাইল আনলকড!
+                      </p>
+                    </div>
+                  </div>
+                  <Link
+                    to="/course/ai-motion?watch=1"
+                    className="inline-flex items-center gap-2 rounded-xl bg-purple-600 hover:bg-purple-500 px-6 py-3.5 text-xs sm:text-sm font-bold text-white shadow-lg transition-colors shrink-0"
+                  >
+                    <span>ক্লাস শুরু করুন 🎬</span>
+                    <ArrowRight size={15} />
+                  </Link>
+                </div>
+              </div>
+            ) : order.payment_status === 'pending' ? (
+              /* PENDING MANUAL VERIFICATION - STRICTLY NO START COURSE BUTTON! */
+              <div className="mt-6 rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-950/90 via-ink-950 to-[#171003] p-5 sm:p-6 text-white shadow-xl font-['Hind_Siliguri',sans-serif]">
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-5">
+                  <div className="flex items-start gap-3.5">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-md">
+                      <Clock size={24} className="animate-pulse" />
+                    </div>
+                    <div>
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 border border-amber-500/30 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-amber-300 mb-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-ping" />
+                        ম্যানুয়াল পেমেন্ট ভেরিফিকেশন পেন্ডিং
+                      </span>
+                      <h3 className="text-base sm:text-lg font-bold text-white">
+                        AI মোশন গ্রাফিক্স মাস্টারক্লাস
+                      </h3>
+                      <p className="text-xs sm:text-sm text-amber-200/90 mt-1.5 max-w-xl leading-relaxed">
+                        আপনার বিকাশ পেমেন্ট ট্রানজেকশন (TrxID) আমাদের কাছে জমা হয়েছে। অ্যাডমিন TrxID মিলিয়ে দেখে অর্ডারটি <strong>অ্যাপ্রুভ করার সাথে সাথে কোর্সটি স্বয়ংক্রিয়ভাবে আনলক হয়ে যাবে</strong>। অ্যাডমিন অ্যাপ্রুভ না করা পর্যন্ত কোর্সটি শুরু করা যাবে না।
+                      </p>
+                      
+                      <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-ink-300">
+                        <span className="flex items-center gap-1.5 text-amber-300 font-semibold bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20">
+                          <Clock size={13} /> সাধারণত ১৫-৩০ মিনিটের মধ্যে অ্যাপ্রুভ করা হয়
+                        </span>
+                        <span>অর্ডার নং: <strong className="text-white">{order.order_number}</strong></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto shrink-0 pt-2 sm:pt-0">
+                    <a
+                      href={`https://wa.me/8801798583122?text=${encodeURIComponent(`আসসালামু আলাইকুম, আমি AI মোশন কোর্সের জন্য ম্যানুয়াল পেমেন্ট করেছি। অর্ডার নম্বর: ${order.order_number}, ইমেইল: ${order.customer_email}। দয়া করে ভেরিফাই ও অ্যাপ্রুভ করে দিন।`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-lg transition-colors cursor-pointer"
+                    >
+                      <MessageCircle size={15} />
+                      <span>দ্রুত অ্যাপ্রুভ করাতে WhatsApp</span>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => window.location.reload()}
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 px-4 py-2.5 text-xs sm:text-sm font-bold text-ink-200 hover:text-white transition-colors cursor-pointer"
+                      title="স্ট্যাটাস চেক করতে রিফ্রেশ করুন"
+                    >
+                      <RotateCw size={14} />
+                      <span>স্ট্যাটাস চেক করুন</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* UNPAID MANUAL ORDER - STRICTLY NO START COURSE BUTTON! */
+              <div className="mt-6 rounded-2xl border border-brand-500/40 bg-gradient-to-r from-brand-950/90 via-ink-950 to-[#070b14] p-5 sm:p-6 text-white shadow-xl font-['Hind_Siliguri',sans-serif]">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-start gap-3.5">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-500/20 text-brand-400 border border-brand-500/30">
+                      <AlertCircle size={24} />
+                    </div>
+                    <div>
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-500/20 border border-brand-500/30 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-brand-300 mb-1">
+                        পেমেন্ট সম্পন্ন করা বাকি
+                      </span>
+                      <h3 className="text-base sm:text-lg font-bold text-white">
+                        AI মোশন গ্রাফিক্স মাস্টারক্লাস
+                      </h3>
+                      <p className="text-xs text-ink-300 mt-1 max-w-xl leading-relaxed">
+                        কোর্সটিতে এনরোল সম্পন্ন করতে বিকাশ নম্বরে ১৯৯ টাকা সেন্ড মানি করে TrxID সাবমিট করুন। TrxID যাচাই করার পর অ্যাডমিন কোর্সটি সক্রিয় করবে।
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowManualPayment(true)}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 hover:bg-brand-500 px-6 py-3.5 text-xs sm:text-sm font-bold text-white shadow-lg transition-colors shrink-0 cursor-pointer"
+                  >
+                    <span>বিকাশে পেমেন্ট ও TrxID দিন</span>
+                    <ArrowRight size={15} />
+                  </button>
+                </div>
+              </div>
+            )
+          )}
+
 
           <section className="mt-8 rounded-2xl border border-ink-100 bg-white p-5 shadow-soft sm:p-7">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

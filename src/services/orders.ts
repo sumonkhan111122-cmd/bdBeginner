@@ -355,7 +355,7 @@ export async function getCustomerOrderByNumber(
 export async function getAdminOrders(): Promise<OrderRow[]> {
   const { data, error } = await getSupabase()
     .from('orders')
-    .select('*,order_items(id,quantity,product_id)')
+    .select('*,order_items(*)')
     .order('created_at', { ascending: false });
   if (error) throw error;
   return (data ?? []) as OrderRow[];

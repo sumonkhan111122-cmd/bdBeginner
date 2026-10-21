@@ -183,9 +183,14 @@ export function configureGtm(value: string | null | undefined): void {
 }
 
 export function configureFacebookPixel(value: string | null | undefined): void {
-  const rawId = value?.trim() || (import.meta.env.VITE_FACEBOOK_PIXEL_ID as string | undefined)?.trim() || '';
+  const rawId = value?.trim() || (import.meta.env.VITE_FACEBOOK_PIXEL_ID as string | undefined)?.trim() || '1299950688895692';
   const scriptId = 'bdb-fb-pixel-script';
   const noscriptId = 'bdb-fb-pixel-noscript';
+
+  // If already loaded or initialized from static index.html, don't duplicate
+  if (typeof window !== 'undefined' && (window as any).fbq) {
+    return;
+  }
 
   if (!rawId || !/^\d{6,25}$/.test(rawId)) {
     removeById(scriptId);

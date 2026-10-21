@@ -109,7 +109,7 @@ export const DEFAULT_SEO_SETTINGS: SeoSettings = {
   google_search_console_verification: null,
   google_analytics_id: null,
   google_tag_manager_id: null,
-  facebook_pixel_id: null,
+  facebook_pixel_id: '1299950688895692',
   facebook_domain_verification: null,
   robots_index: true,
   robots_follow: true,

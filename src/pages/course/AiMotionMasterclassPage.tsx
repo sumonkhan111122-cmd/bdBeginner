@@ -1,0 +1,787 @@
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import {
+  Play,
+  Sparkles,
+  Check,
+  ShieldCheck,
+  Zap,
+  Clock,
+  Infinity as InfinityIcon,
+  Crown,
+  Star,
+  ChevronDown,
+  Gift,
+  ArrowRight,
+  DownloadCloud,
+  Layers,
+  Film,
+  Bot,
+  Laptop,
+  CheckCircle2,
+  FileText,
+  KeyRound,
+  Lock,
+  Headphones,
+  Eye,
+  X,
+  MessageCircle,
+} from 'lucide-react';
+import { Layout } from '@/components/layout/Layout';
+import { Button } from '@/components/ui/Button';
+import { AI_MOTION_COURSE, courseToProduct } from '@/data/aiMotionCourse';
+import { CourseLearningPortal } from '@/components/course/CourseLearningPortal';
+import { ProtectedVideoPlayer } from '@/components/course/ProtectedVideoPlayer';
+import {
+  isCourseEnrolled,
+  getActiveCourseEmail,
+  getEnrollmentRecord,
+  syncCourseEnrollmentOnline,
+  type CourseEnrollmentRecord,
+} from '@/services/courseEnrollment';
+import { recordCourseView } from '@/services/courseAnalytics';
+import { useCustomerAuth } from '@/context/CustomerAuthContext';
+import { useCart } from '@/context/CartContext';
+import { useMembership } from '@/context/MembershipContext';
+
+export function AiMotionMasterclassPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { session } = useCustomerAuth();
+  const { isVip } = useMembership();
+  const { addItem, clearCart } = useCart();
+
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [activeCurriculumMod, setActiveCurriculumMod] = useState<number>(0);
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
+
+  // Track course page view
+  useEffect(() => {
+    recordCourseView();
+  }, []);
+
+  // Check enrollment
+  const [enrolled, setEnrolled] = useState(() => {
+    return isVip || isCourseEnrolled(AI_MOTION_COURSE.id, session?.user?.email);
+  });
+
+  const [pendingOrder, setPendingOrder] = useState<CourseEnrollmentRecord | null>(() => {
+    const record = getEnrollmentRecord(AI_MOTION_COURSE.id, session?.user?.email);
+    return record?.status === 'pending' ? record : null;
+  });
+
+  // Mode: 'landing' or 'learning'
+  // Strict Protection: Only enrolled users can enter 'learning' portal mode!
+  const [viewMode, setViewMode] = useState<'landing' | 'learning'>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const isEnr = isVip || isCourseEnrolled(AI_MOTION_COURSE.id);
+    if ((params.get('watch') === '1' || params.get('portal') === '1') && isEnr) {
+      return 'learning';
+    }
+    return isEnr ? 'learning' : 'landing';
+  });
+
+  // Sync online enrollment status from Supabase
+  useEffect(() => {
+    let active = true;
+    syncCourseEnrollmentOnline(AI_MOTION_COURSE.id, session?.user?.email, session?.user?.id).then((result) => {
+      if (!active) return;
+      if (result.status === 'active') {
+        setEnrolled(true);
+        setPendingOrder(null);
+      } else if (result.status === 'pending') {
+        setEnrolled(false);
+        const record = getEnrollmentRecord(AI_MOTION_COURSE.id, session?.user?.email);
+        setPendingOrder(record);
+      } else {
+        setEnrolled(isVip || isCourseEnrolled(AI_MOTION_COURSE.id, session?.user?.email));
+        setPendingOrder(null);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [session?.user?.email, session?.user?.id, isVip]);
+
+  // Handle URL params for demo and watch
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('demo') === '1') {
+      setIsDemoModalOpen(true);
+    } else if (params.get('watch') === '1' || params.get('portal') === '1') {
+      const isEnr = isVip || isCourseEnrolled(AI_MOTION_COURSE.id, session?.user?.email);
+      if (isEnr) {
+        setViewMode('learning');
+      } else {
+        // If not enrolled, do not allow portal access; open the isolated single demo video instead!
+        setIsDemoModalOpen(true);
+      }
+    }
+  }, [location.search, isVip, session?.user?.email]);
+
+  useEffect(() => {
+    const checkEnroll = () => {
+      const isNowEnrolled = isVip || isCourseEnrolled(AI_MOTION_COURSE.id, session?.user?.email);
+      setEnrolled(isNowEnrolled);
+      const record = getEnrollmentRecord(AI_MOTION_COURSE.id, session?.user?.email);
+      setPendingOrder(record?.status === 'pending' ? record : null);
+      if (!isNowEnrolled && viewMode === 'learning') {
+        setViewMode('landing');
+      }
+    };
+
+    window.addEventListener('course-enrollment-changed', checkEnroll);
+    checkEnroll();
+    return () => window.removeEventListener('course-enrollment-changed', checkEnroll);
+  }, [isVip, session?.user?.email, viewMode]);
+
+  // Primary Purchase Handler: Routes directly to site checkout with bKash automatic / manual options
+  const handleEnrollNow = () => {
+    if (pendingOrder && !enrolled) {
+      alert(
+        `আপনার একটি ম্যানুয়াল অর্ডার ${
+          pendingOrder.orderNumber ? `(অর্ডার নং: #${pendingOrder.orderNumber})` : ''
+        } বর্তমানে ভেরিফিকেশনের জন্য পেন্ডিং আছে। অ্যাডমিন TrxID যাচাই করে অ্যাপ্রুভ করার সাথে সাথেই কোর্সটি আনলক হয়ে যাবে। দ্রুত অ্যাপ্রুভ করাতে আমাদের WhatsApp নম্বরে (+8801798583122) মেসেজ দিন।`
+      );
+      return;
+    }
+    clearCart();
+    addItem(courseToProduct(), 1, false);
+    navigate('/checkout');
+  };
+
+  const handleWatchDemo = () => {
+    if (enrolled) {
+      setViewMode('learning');
+    } else {
+      setIsDemoModalOpen(true);
+    }
+  };
+
+  // If in learning portal mode and enrolled, render learning portal directly
+  if (viewMode === 'learning' && enrolled) {
+    return (
+      <CourseLearningPortal
+        onBackToLanding={() => setViewMode('landing')}
+        enrolledEmail={session?.user?.email || getActiveCourseEmail(AI_MOTION_COURSE.id)}
+      />
+    );
+  }
+
+  const demoLesson = AI_MOTION_COURSE.modules[0].lessons[0];
+
+  return (
+    <Layout>
+      <div className="font-['Hind_Siliguri',sans-serif] bg-[#070b14] text-ink-100">
+        
+        {/* ENROLLED TOP BANNER (Visible if user already purchased & paid) */}
+        {enrolled && (
+          <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white py-3.5 px-4 text-sm font-semibold shadow-md">
+            <div className="container-page flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 size={18} className="text-white shrink-0" />
+                <span>
+                  আপনার কোর্স এক্সেস সক্রিয় রয়েছে! সম্পূর্ণ ১০টি ক্লাস ও প্রজেক্ট ফাইল দেখতে পোর্টালে যান।
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewMode('learning')}
+                className="px-5 py-2 bg-white text-emerald-800 rounded-xl font-bold text-xs sm:text-sm hover:bg-emerald-50 transition-colors shadow-sm flex items-center gap-2 cursor-pointer"
+              >
+                <span>লার্নিং পোর্টালে যান</span>
+                <ArrowRight size={15} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* PENDING MANUAL VERIFICATION TOP BANNER */}
+        {pendingOrder && !enrolled && (
+          <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white py-3.5 px-4 text-sm font-semibold shadow-md border-b border-amber-400/30">
+            <div className="container-page flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <Clock size={18} className="text-white shrink-0 animate-pulse" />
+                <span>
+                  আপনার ম্যানুয়াল পেমেন্ট ভেরিফিকেশন পেন্ডিং রয়েছে{' '}
+                  {pendingOrder.orderNumber ? `(অর্ডার নং: #${pendingOrder.orderNumber})` : ''}। অ্যাডমিন TrxID যাচাই করে
+                  অ্যাপ্রুভ করার সাথে সাথেই লার্নিং পোর্টাল স্বয়ংক্রিয়ভাবে খুলে যাবে।
+                </span>
+              </div>
+              <a
+                href={`https://wa.me/8801798583122?text=${encodeURIComponent(
+                  `আসসালামু আলাইকুম, আমি AI মোশন কোর্সের জন্য ম্যানুয়াল পেমেন্ট করেছি। অর্ডার নম্বর: ${
+                    pendingOrder.orderNumber || ''
+                  }। দয়া করে ভেরিফাই ও অ্যাপ্রুভ করে দিন।`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-1.5 bg-white text-amber-900 rounded-xl font-bold text-xs hover:bg-amber-50 transition-colors shadow-sm flex items-center gap-1.5"
+              >
+                <MessageCircle size={14} />
+                <span>WhatsApp সাপোর্ট</span>
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* HERO SECTION */}
+        <section className="relative overflow-hidden bg-gradient-to-b from-[#0b1329] via-[#070b14] to-black text-white pt-14 pb-20 lg:pt-24 lg:pb-32">
+          {/* Ambient Lighting */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[45rem] h-[25rem] bg-brand-500/15 blur-[140px] pointer-events-none rounded-full" />
+          <div className="absolute top-1/3 right-10 w-[35rem] h-[22rem] bg-accent-500/15 blur-[120px] pointer-events-none rounded-full" />
+
+          <div className="container-page relative z-10">
+            <div className="max-w-4xl mx-auto text-center space-y-6">
+              
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-4 py-1.5 text-xs sm:text-sm font-bold text-amber-300 shadow-inner backdrop-blur-md">
+                <Sparkles size={15} className="text-amber-400" />
+                <span>{AI_MOTION_COURSE.badge}</span>
+              </div>
+
+              {/* Title */}
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.25]">
+                AI মোশন গ্রাফিক্স মাস্টারক্লাস <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 via-sky-300 to-accent-300">
+                  Advanced Agentic Video Editing
+                </span>
+              </h1>
+
+              {/* Subtitle */}
+              <p className="text-base sm:text-lg lg:text-xl text-ink-200 max-w-2xl mx-auto leading-relaxed">
+                {AI_MOTION_COURSE.tagline}
+              </p>
+
+              {/* Course Highlights Bar */}
+              <div className="pt-2 flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-xs sm:text-sm font-medium text-ink-300">
+                <span className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 backdrop-blur-md">
+                  <Film size={15} className="text-brand-400" />
+                  ১০টি প্র্যাক্টিক্যাল ক্লাস
+                </span>
+                <span className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 backdrop-blur-md">
+                  <Clock size={15} className="text-amber-400" />
+                  ১ ঘণ্টা ৩০ মিনিট (দেড় ঘণ্টা)
+                </span>
+                <span className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 backdrop-blur-md">
+                  <DownloadCloud size={15} className="text-accent-400" />
+                  সম্পূর্ণ ফ্রি প্রজেক্ট ফাইল
+                </span>
+                <span className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 backdrop-blur-md">
+                  <InfinityIcon size={15} className="text-emerald-400" />
+                  আজীবন এক্সেস
+                </span>
+              </div>
+
+              {/* Price & Primary CTA Card */}
+              <div className="pt-6 max-w-xl mx-auto">
+                <div className="rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-7 sm:p-9 backdrop-blur-2xl shadow-2xl space-y-6">
+                  <div className="flex items-baseline justify-center gap-3.5">
+                    <span className="text-4xl sm:text-5xl font-extrabold text-white">৳১৯৯</span>
+                    <span className="text-lg sm:text-xl text-ink-400 line-through">৳১,৯৯৯</span>
+                    <span className="rounded-xl bg-amber-400 text-ink-950 px-3 py-1 text-xs font-black uppercase tracking-wider">
+                      ৯০% বিশেষ অফার
+                    </span>
+                  </div>
+
+                  <p className="text-xs sm:text-sm text-ink-300 leading-relaxed">
+                    ⚡ এককালীন পেমেন্ট — বিকাশ অটোমেটিকে তাৎক্ষণিক এক্সেস অথবা বিকাশ ম্যানুয়াল পেমেন্টে অ্যাডমিন ভেরিফিকেশনের পর এক্সেস!
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5">
+                    {pendingOrder && !enrolled ? (
+                      <button
+                        type="button"
+                        onClick={handleEnrollNow}
+                        className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-amber-600 to-amber-700 px-8 py-4 text-base font-extrabold text-white shadow-xl hover:opacity-95 transition-all cursor-pointer"
+                      >
+                        <Clock size={18} className="animate-pulse" />
+                        <span>পেমেন্ট ভেরিফিকেশন পেন্ডিং</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleEnrollNow}
+                        className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-brand-600 via-brand-500 to-accent-600 px-8 py-4 text-base font-extrabold text-white shadow-xl hover:opacity-95 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                      >
+                        <span>কোর্সটি কিনুন (৳১৯৯)</span>
+                        <ArrowRight size={18} />
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={handleWatchDemo}
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl border border-white/20 bg-white/5 px-6 py-4 text-sm sm:text-base font-bold text-white hover:bg-white/10 transition-colors cursor-pointer"
+                    >
+                      <Play size={16} className="fill-white" />
+                      <span>ফ্রি ডেমো দেখুন</span>
+                    </button>
+                  </div>
+
+                  <div className="pt-2 flex items-center justify-center gap-2 text-xs text-ink-400">
+                    <ShieldCheck size={16} className="text-emerald-400" />
+                    <span>কেনার পর ব্রাউজারে সাথে সাথে সেভ থাকবে • পাসওয়ার্ড ছাড়াই দেখতে পারবেন</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        {/* VALUE PILLARS */}
+        <section className="section-padding bg-[#070b14] text-white border-t border-white/10">
+          <div className="container-page">
+            <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
+              <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-brand-400">
+                হ্যান্ডস-অন কারিকুলাম ও প্রযুক্তি
+              </span>
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-white">
+                এই মাস্টারক্লাসে আপনি কী কী শিখবেন?
+              </h2>
+              <p className="text-sm sm:text-base text-ink-300 leading-relaxed">
+                শুধু থিওরি নয়—বাস্তব প্রজেক্টের মাধ্যমে শিখবেন কীভাবে লেটেস্ট এআই মডেল দিয়ে সিনেমাটিক মোশন গ্রাফিক্স ও অটোমেটেড ভিডিও তৈরি করবেন।
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {AI_MOTION_COURSE.features.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-3xl border border-white/10 bg-white/[0.02] p-7 hover:border-brand-500/40 hover:bg-white/[0.04] transition-all duration-300 space-y-3"
+                >
+                  <div className="flex h-13 w-13 items-center justify-center rounded-2xl bg-brand-500/10 text-brand-400 border border-brand-500/20 mb-4">
+                    {idx === 0 && <Film size={24} />}
+                    {idx === 1 && <Bot size={24} />}
+                    {idx === 2 && <Sparkles size={24} />}
+                    {idx === 3 && <DownloadCloud size={24} />}
+                    {idx === 4 && <InfinityIcon size={24} />}
+                    {idx === 5 && <Headphones size={24} />}
+                  </div>
+                  <h3 className="text-lg font-bold text-white">{item.title}</h3>
+                  <p className="text-sm text-ink-300 leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CURRICULUM EXPLORER (10 Lessons across 4 Modules) */}
+        <section className="section-padding bg-black text-white border-t border-white/10">
+          <div className="container-page">
+            <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
+              <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-amber-400">
+                সম্পূর্ণ সিলেবাস (লকড)
+              </span>
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-white">
+                ১০টি এক্সক্লুসিভ প্র্যাক্টিক্যাল ক্লাস
+              </h2>
+              <p className="text-sm sm:text-base text-ink-300 leading-relaxed">
+                মোট ১ ঘণ্টা ৩০ মিনিট (দেড় ঘণ্টা) টু-দ্য-পয়েন্ট হ্যান্ডস-অন টিউটোরিয়াল। ১ম ক্লাসটি ফ্রি ডেমো হিসেবে দেখতে পারবেন, বাকি ক্লাসগুলো কোর্স ক্রয়ের পর আনলক হবে।
+              </p>
+            </div>
+
+            <div className="max-w-4xl mx-auto space-y-4">
+              {AI_MOTION_COURSE.modules.map((mod, modIdx) => {
+                const isOpen = activeCurriculumMod === modIdx;
+                return (
+                  <div
+                    key={mod.id}
+                    className="rounded-3xl border border-white/10 bg-[#070b14] overflow-hidden transition-all"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setActiveCurriculumMod(isOpen ? -1 : modIdx)}
+                      className="w-full flex items-center justify-between p-5 sm:p-6 text-left hover:bg-white/[0.03] transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center gap-4">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-500/20 text-brand-400 text-sm font-extrabold">
+                          {mod.moduleNumber}
+                        </span>
+                        <div>
+                          <h3 className="text-base sm:text-lg font-bold text-white">
+                            {mod.title}
+                          </h3>
+                          <span className="text-xs sm:text-sm text-ink-400">
+                            {mod.lessons.length}টি ক্লাস • {mod.description}
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronDown
+                        size={20}
+                        className={`text-ink-400 transition-transform duration-200 ${
+                          isOpen ? 'rotate-180 text-brand-400' : ''
+                        }`}
+                      />
+                    </button>
+
+                    {isOpen && (
+                      <div className="border-t border-white/10 divide-y divide-white/5 bg-black/60 p-3 sm:p-4">
+                        {mod.lessons.map((lesson) => (
+                          <div
+                            key={lesson.id}
+                            className="flex items-center justify-between p-4 rounded-2xl hover:bg-white/[0.03] transition-colors"
+                          >
+                            <div className="flex items-center gap-3.5">
+                              <span className="text-xs font-mono font-bold text-brand-400">
+                                {lesson.lessonNumber}
+                              </span>
+                              <div>
+                                <h4 className="text-sm sm:text-base font-semibold text-white">
+                                  {lesson.title}
+                                </h4>
+                                <p className="text-xs text-ink-400 line-clamp-1 mt-0.5">
+                                  {lesson.summary}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-3.5 shrink-0 ml-3">
+                              <span className="text-xs sm:text-sm font-mono text-ink-300">
+                                {lesson.duration}
+                              </span>
+                              {lesson.isFreePreview ? (
+                                <button
+                                  type="button"
+                                  onClick={handleWatchDemo}
+                                  className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600/30 border border-brand-500/50 px-3.5 py-1.5 text-xs font-bold text-brand-300 hover:bg-brand-600 hover:text-white transition-colors cursor-pointer"
+                                >
+                                  <Play size={12} className="fill-current" />
+                                  <span>ফ্রি ডেমো দেখুন</span>
+                                </button>
+                              ) : enrolled ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setViewMode('learning')}
+                                  className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600/30 border border-emerald-500/50 px-3 py-1.5 text-xs font-bold text-emerald-300 hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer"
+                                >
+                                  <Play size={12} className="fill-current" />
+                                  <span>ক্লাস দেখুন</span>
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={handleEnrollNow}
+                                  className="inline-flex items-center gap-1.5 rounded-xl bg-white/5 border border-white/10 px-3 py-1.5 text-xs font-semibold text-ink-400 hover:text-white hover:border-amber-400/40 hover:bg-amber-400/10 transition-colors cursor-pointer"
+                                  title="কোর্সটি কিনলে আনলক হবে"
+                                >
+                                  <Lock size={13} className="text-amber-400" />
+                                  <span>লকড (৳১৯৯)</span>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-12 text-center">
+              <button
+                type="button"
+                onClick={handleEnrollNow}
+                className="inline-flex items-center gap-2 rounded-2xl bg-brand-600 px-8 py-4 text-base font-extrabold text-white shadow-xl hover:bg-brand-500 transition-all cursor-pointer"
+              >
+                <span>মাত্র ১৯৯ টাকায় সম্পূর্ণ সিলেবাস আনলক করুন</span>
+                <ArrowRight size={18} />
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* BONUSES (CLEAN, NO FAKE PRICE TAGS) */}
+        <section className="section-padding bg-gradient-to-b from-[#070b14] via-[#0b1329] to-[#070b14] text-white border-t border-white/10">
+          <div className="container-page">
+            <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
+              <div className="inline-flex items-center gap-2 rounded-full bg-amber-400/10 border border-amber-400/30 px-4 py-1.5 text-xs sm:text-sm font-bold text-amber-300">
+                <Gift size={16} />
+                <span>সম্পূর্ণ ফ্রি • ৪টি মেগা বোনাস প্যাক</span>
+              </div>
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-white">
+                কোর্সের সাথে সম্পূর্ণ ফ্রিতে পাচ্ছেন এক্সক্লুসিভ অ্যাসেটস
+              </h2>
+              <p className="text-sm sm:text-base text-ink-300">
+                আজই ১৯৯ টাকায় এনরোল করলে নিচের সমস্ত প্রিমিয়াম প্যাকগুলো পাবেন কোনো অতিরিক্ত ফি ছাড়াই।
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              {AI_MOTION_COURSE.bonuses.map((bonus, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-3xl border border-amber-400/20 bg-black/50 p-6 hover:border-amber-400/40 transition-colors space-y-2.5 backdrop-blur-xl"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-amber-400 uppercase tracking-wide">
+                      বোনাস #{idx + 1}
+                    </span>
+                    <span className="rounded-full bg-emerald-500/20 text-emerald-300 px-3 py-0.5 text-xs font-bold">
+                      সম্পূর্ণ ফ্রি
+                    </span>
+                  </div>
+                  <h3 className="text-base sm:text-lg font-bold text-white">{bonus.title}</h3>
+                  <p className="text-xs sm:text-sm text-ink-300 leading-relaxed">{bonus.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* REVIEWS */}
+        <section className="section-padding bg-black text-white border-t border-white/10">
+          <div className="container-page">
+            <div className="text-center max-w-2xl mx-auto mb-12">
+              <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-brand-400">
+                স্টুডেন্ট ফিডব্যাক
+              </span>
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-white mt-1">
+                স্টুডেন্টরা কী বলছেন?
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+              {AI_MOTION_COURSE.reviews.map((rev, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-3xl border border-white/10 bg-[#070b14] p-7 flex flex-col justify-between space-y-4"
+                >
+                  <div className="space-y-3.5">
+                    <div className="flex text-amber-400">
+                      {[...Array(rev.rating)].map((_, i) => (
+                        <Star key={i} size={16} className="fill-current" />
+                      ))}
+                    </div>
+                    <p className="text-sm text-ink-200 leading-relaxed italic">
+                      "{rev.comment}"
+                    </p>
+                  </div>
+
+                  <div className="pt-4 border-t border-white/10 flex items-center justify-between">
+                    <div>
+                      <h4 className="text-sm font-bold text-white">{rev.name}</h4>
+                      <span className="text-xs text-ink-400">{rev.role}</span>
+                    </div>
+                    <span className="text-xs text-ink-500">{rev.date}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section className="section-padding bg-[#070b14] text-white border-t border-white/10">
+          <div className="container-page max-w-3xl mx-auto">
+            <div className="text-center mb-12 space-y-2">
+              <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-brand-400">
+                সাধারণ জিজ্ঞাসা
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
+                সচরাচর জিজ্ঞাসিত প্রশ্নসমূহ (FAQ)
+              </h2>
+            </div>
+
+            <div className="space-y-3.5">
+              {AI_MOTION_COURSE.faqs.map((faq, idx) => {
+                const isOpen = openFaq === idx;
+                return (
+                  <div
+                    key={idx}
+                    className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setOpenFaq(isOpen ? null : idx)}
+                      className="w-full flex items-center justify-between p-5 text-left text-sm sm:text-base font-bold text-white hover:bg-white/[0.04] transition-colors cursor-pointer"
+                    >
+                      <span>{faq.q}</span>
+                      <ChevronDown
+                        size={18}
+                        className={`text-ink-400 transition-transform duration-200 shrink-0 ml-3 ${
+                          isOpen ? 'rotate-180 text-brand-400' : ''
+                        }`}
+                      />
+                    </button>
+                    {isOpen && (
+                      <div className="p-5 pt-0 text-sm text-ink-300 leading-relaxed border-t border-white/5 bg-black/40">
+                        {faq.a}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* WHATSAPP SUPPORT SECTION */}
+        <section className="py-12 bg-black border-t border-white/10 text-white">
+          <div className="container-page max-w-2xl mx-auto text-center space-y-4">
+            <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest block">
+              ২৪/৭ স্টুডেন্ট হেল্পডেস্ক
+            </span>
+            <h3 className="text-xl sm:text-2xl font-extrabold text-white">
+              যেকোনো প্রশ্ন বা পেমেন্ট সহায়তায় সরাসরি যোগাযোগ করুন
+            </h3>
+            <p className="text-sm text-ink-300">
+              বিকাশ পেমেন্ট বা কোর্স অ্যাক্সেস সংক্রান্ত যেকোনো প্রয়োজনে আমাদের অফিসিয়াল হোয়াটসঅ্যাপে মেসেজ দিন:
+            </p>
+            <div className="pt-2">
+              <a
+                href="https://wa.me/8801798583122?text=Hello%20bdBeginner,%20I%20need%20help%20with%20AI%20Motion%20Masterclass"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-7 py-3.5 text-sm sm:text-base shadow-xl transition-all"
+              >
+                <MessageCircle size={20} className="fill-current" />
+                <span>WhatsApp: +8801798583122</span>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* BOTTOM FINAL CTA */}
+        <section className="py-20 bg-gradient-to-t from-black via-[#0b1329] to-[#070b14] text-white text-center border-t border-white/10">
+          <div className="container-page max-w-3xl mx-auto space-y-6">
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-white">
+              এআই দিয়ে ভিডিও এডিটিংয়ের ভবিষ্যৎ আয়ত্ত করুন
+            </h2>
+            <p className="text-sm sm:text-base text-ink-300 max-w-xl mx-auto leading-relaxed">
+              মাত্র ১৯৯ টাকায় আজীবন এক্সেস নিন। ১০টি প্র্যাক্টিক্যাল ক্লাস (১ ঘণ্টা ৩০ মিনিট) ও সম্পূর্ণ ফ্রি সোর্স ফাইল দিয়ে আপনার ক্যারিয়ার এগিয়ে নিন।
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+              <button
+                type="button"
+                onClick={handleEnrollNow}
+                className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl ${
+                  pendingOrder && !enrolled
+                    ? 'bg-amber-600 hover:bg-amber-500'
+                    : 'bg-gradient-to-r from-brand-600 via-brand-500 to-accent-600 hover:opacity-95'
+                } px-9 py-4 text-base font-extrabold text-white shadow-2xl transition-all cursor-pointer`}
+              >
+                {pendingOrder && !enrolled ? (
+                  <>
+                    <Clock size={18} className="animate-pulse" />
+                    <span>পেমেন্ট ভেরিফিকেশন পেন্ডিং</span>
+                  </>
+                ) : (
+                  <>
+                    <span>এখনই ১৯৯ টাকায় ভর্তি হন</span>
+                    <ArrowRight size={18} />
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* STICKY MOBILE BOTTOM BAR */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#070b14]/95 border-t border-white/10 p-3.5 backdrop-blur-xl flex items-center justify-between gap-3">
+          <div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-xl font-black text-white">৳১৯৯</span>
+              <span className="text-xs text-ink-500 line-through">৳১,৯৯৯</span>
+            </div>
+            <span className="text-[11px] text-amber-400 font-bold block">১০টি ক্লাস • আজীবন এক্সেস</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleEnrollNow}
+            className={`inline-flex items-center gap-1.5 rounded-xl ${
+              pendingOrder && !enrolled ? 'bg-amber-600 hover:bg-amber-500' : 'bg-brand-600 hover:bg-brand-500'
+            } px-4 sm:px-5 py-3 text-xs sm:text-sm font-bold text-white shadow-md transition-colors cursor-pointer`}
+          >
+            {pendingOrder && !enrolled ? (
+              <>
+                <Clock size={14} className="animate-pulse" />
+                <span>ভেরিফিকেশন পেন্ডিং</span>
+              </>
+            ) : (
+              <>
+                <span>এনরোল করুন (৳১৯৯)</span>
+                <ArrowRight size={15} />
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* FREE DEMO VIDEO MODAL (Single lesson 1: B1l3tNihOZI, anti-branding protected) */}
+        {isDemoModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/90 backdrop-blur-xl overflow-y-auto">
+            <div className="relative w-full max-w-4xl rounded-3xl bg-[#0b1329] border border-white/10 p-5 sm:p-7 shadow-2xl text-white my-auto">
+              
+              {/* Header */}
+              <div className="flex items-center justify-between pb-4 border-b border-white/10">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500/20 text-brand-400">
+                    <Play size={16} className="fill-current" />
+                  </span>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-bold text-white">
+                      ১ম ক্লাস (ফ্রি ডেমো): {demoLesson.title}
+                    </h3>
+                    <p className="text-xs text-ink-400 font-mono">
+                      সময়: {demoLesson.duration} • ফ্রি ডেমো ক্লাস
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsDemoModalOpen(false)}
+                  className="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-ink-300 hover:text-white transition-colors cursor-pointer"
+                  title="Close Demo"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Video Player: Protected against YouTube titles, channels, and logo */}
+              <div className="my-5">
+                <ProtectedVideoPlayer
+                  courseId={AI_MOTION_COURSE.id}
+                  lessonId={demoLesson.id}
+                  title={`${demoLesson.lessonNumber}. ${demoLesson.title}`}
+                  youtubeId={demoLesson.youtubeId || 'B1l3tNihOZI'}
+                  videoUrl={demoLesson.videoUrl}
+                  isLocked={false}
+                  onUnlockClick={handleEnrollNow}
+                />
+              </div>
+
+              {/* Bottom Conversion Prompt */}
+              <div className="rounded-2xl border border-brand-500/30 bg-gradient-to-r from-brand-950/60 via-[#070b14] to-brand-950/60 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block mb-1">
+                    বাকি ৯টি ক্লাস ও সকল প্রজেক্ট ফাইল পান
+                  </span>
+                  <p className="text-xs sm:text-sm text-ink-200">
+                    সম্পূর্ণ কোর্সের ১০টি ক্লাস (১ ঘণ্টা ৩০ মিনিট) ও সকল সোর্স ফাইলের আজীবন এক্সেস পেতে এখনই এনরোল করুন।
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsDemoModalOpen(false);
+                    handleEnrollNow();
+                  }}
+                  className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 via-brand-500 to-accent-600 px-6 py-3.5 text-sm font-bold text-white shadow-xl hover:opacity-95 transition-all cursor-pointer"
+                >
+                  <span>সম্পূর্ণ কোর্স আনলক করুন (৳১৯৯)</span>
+                  <ArrowRight size={16} />
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+      </div>
+    </Layout>
+  );
+}

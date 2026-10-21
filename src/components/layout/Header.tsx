@@ -20,6 +20,7 @@ import {
   Laptop,
   GraduationCap,
   FileCode,
+  Film,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { AnnouncementBar } from './AnnouncementBar';
@@ -32,6 +33,7 @@ import { useDiscovery } from '@/context/DiscoveryContext';
 import { safeHttpUrl } from '@/lib/urls';
 
 const exploreLinks = [
+  { label: 'AI মোশন মাস্টারক্লাস (৳১৯৯)', to: '/course/ai-motion', description: 'Advanced Agentic Video Editing', icon: Film },
   { label: 'WordPress Themes', to: '/wordpress', description: 'Curated premium WP themes', icon: Layers },
   { label: 'WordPress Plugins', to: '/plugins', description: 'GPL plugins & dev tools', icon: Sparkles },
   { label: 'Software & Tools', to: '/products?category=software', description: 'Productivity & utilities', icon: Laptop },
@@ -154,6 +156,24 @@ export function Header() {
             >
               <Crown size={14} className="text-amber-500 fill-amber-400 shrink-0" />
               <span>VIP Membership</span>
+            </NavLink>
+
+            {/* AI Motion Masterclass - Hot New Course */}
+            <NavLink
+              to="/course/ai-motion"
+              className={({ isActive }) =>
+                `inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-bold transition-all shadow-xs ${
+                  isActive
+                    ? 'bg-gradient-to-r from-purple-600 to-brand-600 text-white shadow-sm ring-1 ring-purple-500'
+                    : 'bg-gradient-to-r from-purple-50 via-indigo-50 to-brand-50 text-purple-950 border border-purple-300 hover:bg-purple-100 hover:border-purple-400'
+                }`
+              }
+            >
+              <Film size={13} className="text-purple-600 shrink-0" />
+              <span>AI মোশন ক্লাস</span>
+              <span className="rounded-md bg-purple-600 px-1 py-0.2 text-[9px] font-extrabold uppercase tracking-wider text-white">
+                ৳১৯৯
+              </span>
             </NavLink>
 
             {/* Playflix Tool - Premium External Tool Badge */}
@@ -408,6 +428,27 @@ export function Header() {
                   </span>
                   <span className="rounded-full bg-amber-400/30 px-2 py-0.5 text-[10px] font-extrabold text-amber-900">
                     ALL-ACCESS
+                  </span>
+                </NavLink>
+
+                {/* AI Motion Masterclass in mobile */}
+                <NavLink
+                  to="/course/ai-motion"
+                  onClick={() => setMobileOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center justify-between rounded-xl p-3.5 text-base font-bold transition-all shadow-xs ${
+                      isActive
+                        ? 'bg-gradient-to-r from-purple-600 to-brand-600 text-white'
+                        : 'bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-950 border border-purple-300'
+                    }`
+                  }
+                >
+                  <span className="flex items-center gap-2">
+                    <Film size={18} className="text-purple-600" />
+                    <span>AI মোশন ক্লাস</span>
+                  </span>
+                  <span className="rounded-full bg-purple-600 px-2 py-0.5 text-[10px] font-extrabold text-white">
+                    ৳১৯৯
                   </span>
                 </NavLink>
 

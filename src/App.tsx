@@ -32,6 +32,7 @@ const PaymentResultPage = lazyPage(() => import('@/pages/PaymentResultPage'), 'P
 const OrderSuccessPage = lazyPage(() => import('@/pages/OrderSuccessPage'), 'OrderSuccessPage');
 const WishlistPage = lazyPage(() => import('@/pages/discovery/WishlistPage'), 'WishlistPage');
 const MembershipPage = lazyPage(() => import('@/pages/MembershipPage'), 'MembershipPage');
+const AiMotionMasterclassPage = lazyPage(() => import('@/pages/course/AiMotionMasterclassPage'), 'AiMotionMasterclassPage');
 const AccountWishlistPage = lazyPage(() => import('@/pages/account/AccountWishlistPage'), 'AccountWishlistPage');
 const AccountOverviewPage = lazyPage(() => import('@/pages/account/AccountOverviewPage'), 'AccountOverviewPage');
 const AccountOrdersPage = lazyPage(() => import('@/pages/account/AccountOrdersPage'), 'AccountOrdersPage');
@@ -112,6 +113,9 @@ export default function App() {
           <Route path="/membership" element={<MembershipPage />} />
           <Route path="/pricing" element={<MembershipPage />} />
           <Route path="/vip" element={<MembershipPage />} />
+          <Route path="/course/ai-motion" element={<AiMotionMasterclassPage />} />
+          <Route path="/courses/ai-motion-masterclass" element={<AiMotionMasterclassPage />} />
+          <Route path="/ai-motion-masterclass" element={<AiMotionMasterclassPage />} />
           <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:slug" element={<ProductDetailPage />} />
         <Route path="/categories" element={<CategoriesPage />} />

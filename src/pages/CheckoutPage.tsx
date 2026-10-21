@@ -312,12 +312,93 @@ export function CheckoutPage() {
                 <p className="mt-2 text-sm text-success-700">This order is fully covered by your discount. No payment method is needed.</p>
               </section>
             ) : (
-              <section className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft sm:p-6">
-                <h2 className="font-display text-lg font-bold text-ink-900">Payment Method</h2>
-                {paymentSettingsLoading ? <div className="mt-4 h-24 animate-pulse rounded-xl bg-ink-50" /> : paymentSettingsError ? <div className="mt-4 flex items-start gap-2 rounded-xl border border-error-200 bg-error-50 p-4 text-sm text-error-700"><AlertCircle className="mt-0.5 shrink-0" size={17} />{paymentSettingsError}</div> : !directBkash && manualMethods.length === 0 ? <div className="mt-4 rounded-xl border border-warning-200 bg-warning-50 p-4 text-sm text-warning-800">No payment method is currently available. Please contact support.</div> : <div className="mt-4 flex flex-col gap-3">
-                  {directBkash && <label className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition-colors ${paymentMethod === 'bkash' ? 'border-brand-500 bg-brand-50/30' : 'border-ink-100 hover:border-ink-200'}`}><input type="radio" name="payment_method" value="bkash" checked={paymentMethod === 'bkash'} onChange={() => setPaymentMethod('bkash')} className="mt-0.5 h-4 w-4 border-ink-300 text-brand-600 focus:ring-brand-500" /><div><p className="font-semibold text-ink-900">{directBkash.display_name}</p><p className="mt-1 text-sm text-ink-500">{getBkashDescription(directBkash)}</p></div></label>}
-                  {manualMethods.length > 0 && <label className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition-colors ${paymentMethod === 'manual' ? 'border-brand-500 bg-brand-50/30' : 'border-ink-100 hover:border-ink-200'}`}><input type="radio" name="payment_method" value="manual" checked={paymentMethod === 'manual'} onChange={() => setPaymentMethod('manual')} className="mt-0.5 h-4 w-4 border-ink-300 text-brand-600 focus:ring-brand-500" /><div><p className="font-semibold text-ink-900">Manual Payment / Payment Confirmation</p><p className="mt-1 text-sm text-ink-500">{manualMethods.map((method) => method.display_name).join(', ')}. Manual verification required.</p></div></label>}
-                </div>}
+              <section className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft sm:p-6 font-['Hind_Siliguri',sans-serif]">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-display text-lg font-bold text-ink-900">Payment Method (পেমেন্ট পদ্ধতি)</h2>
+                  <span className="text-xs text-ink-400 font-medium">নিরাপদ ও সহজ পেমেন্ট</span>
+                </div>
+                {paymentSettingsLoading ? (
+                  <div className="mt-4 h-24 animate-pulse rounded-xl bg-ink-50" />
+                ) : paymentSettingsError ? (
+                  <div className="mt-4 flex items-start gap-2 rounded-xl border border-error-200 bg-error-50 p-4 text-sm text-error-700">
+                    <AlertCircle className="mt-0.5 shrink-0" size={17} />
+                    {paymentSettingsError}
+                  </div>
+                ) : !directBkash && manualMethods.length === 0 ? (
+                  <div className="mt-4 rounded-xl border border-warning-200 bg-warning-50 p-4 text-sm text-warning-800">
+                    No payment method is currently available. Please contact support.
+                  </div>
+                ) : (
+                  <div className="mt-4 flex flex-col gap-3.5">
+                    {/* 1. bKash Automatic Payment */}
+                    {directBkash && (
+                      <label
+                        className={`flex cursor-pointer items-start gap-3.5 rounded-2xl border-2 p-4 transition-all ${
+                          paymentMethod === 'bkash'
+                            ? 'border-[#E2136E] bg-[#E2136E]/5 ring-2 ring-[#E2136E]/20'
+                            : 'border-ink-100 bg-white hover:border-ink-200'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="payment_method"
+                          value="bkash"
+                          checked={paymentMethod === 'bkash'}
+                          onChange={() => setPaymentMethod('bkash')}
+                          className="mt-1 h-4 w-4 border-ink-300 text-[#E2136E] focus:ring-[#E2136E]"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="text-base font-bold text-ink-900 flex items-center gap-2">
+                              <span>বিকাশ অটোমেটিক পেমেন্ট</span>
+                              <span className="text-xs font-semibold text-ink-500 font-mono">(bKash Automatic)</span>
+                            </span>
+                            <span className="rounded-full bg-[#E2136E]/10 px-2.5 py-0.5 text-xs font-bold text-[#E2136E]">
+                              ⚡ স্বয়ংক্রিয় গেটওয়ে
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs sm:text-sm text-ink-600 leading-relaxed">
+                            বিকাশ অনলাইন পেমেন্ট গেটওয়ের মাধ্যমে সরাসরি ও নিরাপদে ইনস্ট্যান্ট পেমেন্ট সম্পন্ন করুন। পেমেন্ট শেষ হওয়ামাত্রই আপনার অর্ডার কনফার্ম হবে।
+                          </p>
+                        </div>
+                      </label>
+                    )}
+
+                    {/* 2. bKash Manual Payment / Send Money */}
+                    {manualMethods.length > 0 && (
+                      <label
+                        className={`flex cursor-pointer items-start gap-3.5 rounded-2xl border-2 p-4 transition-all ${
+                          paymentMethod === 'manual'
+                            ? 'border-brand-500 bg-brand-50/30 ring-2 ring-brand-500/20'
+                            : 'border-ink-100 bg-white hover:border-ink-200'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="payment_method"
+                          value="manual"
+                          checked={paymentMethod === 'manual'}
+                          onChange={() => setPaymentMethod('manual')}
+                          className="mt-1 h-4 w-4 border-ink-300 text-brand-600 focus:ring-brand-500"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="text-base font-bold text-ink-900 flex items-center gap-2">
+                              <span>বিকাশ ম্যানুয়াল পেমেন্ট</span>
+                              <span className="text-xs font-semibold text-ink-500 font-mono">(Send Money / Manual)</span>
+                            </span>
+                            <span className="rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-bold text-brand-700">
+                              Send Money
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs sm:text-sm text-ink-600 leading-relaxed">
+                            পার্সোনাল বিকাশ নম্বর (<span className="font-bold text-ink-900">01677272090</span>)-এ Send Money করে Transaction ID দিয়ে ভেরিফাই করুন। (নগদ ও রকেটও প্রযোজ্য)
+                          </p>
+                        </div>
+                      </label>
+                    )}
+                  </div>
+                )}
               </section>
             )}
 

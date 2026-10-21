@@ -10,12 +10,14 @@ import { Newsletter } from '@/components/Newsletter';
 import { Layout } from '@/components/layout/Layout';
 import { RecentlyViewedSection } from '@/components/discovery/RecentlyViewedSection';
 import { MembershipSection } from '@/components/home/MembershipSection';
+import { AiMotionCourseSection } from '@/components/home/AiMotionCourseSection';
 
 export function HomePage() {
   return (
     <Layout>
       <Hero />
       <CategoryExplorer />
+      <AiMotionCourseSection />
       <FeaturedProducts />
       <MembershipSection />
       <RecentlyViewedSection />
