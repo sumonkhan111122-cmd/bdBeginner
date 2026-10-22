@@ -27,6 +27,10 @@ const ContactPage = lazyPage(() => import('@/pages/ContactPage'), 'ContactPage')
 const FaqPage = lazyPage(() => import('@/pages/FaqPage'), 'FaqPage');
 const AboutPage = lazyPage(() => import('@/pages/AboutPage'), 'AboutPage');
 const CartPage = lazyPage(() => import('@/pages/CartPage'), 'CartPage');
+import { AuthRecoveryHandler } from '@/components/auth/AuthRecoveryHandler';
+
+const CourseLearnPage = lazyPage(() => import('@/pages/course/CourseLearnPage'), 'CourseLearnPage');
+const AccountCoursesPage = lazyPage(() => import('@/pages/account/AccountCoursesPage'), 'AccountCoursesPage');
 const CheckoutPage = lazyPage(() => import('@/pages/CheckoutPage'), 'CheckoutPage');
 const PaymentResultPage = lazyPage(() => import('@/pages/PaymentResultPage'), 'PaymentResultPage');
 const OrderSuccessPage = lazyPage(() => import('@/pages/OrderSuccessPage'), 'OrderSuccessPage');
@@ -100,6 +104,7 @@ function PlayflixRedirect() {
 export default function App() {
   return (
     <BrowserRouter>
+      <AuthRecoveryHandler />
       <CartProvider>
         <SiteSettingsProvider>
           <AdminAuthProvider>
@@ -117,6 +122,9 @@ export default function App() {
           <Route path="/course/ai-motion" element={<AiMotionMasterclassPage />} />
           <Route path="/courses/ai-motion-masterclass" element={<AiMotionMasterclassPage />} />
           <Route path="/ai-motion-masterclass" element={<AiMotionMasterclassPage />} />
+          <Route path="/course/ai-motion/learn" element={<CourseLearnPage />} />
+          <Route path="/courses/ai-motion-masterclass/learn" element={<CourseLearnPage />} />
+          <Route path="/courses/ai-motion/learn" element={<CourseLearnPage />} />
           <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:slug" element={<ProductDetailPage />} />
         <Route path="/categories" element={<CategoriesPage />} />
@@ -133,6 +141,7 @@ export default function App() {
         <Route path="/payment/result" element={<PaymentResultPage />} />
         <Route path="/wishlist" element={<WishlistPage />} />
         <Route path="/account" element={<AccountOverviewPage />} />
+        <Route path="/account/courses" element={<AccountCoursesPage />} />
         <Route path="/account/wishlist" element={<AccountWishlistPage />} />
         <Route path="/account/orders" element={<AccountOrdersPage />} />
         <Route path="/account/downloads" element={<AccountDownloadsPage />} />

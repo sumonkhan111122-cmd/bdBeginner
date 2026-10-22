@@ -45,15 +45,46 @@ export function ResetPasswordPage() {
               setError(
                 errorDesc
                   ? decodeURIComponent(errorDesc.replace(/\+/g, ' '))
-                  : 'The password reset link has expired or is invalid.'
+                  : 'পাসওয়ার্ড রিসেট লিংকটির মেয়াদ শেষ অথবা এটি সঠিক নয়। দয়া করে আবার লিংক পাঠান।'
               );
               setLoadingSession(false);
             }
             return;
           }
+
+          // If access_token and refresh_token are in hash, explicitly set session
+          const accessToken = hashParams.get('access_token');
+          const refreshToken = hashParams.get('refresh_token');
+          if (accessToken && refreshToken) {
+            const { data: setSessionData, error: setSessionErr } = await sb.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            if (!setSessionErr && setSessionData.session && mounted) {
+              setHasValidSession(true);
+              setLoadingSession(false);
+              return;
+            }
+          }
         }
 
-        // 2. Check for active session
+        // 2. Check if a PKCE code was passed in URL search params (?code=...)
+        const searchParams = new URLSearchParams(window.location.search);
+        const code = searchParams.get('code');
+        if (code) {
+          try {
+            const { data: exchangeData, error: exchangeErr } = await sb.auth.exchangeCodeForSession(code);
+            if (!exchangeErr && exchangeData.session && mounted) {
+              setHasValidSession(true);
+              setLoadingSession(false);
+              return;
+            }
+          } catch (codeErr) {
+            console.warn('Code exchange error on reset password:', codeErr);
+          }
+        }
+
+        // 3. Check for existing active session
         const { data: { session }, error: sessionError } = await sb.auth.getSession();
         if (sessionError) {
           throw sessionError;
@@ -65,7 +96,7 @@ export function ResetPasswordPage() {
           return;
         }
 
-        // 3. Listen briefly for auth state changes if Supabase is still parsing hash
+        // 4. Listen for auth state changes (e.g. Supabase async hash parser)
         const { data: listener } = sb.auth.onAuthStateChange((event, newSession) => {
           if ((event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') && newSession && mounted) {
             setHasValidSession(true);

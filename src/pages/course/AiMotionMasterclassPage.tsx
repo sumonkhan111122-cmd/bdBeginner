@@ -31,7 +31,7 @@ import {
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/Button';
 import { AI_MOTION_COURSE, courseToProduct } from '@/data/aiMotionCourse';
-import { CourseLearningPortal } from '@/components/course/CourseLearningPortal';
+import { CourseDiscountModal } from '@/components/course/CourseDiscountModal';
 import { ProtectedVideoPlayer } from '@/components/course/ProtectedVideoPlayer';
 import {
   isCourseEnrolled,
@@ -51,11 +51,17 @@ export function AiMotionMasterclassPage() {
   const location = useLocation();
   const { session } = useCustomerAuth();
   const { isVip } = useMembership();
-  const { addItem, clearCart } = useCart();
+  const { addItem, clearCart, applyCoupon } = useCart();
 
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [activeCurriculumMod, setActiveCurriculumMod] = useState<number>(0);
   const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
+
+  // Discount modal state & claimed tracker
+  const [showDiscountModal, setShowDiscountModal] = useState(false);
+  const [discountClaimed, setDiscountClaimed] = useState(() => {
+    return sessionStorage.getItem('ai_motion_discount_status') === 'claimed';
+  });
 
   // Track course page view
   useEffect(() => {
@@ -73,16 +79,21 @@ export function AiMotionMasterclassPage() {
     return record?.status === 'pending' ? record : null;
   });
 
-  // Mode: 'landing' or 'learning'
-  // Strict Protection: Only enrolled users can enter 'learning' portal mode!
-  const [viewMode, setViewMode] = useState<'landing' | 'learning'>(() => {
-    const params = new URLSearchParams(window.location.search);
-    const isEnr = isVip || isCourseEnrolled(AI_MOTION_COURSE.id);
-    if ((params.get('watch') === '1' || params.get('portal') === '1') && isEnr) {
-      return 'learning';
-    }
-    return isEnr ? 'learning' : 'landing';
-  });
+  // 10-Second Discount Popup Timer: triggers after 10s on page if not enrolled and not yet dismissed
+  useEffect(() => {
+    if (enrolled) return;
+    const status = sessionStorage.getItem('ai_motion_discount_status');
+    if (status === 'claimed' || status === 'dismissed') return;
+
+    const timer = setTimeout(() => {
+      const current = sessionStorage.getItem('ai_motion_discount_status');
+      if (!current) {
+        setShowDiscountModal(true);
+      }
+    }, 10000); // exactly 10 seconds
+
+    return () => clearTimeout(timer);
+  }, [enrolled]);
 
   // Sync online enrollment status from Supabase with auto-polling for pending orders
   useEffect(() => {
@@ -128,13 +139,13 @@ export function AiMotionMasterclassPage() {
     } else if (params.get('watch') === '1' || params.get('portal') === '1') {
       const isEnr = isVip || isCourseEnrolled(AI_MOTION_COURSE.id, session?.user?.email);
       if (isEnr) {
-        setViewMode('learning');
+        navigate('/course/ai-motion/learn', { replace: true });
       } else {
-        // If not enrolled, do not allow portal access; open the isolated single demo video instead!
+        // If not enrolled, open the demo video
         setIsDemoModalOpen(true);
       }
     }
-  }, [location.search, isVip, session?.user?.email]);
+  }, [location.search, isVip, session?.user?.email, navigate]);
 
   useEffect(() => {
     const checkEnroll = () => {
@@ -142,18 +153,19 @@ export function AiMotionMasterclassPage() {
       setEnrolled(isNowEnrolled);
       const record = getEnrollmentRecord(AI_MOTION_COURSE.id, session?.user?.email);
       setPendingOrder(record?.status === 'pending' ? record : null);
-      if (!isNowEnrolled && viewMode === 'learning') {
-        setViewMode('landing');
-      }
     };
 
     window.addEventListener('course-enrollment-changed', checkEnroll);
     checkEnroll();
     return () => window.removeEventListener('course-enrollment-changed', checkEnroll);
-  }, [isVip, session?.user?.email, viewMode]);
+  }, [isVip, session?.user?.email]);
 
   // Primary Purchase Handler: Routes directly to site checkout with bKash automatic / manual options
-  const handleEnrollNow = () => {
+  const handleEnrollNow = async () => {
+    if (enrolled) {
+      navigate('/course/ai-motion/learn');
+      return;
+    }
     if (pendingOrder && !enrolled) {
       alert(
         `আপনার একটি ম্যানুয়াল অর্ডার ${
@@ -162,40 +174,49 @@ export function AiMotionMasterclassPage() {
       );
       return;
     }
+    const finalPrice = discountClaimed ? 240 : 290;
     trackInitiateCheckout(
       [
         {
           productId: AI_MOTION_COURSE.id,
           name: AI_MOTION_COURSE.title,
-          price: 290,
+          price: finalPrice,
           quantity: 1,
         },
       ],
-      290
+      finalPrice
     );
     clearCart();
-    addItem(courseToProduct(), 1, false);
+    addItem(courseToProduct(AI_MOTION_COURSE), 1, false);
+    if (discountClaimed) {
+      await applyCoupon('AIMOTION50');
+    }
     navigate('/checkout');
+  };
+
+  const handleClaimDiscount = async () => {
+    sessionStorage.setItem('ai_motion_discount_status', 'claimed');
+    setDiscountClaimed(true);
+    setShowDiscountModal(false);
+    clearCart();
+    addItem(courseToProduct(AI_MOTION_COURSE), 1, false);
+    await applyCoupon('AIMOTION50');
+    navigate('/checkout');
+  };
+
+  const handleCloseDiscount = () => {
+    sessionStorage.setItem('ai_motion_discount_status', 'dismissed');
+    setShowDiscountModal(false);
   };
 
   const handleWatchDemo = () => {
     trackStartTrial('AI Motion Masterclass Demo', 0);
     if (enrolled) {
-      setViewMode('learning');
+      navigate('/course/ai-motion/learn');
     } else {
       setIsDemoModalOpen(true);
     }
   };
-
-  // If in learning portal mode and enrolled, render learning portal directly
-  if (viewMode === 'learning' && enrolled) {
-    return (
-      <CourseLearningPortal
-        onBackToLanding={() => setViewMode('landing')}
-        enrolledEmail={session?.user?.email || getActiveCourseEmail(AI_MOTION_COURSE.id)}
-      />
-    );
-  }
 
   const demoLesson = AI_MOTION_COURSE.modules[0].lessons[0];
 
@@ -205,22 +226,21 @@ export function AiMotionMasterclassPage() {
         
         {/* ENROLLED TOP BANNER (Visible if user already purchased & paid) */}
         {enrolled && (
-          <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white py-3.5 px-4 text-sm font-semibold shadow-md">
+          <div className="bg-gradient-to-r from-purple-900 via-brand-900 to-purple-950 text-white py-3.5 px-4 text-sm font-semibold shadow-md border-b border-purple-500/30">
             <div className="container-page flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <CheckCircle2 size={18} className="text-white shrink-0" />
+                <CheckCircle2 size={18} className="text-emerald-400 shrink-0" />
                 <span>
-                  আপনার কোর্স এক্সেস সক্রিয় রয়েছে! সম্পূর্ণ ১০টি ক্লাস ও প্রজেক্ট ফাইল দেখতে পোর্টালে যান।
+                  অভিনন্দন! আপনার কোর্স এক্সেস সক্রিয় রয়েছে। সম্পূর্ণ ১০টি ক্লাস ও প্রজেক্ট ফাইল দেখতে ক্লাসরুমে যান।
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={() => setViewMode('learning')}
-                className="px-5 py-2 bg-white text-emerald-800 rounded-xl font-bold text-xs sm:text-sm hover:bg-emerald-50 transition-colors shadow-sm flex items-center gap-2 cursor-pointer"
+              <Link
+                to="/course/ai-motion/learn"
+                className="px-5 py-2 bg-gradient-to-r from-purple-500 to-brand-500 text-white rounded-xl font-bold text-xs sm:text-sm hover:brightness-110 transition-all shadow-sm flex items-center gap-2 cursor-pointer"
               >
-                <span>লার্নিং পোর্টালে যান</span>
-                <ArrowRight size={15} />
-              </button>
+                <Play size={14} fill="currentColor" />
+                <span>কোর্সের ক্লাসরুমে যান 🎬</span>
+              </Link>
             </div>
           </div>
         )}
@@ -324,11 +344,23 @@ export function AiMotionMasterclassPage() {
               <div className="pt-6 max-w-xl mx-auto">
                 <div className="rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-7 sm:p-9 backdrop-blur-2xl shadow-2xl space-y-6">
                   <div className="flex items-baseline justify-center gap-3.5">
-                    <span className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight font-sans">৳290</span>
-                    <span className="text-lg sm:text-xl text-ink-400 line-through font-sans">৳5,000</span>
-                    <span className="rounded-xl bg-amber-400 text-ink-950 px-3 py-1 text-xs font-black uppercase tracking-wider font-sans">
-                      94% বিশেষ অফার
-                    </span>
+                    {discountClaimed ? (
+                      <>
+                        <span className="text-4xl sm:text-5xl font-extrabold text-emerald-400 tracking-tight font-sans">৳240</span>
+                        <span className="text-lg sm:text-xl text-ink-400 line-through font-sans">৳290</span>
+                        <span className="rounded-xl bg-emerald-500 text-white px-3 py-1 text-xs font-black uppercase tracking-wider font-sans">
+                          ৳৫০ স্পেশাল ছাড় সক্রিয়
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight font-sans">৳290</span>
+                        <span className="text-lg sm:text-xl text-ink-400 line-through font-sans">৳5,000</span>
+                        <span className="rounded-xl bg-amber-400 text-ink-950 px-3 py-1 text-xs font-black uppercase tracking-wider font-sans">
+                          94% বিশেষ অফার
+                        </span>
+                      </>
+                    )}
                   </div>
 
                   <p className="text-xs sm:text-sm text-ink-300 leading-relaxed">
@@ -336,7 +368,15 @@ export function AiMotionMasterclassPage() {
                   </p>
 
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5">
-                    {pendingOrder && !enrolled ? (
+                    {enrolled ? (
+                      <Link
+                        to="/course/ai-motion/learn"
+                        className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-purple-600 via-brand-500 to-purple-600 px-8 py-4 text-base font-extrabold text-white shadow-xl hover:brightness-110 transition-all cursor-pointer"
+                      >
+                        <Play size={18} fill="currentColor" />
+                        <span>কোর্স ক্লাসরুমে যান (ক্লাস দেখুন 🎬)</span>
+                      </Link>
+                    ) : pendingOrder ? (
                       <button
                         type="button"
                         onClick={handleEnrollNow}
@@ -351,7 +391,7 @@ export function AiMotionMasterclassPage() {
                         onClick={handleEnrollNow}
                         className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-brand-600 via-brand-500 to-accent-600 px-8 py-4 text-base font-extrabold text-white shadow-xl hover:opacity-95 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
                       >
-                        <span>কোর্সটি কিনুন (৳290)</span>
+                        <span>{discountClaimed ? 'কোর্সটি কিনুন (৳240 • ৳50 ছাড়)' : 'কোর্সটি কিনুন (৳290)'}</span>
                         <ArrowRight size={18} />
                       </button>
                     )}
@@ -362,7 +402,7 @@ export function AiMotionMasterclassPage() {
                       className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl border border-white/20 bg-white/5 px-6 py-4 text-sm sm:text-base font-bold text-white hover:bg-white/10 transition-colors cursor-pointer"
                     >
                       <Play size={16} className="fill-white" />
-                      <span>ফ্রি ডেমো দেখুন</span>
+                      <span>{enrolled ? 'ক্লাস লিস্ট দেখুন' : 'ফ্রি ডেমো দেখুন'}</span>
                     </button>
                   </div>
 
@@ -500,7 +540,7 @@ export function AiMotionMasterclassPage() {
                               ) : enrolled ? (
                                 <button
                                   type="button"
-                                  onClick={() => setViewMode('learning')}
+                                  onClick={() => navigate('/course/ai-motion/learn')}
                                   className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600/30 border border-emerald-500/50 px-3 py-1.5 text-xs font-bold text-emerald-300 hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer"
                                 >
                                   <Play size={12} className="fill-current" />
@@ -836,10 +876,18 @@ export function AiMotionMasterclassPage() {
                   </button>
                 </div>
               </div>
-
             </div>
           </div>
         )}
+
+        {/* 10-Second Special Discount Popup Modal */}
+        <CourseDiscountModal
+          isOpen={showDiscountModal}
+          onClose={handleCloseDiscount}
+          onClaim={handleClaimDiscount}
+          originalPrice={290}
+          discountAmount={50}
+        />
 
       </div>
     </Layout>

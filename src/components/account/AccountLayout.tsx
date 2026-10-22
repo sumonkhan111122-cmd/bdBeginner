@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { Navigate, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { User, Shield, LogOut, ChevronRight, LayoutDashboard, Package, DownloadCloud, Heart, Star, Crown } from 'lucide-react';
+import { User, Shield, LogOut, ChevronRight, LayoutDashboard, Package, DownloadCloud, Heart, Star, Crown, GraduationCap } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { useMembership } from '@/context/MembershipContext';
@@ -27,6 +27,7 @@ export function AccountLayout({ children }: AccountLayoutProps) {
 
   const navItems = [
     { label: 'Overview', to: '/account', icon: LayoutDashboard, exact: true },
+    { label: 'My Courses (আমার কোর্স)', to: '/account/courses', icon: GraduationCap, exact: false },
     { label: 'Orders', to: '/account/orders', icon: Package, exact: false },
     { label: 'Downloads', to: '/account/downloads', icon: DownloadCloud, exact: false },
     { label: 'Wishlist', to: '/account/wishlist', icon: Heart, exact: false },
@@ -37,9 +38,9 @@ export function AccountLayout({ children }: AccountLayoutProps) {
 
   return (
     <Layout>
-      <div className="bg-ink-50/50 min-h-screen pb-16 pt-8">
-        <div className="container-page">
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
+      <div className="bg-ink-50/50 min-h-screen pb-16 pt-8 w-full overflow-x-hidden">
+        <div className="container-page w-full max-w-full sm:max-w-[1280px]">
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-start w-full min-w-0">
             
             {/* Sidebar Navigation */}
             {session && (
@@ -124,13 +125,13 @@ export function AccountLayout({ children }: AccountLayoutProps) {
             )}
 
             {/* Main Content Area */}
-            <main className="flex-1 w-full max-w-4xl">
+            <main className="flex-1 w-full min-w-0 max-w-4xl">
               {loading ? (
                 <div className="flex h-64 items-center justify-center rounded-2xl border border-ink-100 bg-white shadow-soft">
                   <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-600/30 border-t-brand-600" />
                 </div>
               ) : session ? (
-                <div className="animate-fade-in">
+                <div className="animate-fade-in w-full min-w-0">
                   {children}
                 </div>
               ) : null}

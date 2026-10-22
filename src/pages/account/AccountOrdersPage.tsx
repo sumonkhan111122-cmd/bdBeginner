@@ -54,11 +54,85 @@ export function AccountOrdersPage() {
       ) : orders.length === 0 ? (
         <div className="mt-6 flex min-h-64 flex-col items-center justify-center rounded-2xl border border-dashed border-ink-200 bg-white p-8 text-center shadow-soft"><Package size={30} className="text-ink-300" /><h2 className="mt-4 font-display text-lg font-bold text-ink-900">You haven't placed any orders yet.</h2><Link to="/products" className="mt-4 text-sm font-semibold text-brand-600 hover:underline">Shop Products</Link></div>
       ) : (
-        <div className="mt-6 overflow-x-auto rounded-2xl border border-ink-100 bg-white shadow-soft">
-          <table className="w-full min-w-[760px] text-sm">
-            <thead><tr className="border-b border-ink-100 bg-ink-50/60 text-left text-xs font-semibold uppercase tracking-wider text-ink-400"><th className="px-5 py-3">Order</th><th className="px-5 py-3">Date</th><th className="px-5 py-3">Items</th><th className="px-5 py-3">Total</th><th className="px-5 py-3">Order Status</th><th className="px-5 py-3">Payment</th><th className="px-5 py-3 text-right">View</th></tr></thead>
-            <tbody className="divide-y divide-ink-50">{paginatedOrders.map((order) => <tr key={order.id} className="hover:bg-ink-50/50"><td className="px-5 py-4 font-semibold text-ink-900">{order.order_number}</td><td className="px-5 py-4 text-ink-500">{formatOrderDate(order.created_at)}</td><td className="px-5 py-4 text-ink-600">{getOrderItemCount(order)}</td><td className="px-5 py-4 font-semibold text-ink-800">{order.currency_code === siteSettings.currency_code ? formatCurrency(Number(order.total), siteSettings) : `${order.currency_code} ${Number(order.total).toLocaleString()}`}</td><td className="px-5 py-4"><OrderStatusBadge value={getOrderStatus(order)} /></td><td className="px-5 py-4"><OrderStatusBadge value={order.payment_status} /></td><td className="px-5 py-4 text-right"><Link to={`/account/orders/${order.id}`} className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-ink-200 px-3 font-semibold text-ink-700 hover:bg-ink-50"><Eye size={14} /> View</Link></td></tr>)}</tbody>
-          </table>
+        <div className="mt-6 space-y-4">
+          {/* Mobile Orders Card View (md:hidden) */}
+          <div className="md:hidden space-y-3">
+            {paginatedOrders.map((order) => (
+              <div key={order.id} className="rounded-2xl border border-ink-100 bg-white p-4 shadow-soft">
+                <div className="flex items-center justify-between pb-3 border-b border-ink-50">
+                  <div>
+                    <span className="font-display font-bold text-ink-900 text-sm">
+                      {order.order_number}
+                    </span>
+                    <p className="text-[11px] text-ink-400 mt-0.5">
+                      {formatOrderDate(order.created_at)}
+                    </p>
+                  </div>
+                  <Link
+                    to={`/account/orders/${order.id}`}
+                    className="inline-flex h-8 items-center gap-1 rounded-lg border border-ink-200 bg-white px-2.5 text-xs font-semibold text-ink-700 hover:bg-ink-50"
+                  >
+                    <Eye size={13} />
+                    <span>View</span>
+                  </Link>
+                </div>
+
+                <div className="pt-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <OrderStatusBadge value={getOrderStatus(order)} />
+                    <OrderStatusBadge value={order.payment_status} />
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[11px] text-ink-400 block">{getOrderItemCount(order)} items</span>
+                    <span className="font-bold text-ink-900 text-sm">
+                      {order.currency_code === siteSettings.currency_code
+                        ? formatCurrency(Number(order.total), siteSettings)
+                        : `${order.currency_code} ${Number(order.total).toLocaleString()}`}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table View (hidden md:block) */}
+          <div className="hidden md:block overflow-x-auto rounded-2xl border border-ink-100 bg-white shadow-soft">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-ink-100 bg-ink-50/60 text-left text-xs font-semibold uppercase tracking-wider text-ink-400">
+                  <th className="px-5 py-3">Order</th>
+                  <th className="px-5 py-3">Date</th>
+                  <th className="px-5 py-3">Items</th>
+                  <th className="px-5 py-3">Total</th>
+                  <th className="px-5 py-3">Order Status</th>
+                  <th className="px-5 py-3">Payment</th>
+                  <th className="px-5 py-3 text-right">View</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-ink-50">
+                {paginatedOrders.map((order) => (
+                  <tr key={order.id} className="hover:bg-ink-50/50">
+                    <td className="px-5 py-4 font-semibold text-ink-900">{order.order_number}</td>
+                    <td className="px-5 py-4 text-ink-500">{formatOrderDate(order.created_at)}</td>
+                    <td className="px-5 py-4 text-ink-600">{getOrderItemCount(order)}</td>
+                    <td className="px-5 py-4 font-semibold text-ink-800">
+                      {order.currency_code === siteSettings.currency_code
+                        ? formatCurrency(Number(order.total), siteSettings)
+                        : `${order.currency_code} ${Number(order.total).toLocaleString()}`}
+                    </td>
+                    <td className="px-5 py-4"><OrderStatusBadge value={getOrderStatus(order)} /></td>
+                    <td className="px-5 py-4"><OrderStatusBadge value={order.payment_status} /></td>
+                    <td className="px-5 py-4 text-right">
+                      <Link to={`/account/orders/${order.id}`} className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-ink-200 px-3 font-semibold text-ink-700 hover:bg-ink-50">
+                        <Eye size={14} /> View
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}

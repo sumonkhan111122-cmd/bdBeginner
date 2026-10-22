@@ -236,7 +236,7 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
     }
 
     const { error: resetError } = await sb.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
+      redirectTo: `${window.location.origin}/reset-password`,
     });
 
     if (resetError) {

@@ -249,14 +249,18 @@ export function Header() {
               
               {session && (
                 <div className="absolute right-0 top-full pt-1 opacity-0 invisible translate-y-1 transition-all duration-200 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 z-50">
-                  <div className="w-48 rounded-xl border border-ink-100 bg-white p-2 shadow-soft">
-                    <Link to="/account" className="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-ink-700 hover:bg-ink-50 hover:text-brand-600">Overview</Link>
-                    <Link to="/account/profile" className="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-ink-700 hover:bg-ink-50 hover:text-brand-600">Profile Settings</Link>
-                    <Link to="/account/security" className="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-ink-700 hover:bg-ink-50 hover:text-brand-600">Security</Link>
+                  <div className="w-52 rounded-xl border border-ink-100 bg-white p-2 shadow-soft">
+                    <Link to="/account" className="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-ink-700 hover:bg-ink-50 hover:text-brand-600">Overview</Link>
+                    <Link to="/account/courses" className="flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-purple-700 hover:bg-purple-50">My Courses (আমার কোর্স)</Link>
+                    <Link to="/account/orders" className="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-ink-700 hover:bg-ink-50 hover:text-brand-600">My Orders</Link>
+                    <Link to="/account/downloads" className="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-ink-700 hover:bg-ink-50 hover:text-brand-600">Downloads Hub</Link>
+                    <div className="my-1 mx-2 h-px bg-ink-100" />
+                    <Link to="/account/profile" className="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-ink-700 hover:bg-ink-50 hover:text-brand-600">Profile Settings</Link>
+                    <Link to="/account/security" className="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-ink-700 hover:bg-ink-50 hover:text-brand-600">Security</Link>
                     <div className="my-1 mx-2 h-px bg-ink-100" />
                     <button 
                       onClick={() => logout()} 
-                      className="flex w-full items-center rounded-lg px-3 py-2.5 text-sm font-medium text-error-600 hover:bg-error-50 text-left"
+                      className="flex w-full items-center rounded-lg px-3 py-2 text-sm font-medium text-error-600 hover:bg-error-50 text-left cursor-pointer"
                     >
                       Logout
                     </button>

@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Shield, User, Crown, Sparkles, DownloadCloud, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Shield, User, Crown, Sparkles, DownloadCloud, CheckCircle2, Film, Play } from 'lucide-react';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { useMembership } from '@/context/MembershipContext';
 import { AccountLayout } from '@/components/account/AccountLayout';
+import { isCourseEnrolled } from '@/services/courseEnrollment';
+import { AI_MOTION_COURSE } from '@/data/aiMotionCourse';
 
 export function AccountOverviewPage() {
   const { profile, session } = useCustomerAuth();
@@ -89,7 +91,48 @@ export function AccountOverviewPage() {
           </div>
         </div>
 
-        {/* VIP Membership Status or Upgrade Card */}
+        {/* AI MOTION MASTERCLASS COURSE ACCESS WIDGET */}
+        {(isVip || isCourseEnrolled(AI_MOTION_COURSE.id, session?.user?.email)) && (
+          <div className="overflow-hidden rounded-2xl border border-purple-300 bg-gradient-to-r from-purple-950/90 via-ink-900 to-brand-950/90 p-6 text-white shadow-soft">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-purple-600 text-white shadow-md">
+                  <Film size={24} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-purple-500/30 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-purple-300 border border-purple-500/30">
+                      অ্যাক্টিভ কোর্স
+                    </span>
+                    <span className="text-xs text-ink-300">১০টি ক্লাস • আজীবন এক্সেস</span>
+                  </div>
+                  <h2 className="mt-1 font-display text-lg font-bold text-white">
+                    {AI_MOTION_COURSE.title}
+                  </h2>
+                  <p className="mt-1 text-xs text-ink-300">
+                    আপনার কোর্সের ক্লাসরুম ও সমস্ত প্রজেক্ট সোর্স ফাইল প্রস্তুত আছে।
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <Link
+                  to="/course/ai-motion/learn"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-purple-600 hover:bg-purple-500 px-5 py-3 text-sm font-bold text-white shadow-lg transition-colors shrink-0"
+                >
+                  <Play size={16} fill="currentColor" />
+                  <span>ক্লাস শুরু করুন 🎬</span>
+                </Link>
+                <Link
+                  to="/account/courses"
+                  className="inline-flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 px-4 py-3 text-xs font-semibold text-white transition-colors"
+                >
+                  কোর্স ড্যাশবোর্ড
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
         {isVip ? (
           <div className="overflow-hidden rounded-2xl border-2 border-amber-400/70 bg-gradient-to-br from-amber-500/15 via-yellow-500/10 to-amber-600/15 p-6 shadow-soft">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

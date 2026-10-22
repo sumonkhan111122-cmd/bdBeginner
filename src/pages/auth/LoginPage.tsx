@@ -92,6 +92,15 @@ export function LoginPage() {
   // If already logged in, redirect to safe return URL or account
   useEffect(() => {
     if (!loading && session) {
+      if (
+        location.hash.includes('type=recovery') ||
+        location.search.includes('type=recovery') ||
+        window.location.hash.includes('type=recovery') ||
+        window.location.search.includes('type=recovery')
+      ) {
+        navigate(`/reset-password${window.location.search}${window.location.hash}`, { replace: true });
+        return;
+      }
       let returnTo = location.state?.from?.pathname || '/account';
       if (typeof returnTo !== 'string' || !returnTo.startsWith('/')) {
         returnTo = '/account';
