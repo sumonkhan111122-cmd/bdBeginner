@@ -78,12 +78,12 @@ const CATEGORY_SLUG_MAP: Record<string, string> = {
 
 const QUICK_CATEGORY_PILLS = [
   { label: 'সব প্রোডাক্ট', slug: 'all', categoryName: null, icon: LayoutGrid },
-  { label: 'WordPress Themes', slug: 'wordpress', categoryName: 'WordPress Themes', icon: Palette },
-  { label: 'WordPress Plugins', slug: 'plugins', categoryName: 'WordPress Plugins', icon: Puzzle },
+  { label: 'WordPress Themes (ফ্রি)', slug: 'wordpress', categoryName: 'WordPress Themes', icon: Palette },
+  { label: 'WordPress Plugins (ফ্রি)', slug: 'plugins', categoryName: 'WordPress Plugins', icon: Puzzle },
+  { label: 'PHP Scripts (ফ্রি)', slug: 'scripts', categoryName: 'PHP Scripts & Code', icon: Code2 },
   { label: 'Software & Tools', slug: 'software', categoryName: 'Software', icon: Laptop },
   { label: 'Digital Courses', slug: 'courses', categoryName: 'Courses', icon: GraduationCap },
   { label: 'Digital Resources', slug: 'digital-resources', categoryName: 'Digital Resources', icon: Folder },
-  { label: 'PHP Scripts', slug: 'scripts', categoryName: 'PHP Scripts & Code', icon: Code2 },
   { label: 'AI Tools', slug: 'ai-tools', categoryName: 'AI Tools', icon: Bot },
   { label: 'স্পেশাল ডিল', slug: 'deals', categoryName: '__deals__', icon: Tag },
 ];
@@ -361,16 +361,19 @@ export function ProductsPage({ initialCategory, dealsOnly = false }: ProductsPag
     }
     if (selectedCategories.length === 1) {
       const cat = selectedCategories[0];
+      const isFreeCat = cat === 'WordPress Themes' || cat === 'WordPress Plugins' || cat === 'PHP Scripts & Code';
       return {
-        eyebrow: 'Category',
-        title: cat,
-        description: `Explore our collection of authentic ${cat}. Instant download, clean files, and regular updates.`,
+        eyebrow: isFreeCat ? '100% Free Downloads' : 'Category',
+        title: isFreeCat ? `${cat} (সবার জন্য ১০০% ফ্রি)` : cat,
+        description: isFreeCat
+          ? `bdBeginner-এ সমস্ত ${cat} সবার জন্য সম্পূর্ণ উন্মুক্ত ও ফ্রি! কোনো পেমেন্ট বা সাবস্ক্রিপশন ছাড়াই সরাসরি ডাউনলোড করুন।`
+          : `Explore our collection of authentic ${cat}. Instant download, clean files, and regular updates.`,
       };
     }
     return {
       eyebrow: 'Digital Marketplace',
       title: 'Explore All Digital Products',
-      description: 'Browse WordPress themes, plugins, software, AI tools, courses, and digital resources — each with instant download and verified access.',
+      description: 'ওয়ার্ডপ্রেস থিম, প্লাগইন ও পিএইচপি স্ক্রিপ্ট সবার জন্য সম্পূর্ণ ফ্রি! এর পাশাপাশি প্রিমিয়াম ডিজিটাল কোর্স, সফটওয়্যার ও আধুনিক সলিউশন অন্বেষণ করুন।',
     };
   }, [isDealsOnly, selectedCategories]);
 

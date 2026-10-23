@@ -10,7 +10,7 @@ export const products: Product[] = [
       'Nova is a complete multi-vendor WordPress theme designed for building online marketplaces. It includes vendor dashboards, product management, commission settings, and WooCommerce integration. The theme is built with performance and SEO best practices, making it suitable for stores of any size.',
     category: 'WordPress',
     subcategory: 'Themes',
-    price: 1290,
+    price: 0,
     compareAtPrice: 1790,
     previousPrice: 1790,
     featured: true,

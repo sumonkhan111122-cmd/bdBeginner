@@ -21,6 +21,7 @@ import {
   GraduationCap,
   FileCode,
   Film,
+  Download,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { AnnouncementBar } from './AnnouncementBar';
@@ -34,11 +35,11 @@ import { safeHttpUrl } from '@/lib/urls';
 
 const exploreLinks = [
   { label: 'AI মোশন মাস্টারক্লাস (৳290)', to: '/course/ai-motion', description: 'Advanced Agentic Video Editing', icon: Film },
-  { label: 'WordPress Themes', to: '/wordpress', description: 'Curated premium WP themes', icon: Layers },
-  { label: 'WordPress Plugins', to: '/plugins', description: 'GPL plugins & dev tools', icon: Sparkles },
+  { label: 'WordPress Themes (ফ্রি)', to: '/wordpress', description: '৩,০০০+ প্রিমিয়াম থিম (১০০% ফ্রি)', icon: Layers },
+  { label: 'WordPress Plugins (ফ্রি)', to: '/plugins', description: '৩০০+ এসেনশিয়াল প্লাগইন (১০০% ফ্রি)', icon: Sparkles },
   { label: 'Software & Tools', to: '/products?category=software', description: 'Productivity & utilities', icon: Laptop },
   { label: 'Digital Courses', to: '/products?category=courses', description: 'Practical skills & training', icon: GraduationCap },
-  { label: 'PHP Scripts & Code', to: '/products?category=scripts', description: 'Web apps & source codes', icon: FileCode },
+  { label: 'PHP Scripts & Code (ফ্রি)', to: '/products?category=scripts', description: 'পিএইচপি স্ক্রিপ্ট ও ফুল কোড (১০০% ফ্রি)', icon: FileCode },
   { label: 'Digital Resources', to: '/resources', description: 'Templates, scripts & assets', icon: FolderArchive },
   { label: 'Special Deals', to: '/deals', description: 'Discounts & limited-time offers', icon: Tag },
   { label: 'All Categories', to: '/categories', description: 'Browse complete catalog', icon: Grid3x3 },
@@ -141,6 +142,24 @@ export function Header() {
               }
             >
               Services
+            </NavLink>
+
+            {/* Free Themes & Plugins - Marketing Hook */}
+            <NavLink
+              to="/wordpress"
+              className={({ isActive }) =>
+                `inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-bold transition-all shadow-xs ${
+                  isActive
+                    ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-500'
+                    : 'bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-950 border border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400'
+                }`
+              }
+            >
+              <Download size={13} className="text-emerald-600 shrink-0 stroke-[2.5]" />
+              <span>ফ্রি থিম ও প্লাগইন</span>
+              <span className="rounded-md bg-emerald-600 px-1 py-0.2 text-[9px] font-extrabold uppercase tracking-wider text-white">
+                FREE
+              </span>
             </NavLink>
 
             {/* VIP Membership - Always visible, never breaks */}
@@ -412,6 +431,27 @@ export function Header() {
                 >
                   Services
                   <ChevronRight size={18} className="text-ink-300" />
+                </NavLink>
+
+                {/* Free Themes & Plugins in mobile */}
+                <NavLink
+                  to="/wordpress"
+                  onClick={() => setMobileOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center justify-between rounded-xl p-3.5 text-base font-bold transition-all shadow-xs ${
+                      isActive
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-950 border border-emerald-300'
+                    }`
+                  }
+                >
+                  <span className="flex items-center gap-2">
+                    <Download size={18} className="text-emerald-600 stroke-[2.5]" />
+                    <span>ফ্রি থিম ও প্লাগইন</span>
+                  </span>
+                  <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-extrabold text-white">
+                    100% FREE
+                  </span>
                 </NavLink>
 
                 {/* VIP Membership in mobile */}

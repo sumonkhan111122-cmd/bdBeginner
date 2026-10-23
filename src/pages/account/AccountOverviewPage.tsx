@@ -186,7 +186,7 @@ export function AccountOverviewPage() {
                   </p>
                   <div className="mt-3 flex flex-wrap gap-4 text-xs font-semibold text-ink-700">
                     <span className="flex items-center gap-1.5">
-                      <CheckCircle2 size={14} className="text-emerald-600" /> ১ মাস WP: ৳৪৯৯
+                      <CheckCircle2 size={14} className="text-emerald-600" /> ১০ দিন পেইড পাস: ৳৪৯৯
                     </span>
                     <span className="flex items-center gap-1.5">
                       <CheckCircle2 size={14} className="text-emerald-600" /> ১ মাস অল-এক্সেস: ৳৮৯৯

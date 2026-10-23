@@ -42,6 +42,7 @@ import { useSiteSettings } from '@/context/SiteSettingsContext';
 import { applySeo, applyStructuredData, formatSeoTitle } from '@/lib/seo';
 import { trackViewContent } from '@/lib/tracking';
 import { useCurrencyFormatter } from '@/hooks/useCurrency';
+import { isProductFree, claimFreeDownload } from '@/services/freeDownloads';
 import type { DeliveryType, Product } from '@/types';
 
 const deliveryIconMap: Record<DeliveryType, typeof Download> = {
@@ -226,6 +227,51 @@ function ProductDetailPage() {
     }
   };
 
+  const isFree = isProductFree(product) || product?.price === 0;
+  const [freeDownloading, setFreeDownloading] = useState(false);
+  const [freeNotice, setFreeNotice] = useState<{
+    type: 'success' | 'error';
+    message: string;
+    downloadUrl?: string;
+  } | null>(null);
+
+  const handleFreeDownload = async () => {
+    if (!product) return;
+    setFreeDownloading(true);
+    setFreeNotice(null);
+    try {
+      const res = await claimFreeDownload({
+        id: product.id,
+        name: product.name,
+        slug: product.slug,
+        price: product.price,
+        category: product.category,
+      });
+      if (res.success && res.url) {
+        setFreeNotice({
+          type: 'success',
+          message: 'ফাইল ডাউনলোড প্রস্তুত! যদি নতুন ট্যাব নিজে থেকে ওপেন না হয়, নিচের বাটনে ক্লিক করুন।',
+          downloadUrl: res.url,
+        });
+        if (res.url.startsWith('http')) {
+          window.open(res.url, '_blank', 'noopener,noreferrer');
+        }
+      } else {
+        setFreeNotice({
+          type: 'error',
+          message: res.error || 'ডাউনলোড লিঙ্ক তৈরি করতে ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।',
+        });
+      }
+    } catch (err: any) {
+      setFreeNotice({
+        type: 'error',
+        message: err?.message || 'ডাউনলোডে সমস্যা দেখা দিয়েছে।',
+      });
+    } finally {
+      setFreeDownloading(false);
+    }
+  };
+
   const { addRecentlyViewed } = useDiscovery();
 
   useEffect(() => {
@@ -401,7 +447,14 @@ function ProductDetailPage() {
               <span className="text-sm font-semibold uppercase tracking-wider text-brand-600">
                 {product.category}
               </span>
-              {product.badge && <Badge variant={product.badge} />}
+              {isFree ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1 text-xs font-extrabold uppercase tracking-wider text-white shadow-sm">
+                  <Download size={13} strokeWidth={2.5} />
+                  100% Free
+                </span>
+              ) : product.badge ? (
+                <Badge variant={product.badge} />
+              ) : null}
             </div>
 
             <h1 className="mt-3 font-display text-2xl font-bold leading-tight text-ink-900 sm:text-3xl text-balance">
@@ -420,148 +473,265 @@ function ProductDetailPage() {
               </span>
             </div>
 
-            {/* VIP Member Download Box */}
-            {isVip && !isMembershipProduct && (
-              <div className="mt-6 rounded-2xl border-2 border-amber-400/60 bg-gradient-to-br from-amber-500/15 via-yellow-500/10 to-amber-600/15 p-5 shadow-lg shadow-amber-500/10">
+            {isFree ? (
+              /* 100% FREE DIRECT DOWNLOAD PANEL */
+              <div className="mt-6 rounded-2xl border-2 border-emerald-500/50 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-emerald-600/10 p-5 sm:p-6 shadow-lg shadow-emerald-500/10">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 text-ink-950 shadow-sm">
-                    <Crown size={20} strokeWidth={2.2} />
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md">
+                    <Download size={24} strokeWidth={2.2} />
                   </span>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-display text-sm font-bold text-ink-900">VIP মেম্বারশিপ সক্রিয়</span>
-                      <span className="rounded-full bg-amber-400/30 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-                        {vipStatus.planName || 'VIP All-Access'}
+                      <span className="font-display text-base font-bold text-ink-900">
+                        সবার জন্য ১০০% ফ্রি ডাউনলোড
+                      </span>
+                      <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white">
+                        NO PAYMENT
                       </span>
                     </div>
-                    <p className="mt-0.5 text-xs text-ink-600">
-                      আপনার VIP মেম্বারশিপের অধীনে এই ফাইলটি সম্পূর্ণ ফ্রিতে আনলক করা হয়েছে।
+                    <p className="mt-1 text-xs sm:text-sm text-ink-600 leading-relaxed">
+                      এই ফাইলটি bdBeginner-এ সবার জন্য সম্পূর্ণ উন্মুক্ত। কোনো পেমেন্ট বা একাউন্ট ছাড়াই সরাসরি ডাউনলোড করুন।
                     </p>
-                    {dailyQuota.limit !== null ? (
-                      <p className="mt-1 text-[11px] font-semibold text-brand-700">
-                        আজকের ডাউনলোড: {dailyQuota.used} / {dailyQuota.limit} ফাইল ব্যবহৃত (বাকি {dailyQuota.remaining}টি)
-                      </p>
-                    ) : (
-                      <p className="mt-1 text-[11px] font-bold text-emerald-700">
-                        দৈনিক ডাউনলোড: আনলিমিটেড (সীমাহীন)
-                      </p>
-                    )}
                   </div>
                 </div>
 
-                <div className="mt-4">
+                <div className="mt-5">
                   <button
-                    onClick={handleVipDownload}
-                    disabled={vipDownloading}
-                    className="w-full flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-xl font-bold text-ink-950 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 hover:brightness-105 active:scale-[0.99] shadow-md shadow-amber-500/25 transition-all disabled:opacity-70"
+                    onClick={handleFreeDownload}
+                    disabled={freeDownloading}
+                    className="w-full flex items-center justify-center gap-3 py-4 px-6 rounded-xl font-bold text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:brightness-105 active:scale-[0.99] shadow-lg shadow-emerald-600/25 transition-all disabled:opacity-70 text-base"
                   >
-                    {vipDownloading ? (
+                    {freeDownloading ? (
                       <>
-                        <Loader2 size={18} className="animate-spin" />
+                        <Loader2 size={20} className="animate-spin" />
                         ডাউনলোড প্রস্তুত হচ্ছে...
                       </>
                     ) : (
                       <>
-                        <Download size={18} className="stroke-[2.5]" />
-                        ফ্রি VIP ডাউনলোড করুন
+                        <Download size={20} className="stroke-[2.5]" />
+                        সরাসরি ফ্রি ডাউনলোড করুন
                       </>
                     )}
                   </button>
                 </div>
 
-                {vipNotice && (
+                {freeNotice && (
                   <div
-                    className={`mt-3 rounded-lg p-3 text-xs leading-relaxed ${
-                      vipNotice.type === 'success'
-                        ? 'border border-emerald-200 bg-emerald-50 text-emerald-800'
-                        : 'border border-rose-200 bg-rose-50 text-rose-800'
+                    className={`mt-4 rounded-xl p-3.5 text-xs sm:text-sm leading-relaxed ${
+                      freeNotice.type === 'success'
+                        ? 'border border-emerald-200 bg-emerald-50 text-emerald-900'
+                        : 'border border-rose-200 bg-rose-50 text-rose-900'
                     }`}
                   >
-                    <div>{vipNotice.message}</div>
-                    {vipNotice.downloadUrl && (
-                      <div className="mt-2.5">
+                    <div>{freeNotice.message}</div>
+                    {freeNotice.downloadUrl && (
+                      <div className="mt-3">
                         <a
-                          href={vipNotice.downloadUrl}
+                          href={freeNotice.downloadUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-2 font-medium text-white shadow-sm hover:bg-emerald-700 transition-colors"
+                          className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 font-bold text-white shadow-sm hover:bg-emerald-700 transition-colors"
                         >
-                          <Download size={14} className="stroke-[2.5]" />
+                          <Download size={15} className="stroke-[2.5]" />
                           সরাসরি ফাইল ডাউনলোড / লিঙ্ক ওপেন করুন
                         </a>
                       </div>
                     )}
                   </div>
                 )}
-              </div>
-            )}
 
-            {/* Price + CTAs */}
-            <div className="mt-6 rounded-2xl border border-ink-100 bg-ink-50/50 p-5">
-              <PriceDisplay
-                price={product.price}
-                previousPrice={product.compareAtPrice}
-                size="lg"
-              />
+                <div className="mt-4 flex items-center justify-end">
+                  <WishlistButton productId={product.id} variant="labeled" />
+                </div>
 
-              <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                <Button
-                  onClick={handleAddToCart}
-                  variant={added ? 'subtle' : 'primary'}
-                  size="lg"
-                  fullWidth
-                >
-                  {added ? (
-                    <>
-                      <Check size={18} />
-                      Added to Cart
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingCart size={18} />
-                      Add to Cart
-                    </>
-                  )}
-                </Button>
-                <Button onClick={handleBuyNow} variant="outline" size="lg" fullWidth>
-                  <Zap size={18} />
-                  Buy Now
-                </Button>
-                <WishlistButton productId={product.id} variant="labeled" className="hidden sm:flex" />
-              </div>
-              <div className="mt-3 sm:hidden">
-                <WishlistButton productId={product.id} variant="labeled" className="w-full justify-center" />
-              </div>
-
-              {/* VIP Membership Upsell Callout */}
-              {!isVip && !isMembershipProduct && (
-                <div className="mt-4 rounded-xl border border-amber-300/60 bg-gradient-to-br from-amber-500/10 via-amber-400/5 to-yellow-500/10 p-4">
+                {/* Cross-Sell & Marketing for Paid Products */}
+                <div className="mt-6 border-t border-emerald-200/60 pt-5">
                   <div className="flex items-start gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 text-ink-950 shadow-sm">
-                      <Crown size={18} strokeWidth={2.2} />
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-600 to-purple-600 text-white shadow-sm">
+                      <Sparkles size={20} />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-display text-xs font-bold uppercase tracking-wider text-amber-900">
-                          সব ৩,০০০+ প্রোডাক্ট ফ্রিতে চান?
-                        </span>
-                        <span className="rounded-full bg-amber-400/30 px-1.5 py-0.5 text-[9px] font-bold text-amber-800">
-                          BEST VALUE
-                        </span>
-                      </div>
-                      <p className="mt-1 text-xs leading-relaxed text-ink-700">
-                        প্রতিটি আলাদা না কিনে মাত্র <strong>৳৪৯৯</strong> থেকে VIP মেম্বারশিপ নিয়ে সাইটের প্রোডাক্ট ফ্রিতে ডাউনলোড করুন! সারাজীবনের জন্য লাইফটাইম অ্যাক্সেস মাত্র <strong>৳১,১৯৯</strong>।
+                    <div className="min-w-0 flex-1">
+                      <span className="inline-block rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold text-brand-800 uppercase tracking-wider">
+                        প্রিমিয়াম ডিজিটাল কালেকশন
+                      </span>
+                      <h4 className="mt-1 font-display text-sm font-bold text-ink-900">
+                        আমাদের পেইড কোর্স ও সফটওয়্যারগুলোও ঘুরে দেখুন!
+                      </h4>
+                      <p className="mt-1 text-xs leading-relaxed text-ink-600">
+                        ফ্রি থিম ও প্লাগইনের পাশাপাশি রয়েছে আধুনিক <strong>AI মোশন মাস্টারক্লাস (৳২৯০)</strong>, ডিজিটাল সফটওয়্যার ও টুলস। এছাড়া মাত্র <strong>৳৪৯৯</strong>-এ ১০ দিন অথবা <strong>৳১,১৯৯</strong>-এ আজীবন ভিআইপি মেম্বারশিপ নিয়ে সমস্ত পেইড প্রোডাক্ট আনলক করতে পারবেন।
                       </p>
-                      <Link
-                        to="/membership"
-                        className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 hover:text-amber-900 hover:underline"
-                      >
-                        VIP মেম্বারশিপ প্ল্যান দেখুন <ArrowRight size={13} />
-                      </Link>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <Link
+                          to="/course/ai-motion"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-purple-700 transition-colors"
+                        >
+                          AI মোশন ক্লাস (৳২৯০) <ArrowRight size={12} />
+                        </Link>
+                        <Link
+                          to="/membership"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-900 hover:bg-amber-100 transition-colors"
+                        >
+                          <Crown size={13} className="text-amber-600" />
+                          ভিআইপি মেম্বারশিপ প্ল্যান
+                        </Link>
+                        <Link
+                          to="/products?category=software"
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:underline"
+                        >
+                          সফটওয়্যার সমূহ <ArrowRight size={11} />
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
+            ) : (
+              <>
+                {/* VIP Member Download Box */}
+                {isVip && !isMembershipProduct && (
+                  <div className="mt-6 rounded-2xl border-2 border-amber-400/60 bg-gradient-to-br from-amber-500/15 via-yellow-500/10 to-amber-600/15 p-5 shadow-lg shadow-amber-500/10">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 text-ink-950 shadow-sm">
+                        <Crown size={20} strokeWidth={2.2} />
+                      </span>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-display text-sm font-bold text-ink-900">VIP মেম্বারশিপ সক্রিয়</span>
+                          <span className="rounded-full bg-amber-400/30 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                            {vipStatus.planName || 'VIP All-Access'}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 text-xs text-ink-600">
+                          আপনার VIP মেম্বারশিপের অধীনে এই ফাইলটি সম্পূর্ণ ফ্রিতে আনলক করা হয়েছে।
+                        </p>
+                        {dailyQuota.limit !== null ? (
+                          <p className="mt-1 text-[11px] font-semibold text-brand-700">
+                            আজকের ডাউনলোড: {dailyQuota.used} / {dailyQuota.limit} ফাইল ব্যবহৃত (বাকি {dailyQuota.remaining}টি)
+                          </p>
+                        ) : (
+                          <p className="mt-1 text-[11px] font-bold text-emerald-700">
+                            দৈনিক ডাউনলোড: আনলিমিটেড (সীমাহীন)
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <button
+                        onClick={handleVipDownload}
+                        disabled={vipDownloading}
+                        className="w-full flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-xl font-bold text-ink-950 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 hover:brightness-105 active:scale-[0.99] shadow-md shadow-amber-500/25 transition-all disabled:opacity-70"
+                      >
+                        {vipDownloading ? (
+                          <>
+                            <Loader2 size={18} className="animate-spin" />
+                            ডাউনলোড প্রস্তুত হচ্ছে...
+                          </>
+                        ) : (
+                          <>
+                            <Download size={18} className="stroke-[2.5]" />
+                            ফ্রি VIP ডাউনলোড করুন
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {vipNotice && (
+                      <div
+                        className={`mt-3 rounded-lg p-3 text-xs leading-relaxed ${
+                          vipNotice.type === 'success'
+                            ? 'border border-emerald-200 bg-emerald-50 text-emerald-800'
+                            : 'border border-rose-200 bg-rose-50 text-rose-800'
+                        }`}
+                      >
+                        <div>{vipNotice.message}</div>
+                        {vipNotice.downloadUrl && (
+                          <div className="mt-2.5">
+                            <a
+                              href={vipNotice.downloadUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-2 font-medium text-white shadow-sm hover:bg-emerald-700 transition-colors"
+                            >
+                              <Download size={14} className="stroke-[2.5]" />
+                              সরাসরি ফাইল ডাউনলোড / লিঙ্ক ওপেন করুন
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Price + CTAs */}
+                <div className="mt-6 rounded-2xl border border-ink-100 bg-ink-50/50 p-5">
+                  <PriceDisplay
+                    price={product.price}
+                    previousPrice={product.compareAtPrice}
+                    size="lg"
+                  />
+
+                  <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                    <Button
+                      onClick={handleAddToCart}
+                      variant={added ? 'subtle' : 'primary'}
+                      size="lg"
+                      fullWidth
+                    >
+                      {added ? (
+                        <>
+                          <Check size={18} />
+                          Added to Cart
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart size={18} />
+                          Add to Cart
+                        </>
+                      )}
+                    </Button>
+                    <Button onClick={handleBuyNow} variant="outline" size="lg" fullWidth>
+                      <Zap size={18} />
+                      Buy Now
+                    </Button>
+                    <WishlistButton productId={product.id} variant="labeled" className="hidden sm:flex" />
+                  </div>
+                  <div className="mt-3 sm:hidden">
+                    <WishlistButton productId={product.id} variant="labeled" className="w-full justify-center" />
+                  </div>
+
+                  {/* VIP Membership Upsell Callout */}
+                  {!isVip && !isMembershipProduct && (
+                    <div className="mt-4 rounded-xl border border-amber-300/60 bg-gradient-to-br from-amber-500/10 via-amber-400/5 to-yellow-500/10 p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 text-ink-950 shadow-sm">
+                          <Crown size={18} strokeWidth={2.2} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-display text-xs font-bold uppercase tracking-wider text-amber-900">
+                              সব পেইড প্রোডাক্ট ফ্রিতে চান?
+                            </span>
+                            <span className="rounded-full bg-amber-400/30 px-1.5 py-0.5 text-[9px] font-bold text-amber-800">
+                              BEST VALUE
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs leading-relaxed text-ink-700">
+                            প্রতিটি আলাদা না কিনে মাত্র <strong>৳৪৯৯</strong>-এ ১০ দিন অথবা <strong>৳১,১৯৯</strong>-এ আজীবন VIP মেম্বারশিপ নিয়ে সাইটের সমস্ত পেইড প্রোডাক্ট আনলক করুন! (থিম, প্লাগইন ও স্ক্রিপ্ট সবার জন্য সম্পূর্ণ ফ্রি)।
+                          </p>
+                          <Link
+                            to="/membership"
+                            className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 hover:text-amber-900 hover:underline"
+                          >
+                            VIP মেম্বারশিপ প্ল্যান দেখুন <ArrowRight size={13} />
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
 
               {/* Transparency box */}
               <div className="mt-5 rounded-xl border border-ink-100 bg-white p-4">
@@ -588,7 +758,6 @@ function ProductDetailPage() {
                   ))}
                 </ul>
               </div>
-            </div>
 
             {/* Info panel */}
             <div className="mt-6 rounded-2xl border border-ink-100 bg-white p-5">
@@ -858,40 +1027,70 @@ function ProductDetailPage() {
 
       {/* Sticky mobile CTA */}
       <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-ink-100 bg-white/95 px-4 py-3 backdrop-blur-lg lg:hidden">
-        <div className="flex items-center gap-3">
-          <div className="flex flex-col">
-            <span className="font-display text-lg font-bold text-ink-900">
-              {formatPrice(product.price)}
-            </span>
-            {discountPct > 0 && (
-              <span className="text-xs text-success-600 font-semibold">
-                {discountPct}% off
+        {isFree ? (
+          <div className="flex items-center gap-3">
+            <div className="flex flex-col">
+              <span className="font-display text-sm font-extrabold text-emerald-600">
+                ১০০% ফ্রি
               </span>
-            )}
+              <span className="text-[10px] font-medium text-ink-500">
+                কোনো পেমেন্ট নেই
+              </span>
+            </div>
+            <button
+              onClick={handleFreeDownload}
+              disabled={freeDownloading}
+              className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20 text-sm disabled:opacity-70 transition-colors"
+            >
+              {freeDownloading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  প্রস্তুত হচ্ছে...
+                </>
+              ) : (
+                <>
+                  <Download size={16} className="stroke-[2.5]" />
+                  সরাসরি ফ্রি ডাউনলোড
+                </>
+              )}
+            </button>
           </div>
-          <Button
-            onClick={handleAddToCart}
-            variant={added ? 'subtle' : 'outline'}
-            size="md"
-            className="flex-1"
-          >
-            {added ? (
-              <>
-                <Check size={16} />
-                Added
-              </>
-            ) : (
-              <>
-                <ShoppingCart size={16} />
-                Add
-              </>
-            )}
-          </Button>
-          <Button onClick={handleBuyNow} variant="primary" size="md" className="flex-1">
-            <Zap size={16} />
-            Buy Now
-          </Button>
-        </div>
+        ) : (
+          <div className="flex items-center gap-3">
+            <div className="flex flex-col">
+              <span className="font-display text-lg font-bold text-ink-900">
+                {formatPrice(product.price)}
+              </span>
+              {discountPct > 0 && (
+                <span className="text-xs text-success-600 font-semibold">
+                  {discountPct}% off
+                </span>
+              )}
+            </div>
+            <Button
+              onClick={handleAddToCart}
+              variant={added ? 'subtle' : 'outline'}
+              size="md"
+              className="flex-1"
+            >
+              {added ? (
+                <>
+                  <Check size={16} />
+                  Added
+                </>
+              ) : (
+                <>
+                  <ShoppingCart size={16} />
+                  Add
+                </>
+              )}
+            </Button>
+            <Button onClick={handleBuyNow} variant="primary" size="md" className="flex-1">
+              <Zap size={16} />
+              Buy Now
+            </Button>
+          </div>
+        )}
       </div>
     </Layout>
   );

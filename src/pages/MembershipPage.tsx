@@ -52,16 +52,16 @@ export function MembershipPage() {
 
   const faqs = [
     {
-      q: '১ মাস ওয়ার্ডপ্রেস পাস (৳৪৯৯), ১ মাস অল-এক্সেস (৳৮৯৯) এবং লাইফটাইম (৳১,১৯৯)-এর মধ্যে পার্থক্য কী?',
-      a: '১ মাস ওয়ার্ডপ্রেস পাস (৳৪৯৯) দিয়ে শুধুমাত্র ৩,০০০+ ওয়ার্ডপ্রেস থিম ও প্লাগইন ৩০ দিনের জন্য ডাউনলোড করা যাবে (কোর্স, সফটওয়্যার বা স্ক্রিপ্ট অন্তর্ভুক্ত নয়)। ১ মাস অল-এক্সেস (৳৮৯৯) দিয়ে সাইটের সমস্ত প্রোডাক্ট ডাউনলোড করা যাবে তবে মেয়াদ মাত্র ৩০ দিন। পক্ষান্তরে, লাইফটাইম ভিআইপি পাসে (৳১,১৯৯) মাত্র ৩০০ টাকা বেশিতে আপনি পাবেন সমস্ত থিম, প্লাগইন, কোর্স, সফটওয়্যার, স্ক্রিপ্ট ও এআই টুলস — আজীবন সম্পূর্ণ ফ্রি এবং ভবিষ্যতের সব নতুন আপডেট সহ! তাই এটি সবচেয়ে লাভজনক ও জনপ্রিয় চয়েস।',
+      q: '১০ দিন পেইড পাস (৳৪৯৯), ১ মাস অল-এক্সেস (৳৮৯৯) এবং আজীবন ভিআইপি (৳১,১৯৯)-এর মধ্যে পার্থক্য কী?',
+      a: 'ওয়ার্ডপ্রেস থিম, প্লাগইন ও পিএইচপি স্ক্রিপ্ট এখন bdBeginner-এ সবার জন্য ১০০% ফ্রি ও সরাসরি ডাউনলোডযোগ্য! আর সাইটের সমস্ত পেইড প্রোডাক্ট (ডিজিটাল কোর্স, সফটওয়্যার, এআই টুলস ও এসেট) ডাউনলোড করতে ১০ দিনের জন্য নিতে পারেন ১০ দিন পেইড পাস (৳৪৯৯), অথবা ৩০ দিনের জন্য ১ মাস অল-এক্সেস (৳৮৯৯)। আর সবচেয়ে সেরা ও লাভজনক চয়েস হলো আজীবন ভিআইপি পাস (৳১,১৯৯)—এককালীন মাত্র ১,১৯৯ টাকায় সাইটের বর্তমান ও ভবিষ্যতের সব পেইড প্রোডাক্ট আজীবন আনলিমিটেড ফ্রি!',
     },
     {
       q: 'লাইফটাইম (৳১,১৯৯) প্যাকেজে কি ভবিষ্যতে কোনো রিনিউয়াল বা অতিরিক্ত ফি আছে?',
       a: 'না, কোনো রিনিউয়াল বা মাসিক ফি নেই! ১,১৯৯ টাকা সম্পূর্ণ এককালীন (One-Time) পেমেন্ট। একবার নিলে আজীবন সমস্ত বর্তমান এবং ভবিষ্যতে যুক্ত হওয়া সব নতুন প্রোডাক্ট ও আপডেট সম্পূর্ণ ফ্রিতে ডাউনলোড করতে পারবেন।',
     },
     {
-      q: '১ মাস ওয়ার্ডপ্রেস পাস (৳৪৯৯) নিলে কি কোর্স বা সফটওয়্যার ডাউনলোড করা যাবে?',
-      a: 'না, ৳৪৯৯ প্যাকেজটি শুধুমাত্র ওয়ার্ডপ্রেস থিম ও প্লাগইনের জন্য নির্ধারিত। ভিডিও কোর্স, প্রিমিয়াম সফটওয়্যার, পিএইচপি স্ক্রিপ্ট বা এআই টুলস আনলিমিটেড ডাউনলোড করতে চাইলে আজীবন ভিআইপি পাস অথবা ১ মাস অল-এক্সেস পাস বেছে নিন।',
+      q: '১০ দিন পেইড পাসে (৳৪৯৯) কী কী সুবিধা পাব?',
+      a: '১০ দিন পেইড পাসে সাইটের সমস্ত পেইড প্রিমিয়াম প্রোডাক্ট (ডিজিটাল কোর্স, সফটওয়্যার, এআই টুলস ও এসেট) দৈনিক সর্বোচ্চ ১০টি ফাইল পর্যন্ত টানা ১০ দিন সম্পূর্ণ ফ্রিতে ডাউনলোড করতে পারবেন। উল্লেখ্য, সমস্ত ওয়ার্ডপ্রেস থিম, প্লাগইন ও পিএইচপি স্ক্রিপ্ট কোনো মেম্বারশিপ বা পেমেন্ট ছাড়াই সবার জন্য চিরতরে সম্পূর্ণ ফ্রি!',
     },
     {
       q: 'পেমেন্ট কিভাবে করতে হবে এবং একাউন্ট কখন এক্টিভ হবে?',
@@ -123,7 +123,7 @@ export function MembershipPage() {
           </h1>
 
           <p className="mt-5 text-base sm:text-lg text-ink-200 max-w-2xl mx-auto leading-relaxed">
-            ৩,০০০+ প্রিমিয়াম ওয়ার্ডপ্রেস থিম, প্লাগইন, পিএইচপি স্ক্রিপ্ট ও সফটওয়্যার। প্রতিটি ফাইল আলাদা আলাদা না কিনে এককালীন মেম্বারশিপে উপভোগ করুন সম্পূর্ণ আনলিমিটেড ফ্রি এক্সেস!
+            ওয়ার্ডপ্রেস থিম, প্লাগইন ও স্ক্রিপ্ট সবার জন্য সম্পূর্ণ ফ্রি ও উন্মুক্ত! আর সাইটের সমস্ত প্রিমিয়াম পেইড কোর্স, সফটওয়্যার ও এআই টুলস ১০ দিনের জন্য আনলক করতে বেছে নিন ১০ দিন পেইড পাস (৳৪৯৯), অথবা আজীবন আনলিমিটেড এক্সেস!
           </p>
 
           {/* Quick value badges */}
@@ -320,7 +320,7 @@ export function MembershipPage() {
               <thead>
                 <tr className="border-b border-ink-200 bg-ink-50/50">
                   <th className="py-3.5 px-4 font-semibold text-ink-700">ফিচার ও সুবিধা</th>
-                  <th className="py-3.5 px-4 font-semibold text-ink-700 text-center">১ মাস WP পাস (৳৪৯৯)</th>
+                  <th className="py-3.5 px-4 font-semibold text-ink-700 text-center">১০ দিন পেইড পাস (৳৪৯৯)</th>
                   <th className="py-3.5 px-4 font-bold text-amber-950 bg-amber-100/70 text-center rounded-t-xl ring-1 ring-amber-300">
                     <div className="flex items-center justify-center gap-1.5">
                       <Crown size={15} className="text-amber-600 shrink-0" />
@@ -333,13 +333,13 @@ export function MembershipPage() {
               <tbody className="divide-y divide-ink-100">
                 <tr>
                   <td className="py-3.5 px-4 text-ink-800 font-medium">ডাউনলোড এক্সেস মেয়াদ</td>
-                  <td className="py-3.5 px-4 text-center text-ink-600">৩০ দিন</td>
+                  <td className="py-3.5 px-4 text-center font-semibold text-brand-700">১০ দিন</td>
                   <td className="py-3.5 px-4 text-center font-bold text-amber-900 bg-amber-50/40">আজীবন (Lifetime)</td>
                   <td className="py-3.5 px-4 text-center text-ink-600">৩০ দিন</td>
                 </tr>
                 <tr>
                   <td className="py-3.5 px-4 text-ink-800 font-medium">দৈনিক ডাউনলোড লিমিট</td>
-                  <td className="py-3.5 px-4 text-center font-bold text-ink-800">সর্বোচ্চ ১০টি ফাইল / দিন</td>
+                  <td className="py-3.5 px-4 text-center font-bold text-ink-800">সর্বোচ্চ ১০টি পেইড ফাইল / দিন</td>
                   <td className="py-3.5 px-4 text-center font-bold text-emerald-700 bg-amber-50/40">
                     <span className="inline-flex items-center gap-1">
                       <Check size={14} className="text-emerald-600" />
@@ -351,19 +351,19 @@ export function MembershipPage() {
                 <tr>
                   <td className="py-3.5 px-4 text-ink-800 font-medium">ওয়ার্ডপ্রেস থিম ও প্লাগইন (৩,০০০+)</td>
                   <td className="py-3.5 px-4 text-center text-emerald-600 font-medium">
-                    <Check size={15} className="inline mr-1 text-emerald-600" /> অন্তর্ভুক্ত (৩০ দিন)
+                    <Check size={15} className="inline mr-1 text-emerald-600" /> সবার জন্য ১০০% ফ্রি (উন্মুক্ত)
                   </td>
                   <td className="py-3.5 px-4 text-center text-emerald-700 font-bold bg-amber-50/40">
-                    <Check size={15} className="inline mr-1 text-emerald-600" /> আজীবন ফ্রি
+                    <Check size={15} className="inline mr-1 text-emerald-600" /> সবার জন্য ১০০% ফ্রি (উন্মুক্ত)
                   </td>
                   <td className="py-3.5 px-4 text-center text-emerald-600 font-medium">
-                    <Check size={15} className="inline mr-1 text-emerald-600" /> অন্তর্ভুক্ত (৩০ দিন)
+                    <Check size={15} className="inline mr-1 text-emerald-600" /> সবার জন্য ১০০% ফ্রি (উন্মুক্ত)
                   </td>
                 </tr>
                 <tr>
                   <td className="py-3.5 px-4 text-ink-800 font-medium">প্রিমিয়াম ভিডিও কোর্স ও টিউটোরিয়াল</td>
-                  <td className="py-3.5 px-4 text-center text-rose-500 font-medium">
-                    <X size={15} className="inline mr-1 text-rose-500" /> অন্তর্ভুক্ত নয়
+                  <td className="py-3.5 px-4 text-center text-emerald-600 font-medium">
+                    <Check size={15} className="inline mr-1 text-emerald-600" /> অন্তর্ভুক্ত (১০ দিন)
                   </td>
                   <td className="py-3.5 px-4 text-center text-emerald-700 font-bold bg-amber-50/40">
                     <Check size={15} className="inline mr-1 text-emerald-600" /> আজীবন আনলিমিটেড
@@ -374,8 +374,8 @@ export function MembershipPage() {
                 </tr>
                 <tr>
                   <td className="py-3.5 px-4 text-ink-800 font-medium">সফটওয়্যার, এআই টুলস ও পিএইচপি স্ক্রিপ্ট</td>
-                  <td className="py-3.5 px-4 text-center text-rose-500 font-medium">
-                    <X size={15} className="inline mr-1 text-rose-500" /> অন্তর্ভুক্ত নয়
+                  <td className="py-3.5 px-4 text-center text-emerald-600 font-medium">
+                    <Check size={15} className="inline mr-1 text-emerald-600" /> অন্তর্ভুক্ত (১০ দিন)
                   </td>
                   <td className="py-3.5 px-4 text-center text-emerald-700 font-bold bg-amber-50/40">
                     <Check size={15} className="inline mr-1 text-emerald-600" /> আজীবন আনলিমিটেড
@@ -386,8 +386,8 @@ export function MembershipPage() {
                 </tr>
                 <tr>
                   <td className="py-3.5 px-4 text-ink-800 font-medium">ভবিষ্যতের সকল নতুন রিলিজ ও প্রোডাক্ট</td>
-                  <td className="py-3.5 px-4 text-center text-ink-400">
-                    <X size={15} className="inline mr-1 text-rose-400" /> নেই
+                  <td className="py-3.5 px-4 text-center text-ink-600">
+                    ১০ দিনের মধ্যে যুক্ত ফাইল ফ্রি
                   </td>
                   <td className="py-3.5 px-4 text-center text-emerald-700 font-bold bg-amber-50/40">
                     <Check size={15} className="inline mr-1 text-emerald-600" /> আজীবন সব নতুন প্রোডাক্ট ফ্রি
@@ -398,7 +398,7 @@ export function MembershipPage() {
                 </tr>
                 <tr>
                   <td className="py-3.5 px-4 text-ink-800 font-medium">নিয়মিত লেটেস্ট ভার্সন আপডেট</td>
-                  <td className="py-3.5 px-4 text-center text-ink-400">৩০ দিন পর বন্ধ</td>
+                  <td className="py-3.5 px-4 text-center text-ink-600">১০ দিন মেয়াদকালীন ফ্রি</td>
                   <td className="py-3.5 px-4 text-center font-bold text-emerald-700 bg-amber-50/40">
                     <Check size={15} className="inline mr-1 text-emerald-600" /> আজীবন সম্পূর্ণ ফ্রি আপডেট
                   </td>
@@ -426,7 +426,7 @@ export function MembershipPage() {
                 </tr>
                 <tr>
                   <td className="py-3.5 px-4 text-ink-800 font-medium">রিনিউয়াল ফি</td>
-                  <td className="py-3.5 px-4 text-center text-ink-500">মাসিক ৳৪৯৯</td>
+                  <td className="py-3.5 px-4 text-center text-ink-500">১০ দিন পর সমাপ্ত (ঐচ্ছিক রিনিউ ৳৪৯৯)</td>
                   <td className="py-3.5 px-4 text-center font-bold text-emerald-700 bg-amber-50/40">
                     কোনো রিনিউয়াল ফি নেই (এককালীন)
                   </td>
@@ -488,7 +488,7 @@ export function MembershipPage() {
               </span>
               <h3 className="mt-4 font-display text-base font-bold text-ink-900">প্ল্যান বেছে নিন</h3>
               <p className="mt-2 text-xs text-ink-500">
-                আপনার বাজেট ও প্রয়োজন অনুযায়ী ১ মাস WP পাস (৳৪৯৯), ১ মাস অল-এক্সেস (৳৮৯৯) বা সেরা অফারে আজীবন ভিআইপি পাস (৳১,১৯৯) সিলেক্ট করুন।
+                আপনার বাজেট ও প্রয়োজন অনুযায়ী ১০ দিন পেইড পাস (৳৪৯৯), ১ মাস অল-এক্সেস (৳৮৯৯) বা সেরা অফারে আজীবন ভিআইপি পাস (৳১,১৯৯) সিলেক্ট করুন।
               </p>
             </div>
             <div className="flex flex-col items-center">

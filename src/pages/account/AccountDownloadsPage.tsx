@@ -247,7 +247,7 @@ export function AccountDownloadsPage() {
                     ৩,০০০+ সব প্রোডাক্ট আনলিমিটেড ডাউনলোড করতে চান?
                   </h3>
                   <p className="mt-0.5 text-xs sm:text-sm text-ink-600">
-                    মাত্র <strong className="text-brand-700">৳৪৯৯ (১ মাস WP পাস)</strong>, <strong className="text-brand-700">৳৮৯৯ (১ মাস অল-এক্সেস)</strong> অথবা সেরা অফারে <strong className="text-amber-700 font-extrabold">৳১,১৯৯-এ আজীবন</strong> ভিআইপি মেম্বারশিপ নিয়ে সব প্রোডাক্ট ফ্রিতে নিন!
+                    মাত্র <strong className="text-brand-700">৳৪৯৯ (১০ দিন পেইড পাস)</strong>, <strong className="text-brand-700">৳৮৯৯ (১ মাস অল-এক্সেস)</strong> অথবা সেরা অফারে <strong className="text-amber-700 font-extrabold">৳১,১৯৯-এ আজীবন</strong> ভিআইপি মেম্বারশিপ নিয়ে সব প্রোডাক্ট ফ্রিতে নিন!
                   </p>
                 </div>
               </div>

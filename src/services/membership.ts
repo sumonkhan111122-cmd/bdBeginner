@@ -129,7 +129,7 @@ export async function checkUserMembership(userId?: string | null, email?: string
       }
     }
 
-    // Check for Monthly WordPress VIP
+    // Check for 10-Day Paid All-Access VIP (৳499)
     for (const order of orders) {
       const items = (order.order_items ?? []) as { id: string; product_id: string; product_slug?: string }[];
       const hasMonthly = items.some(
@@ -140,13 +140,13 @@ export async function checkUserMembership(userId?: string | null, email?: string
       );
       if (hasMonthly) {
         const orderDate = new Date(order.created_at).getTime();
-        const expiryDate = orderDate + 30 * 24 * 60 * 60 * 1000;
+        const expiryDate = orderDate + 10 * 24 * 60 * 60 * 1000;
         if (expiryDate > now) {
           const daysRemaining = Math.max(1, Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24)));
           return {
             isVip: true,
             planId: 'monthly',
-            planName: '1-Month WordPress Pass',
+            planName: '১০ দিন পেইড পাস',
             expiresAt: new Date(expiryDate).toISOString(),
             isLifetime: false,
             daysRemaining,
@@ -319,7 +319,7 @@ export async function claimVipProductDownload(
       if (todayCount >= dailyLimit) {
         const planTitle =
           membership.planId === 'monthly'
-            ? '১ মাস ওয়ার্ডপ্রেস পাস (৳৪৯৯)'
+            ? '১০ দিন পেইড পাস (৳৪৯৯)'
             : '১ মাস অল-এক্সেস পাস (৳৮৯৯)';
         return {
           success: false,
@@ -349,34 +349,33 @@ export async function claimVipProductDownload(
           productId = bySlug.id;
         }
       }
-
-      // 499 Plan Restriction: Only WordPress themes and plugins allowed
-      if (membership.planId === 'monthly') {
-        const checkTarget = dbProd || null;
-        const catSlug = (checkTarget as any)?.categories?.slug;
-        const nameLower = (checkTarget?.name || product.name || '').toLowerCase();
-        const isWpCategory = catSlug === 'wordpress' || catSlug === 'plugins';
-        const isWpText = nameLower.includes('wordpress') || nameLower.includes('plugin') || nameLower.includes('theme');
-
-        if (catSlug && !isWpCategory && !isWpText) {
-          return {
-            success: false,
-            error: 'আপনার "১ মাস ওয়ার্ডপ্রেস পাস (৳৪৯৯)" প্যাকেজটি শুধুমাত্র ওয়ার্ডপ্রেস থিম ও প্লাগইনের জন্য প্রযোজ্য। কোর্স, সফটওয়্যার, এআই টুলস ও স্ক্রিপ্ট আনলিমিটেড পেতে আজীবন ভিআইপি পাস (৳১,১৯৯) অথবা ১ মাস অল-এক্সেস পাস বেছে নিন!',
-          };
-        }
-      }
     } catch {
       // non-blocking
     }
 
-    const orderResult = await createCheckoutOrderPriced({
-      customerName: customer.name.trim() || 'VIP Member',
-      customerEmail: customer.email.trim(),
-      customerPhone: customer.phone?.trim() || '01700000000',
-      customerNote: `VIP Membership Claim: ${product.name}`,
-      items: [{ product_id: productId, quantity: 1 }],
-      couponCode: 'VIP_PASS_FREE',
-    });
+    let orderResult;
+    try {
+      orderResult = await createCheckoutOrderPriced({
+        customerName: customer.name.trim() || 'VIP Member',
+        customerEmail: customer.email.trim(),
+        customerPhone: customer.phone?.trim() || '01700000000',
+        customerNote: `VIP Membership Claim: ${product.name}`,
+        items: [{ product_id: productId, quantity: 1 }],
+        couponCode: 'VIP_PASS_FREE',
+      });
+    } catch (orderErr: any) {
+      if (orderErr?.message && orderErr.message.includes('coupon')) {
+        orderResult = await createCheckoutOrderPriced({
+          customerName: customer.name.trim() || 'VIP Member',
+          customerEmail: customer.email.trim(),
+          customerPhone: customer.phone?.trim() || '01700000000',
+          customerNote: `VIP Membership Claim: ${product.name}`,
+          items: [{ product_id: productId, quantity: 1 }],
+        });
+      } else {
+        throw orderErr;
+      }
+    }
 
     if (!orderResult?.order_number || !orderResult?.access_token) {
       throw new Error('Could not generate VIP entitlement.');

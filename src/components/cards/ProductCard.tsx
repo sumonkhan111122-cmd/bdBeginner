@@ -10,6 +10,7 @@ import { useCart } from '@/context/CartContext';
 import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
 import { StaticStarRating } from '@/components/reviews/StarRating';
 import { WishlistButton } from '@/components/discovery/WishlistButton';
+import { isProductFree } from '@/services/freeDownloads';
 
 const accentMap: Record<string, { bg: string; icon: string; bar: string }> = {
   brand: { bg: 'bg-brand-50/50', icon: 'text-brand-600', bar: 'bg-brand-500' },
@@ -37,6 +38,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const Icon = (Icons[product.icon as keyof typeof Icons] ?? Icons.Package) as Icons.LucideIcon;
   const accent = accentMap[product.accent] ?? accentMap.brand;
   const DeliveryIcon = deliveryIconMap[product.deliveryType] ?? Download;
+  const isFree = isProductFree(product) || product.price === 0;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -71,11 +73,18 @@ export function ProductCard({ product }: ProductCardProps) {
             </>
           }
         />
-        {product.badge && (
+        {isFree ? (
+          <div className="absolute left-3 top-3">
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-sm ring-1 ring-white/30">
+              <Download size={11} strokeWidth={2.5} />
+              100% Free
+            </span>
+          </div>
+        ) : product.badge ? (
           <div className="absolute left-3 top-3">
             <Badge variant={product.badge} />
           </div>
-        )}
+        ) : null}
         <div className="absolute right-3 top-3 z-10">
           <WishlistButton productId={product.id} />
         </div>
@@ -114,27 +123,37 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
 
         <div className="mt-3 flex items-center gap-2">
-          <button
-            onClick={handleAddToCart}
-            className={`flex h-9 flex-1 items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
-              added
-                ? 'bg-success-50 text-success-700 border border-success-200'
-                : 'bg-ink-50 text-ink-700 border border-ink-100 hover:bg-ink-100 hover:border-ink-200'
-            }`}
-            aria-label={`Add ${product.name} to cart`}
-          >
-            {added ? (
-              <>
-                <Check size={15} />
-                Added
-              </>
-            ) : (
-              <>
-                <ShoppingCart size={15} />
-                Add to Cart
-              </>
-            )}
-          </button>
+          {isFree ? (
+            <span
+              className="flex h-9 flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-600 text-white text-sm font-bold shadow-xs transition-all group-hover:bg-emerald-500"
+              aria-label={`Free download ${product.name}`}
+            >
+              <Download size={15} className="stroke-[2.5]" />
+              ফ্রি ডাউনলোড
+            </span>
+          ) : (
+            <button
+              onClick={handleAddToCart}
+              className={`flex h-9 flex-1 items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                added
+                  ? 'bg-success-50 text-success-700 border border-success-200'
+                  : 'bg-ink-50 text-ink-700 border border-ink-100 hover:bg-ink-100 hover:border-ink-200'
+              }`}
+              aria-label={`Add ${product.name} to cart`}
+            >
+              {added ? (
+                <>
+                  <Check size={15} />
+                  Added
+                </>
+              ) : (
+                <>
+                  <ShoppingCart size={15} />
+                  Add to Cart
+                </>
+              )}
+            </button>
+          )}
           <span
             className="flex h-9 w-9 items-center justify-center rounded-lg border border-ink-100 text-ink-500 transition-all hover:border-ink-200 hover:text-ink-900"
             aria-label="View details"

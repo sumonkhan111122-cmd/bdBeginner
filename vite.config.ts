@@ -9,6 +9,38 @@ function weadownApiPlugin() {
   return {
     name: 'weadown-api-plugin',
     configureServer(server: any) {
+      server.middlewares.use('/api/free-download', async (req: any, res: any) => {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+        if (req.method === 'OPTIONS') {
+          res.statusCode = 200;
+          res.end();
+          return;
+        }
+
+        try {
+          const handler = (await import('./api/free-download.js')).default;
+          const urlObj = new URL(req.url, 'http://localhost');
+          req.query = Object.fromEntries(urlObj.searchParams);
+          res.status = (code: number) => {
+            res.statusCode = code;
+            return res;
+          };
+          res.json = (data: any) => {
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(data));
+            return res;
+          };
+          await handler(req, res);
+        } catch (err: any) {
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ success: false, error: err.message }));
+        }
+      });
+
       server.middlewares.use('/api/weadown', async (req: any, res: any, next: any) => {
         // Handle CORS
         res.setHeader('Access-Control-Allow-Origin', '*');

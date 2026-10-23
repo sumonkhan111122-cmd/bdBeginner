@@ -27,9 +27,15 @@ export function Hero() {
         <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12">
           {/* Left: Content */}
           <div className="flex flex-col items-start">
-            <span className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700">
-              Premium Digital Marketplace
-            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700">
+                Premium Digital Marketplace
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800 shadow-xs">
+                <Download size={13} className="text-emerald-600 stroke-[2.5]" />
+                ৩,০০০+ থিম, প্লাগইন ও স্ক্রিপ্ট সম্পূর্ণ ফ্রি!
+              </span>
+            </div>
 
             <h1 className="mt-5 text-[2rem] leading-[1.1] tracking-[-0.025em] sm:text-display-lg lg:text-display-xl text-ink-900 text-balance">
               Everything Digital.
@@ -38,9 +44,7 @@ export function Hero() {
             </h1>
 
             <p className="mt-5 max-w-lg text-base leading-relaxed text-ink-500 text-balance sm:text-lg">
-              Premium digital products, WordPress tools, software, resources and
-              professional web solutions — carefully selected and supported by
-              bdBeginner.
+              ওয়ার্ডপ্রেস থিম, প্লাগইন ও পিএইচপি স্ক্রিপ্ট সবার জন্য সম্পূর্ণ ফ্রি! এর পাশাপাশি প্রিমিয়াম ডিজিটাল কোর্স, সফটওয়্যার ও আধুনিক সলিউশন — bdBeginner-এ পাচ্ছেন বিশ্বমানের ডিজিটাল এসেট।
             </p>
 
             {/* Search bar */}
@@ -61,12 +65,13 @@ export function Hero() {
             </div>
 
             <div className="mt-6 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-              <Button to="/products" size="lg">
-                Explore Products
-                <ArrowRight size={18} />
+              <Button to="/wordpress" size="lg" className="bg-emerald-600 hover:bg-emerald-700 border-transparent text-white shadow-md shadow-emerald-600/20">
+                <Download size={18} className="stroke-[2.5]" />
+                ফ্রি থিম ও প্লাগইন ডাউনলোড
               </Button>
-              <Button to="/services" variant="outline" size="lg">
-                Explore Services
+              <Button to="/products" variant="outline" size="lg">
+                Explore All Products
+                <ArrowRight size={18} />
               </Button>
             </div>
 

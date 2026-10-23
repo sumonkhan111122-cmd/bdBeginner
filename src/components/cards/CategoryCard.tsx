@@ -23,11 +23,20 @@ export function CategoryCard({ category }: CategoryCardProps) {
     ? '/services'
     : `/products?category=${encodeURIComponent(category.slug)}`;
 
+  const isFreeCategory = ['wordpress', 'plugins', 'scripts'].includes(category.slug);
+
   return (
     <Link
       to={targetUrl}
       className="group relative flex flex-col items-start overflow-hidden rounded-xl border border-ink-100 bg-white p-5 transition-all duration-200 ease-smooth hover:border-ink-200 hover:shadow-card sm:p-6"
     >
+      {/* Free Category Badge */}
+      {isFreeCategory && (
+        <span className="absolute right-4 top-4 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-extrabold text-emerald-700 border border-emerald-200 shadow-2xs">
+          ১০০% ফ্রি
+        </span>
+      )}
+
       {/* Accent bar at bottom */}
       <span
         className={`absolute bottom-0 left-0 h-0.5 w-0 bg-ink-200 transition-all duration-200 ease-smooth ${colors.hoverBar} group-hover:w-full`}
