@@ -1,47 +1,59 @@
-import { useCategories } from '@/hooks/useCatalog';
-import { categoriesToType } from '@/services/catalog';
-import { CategoryCard } from '@/components/cards/CategoryCard';
-import { SectionHeading } from '@/components/ui/SectionHeading';
-import { Button } from '@/components/ui/Button';
-import { Grid3x3 } from 'lucide-react';
-import { ProductGridSkeleton } from '@/components/ui/SkeletonCard';
-import { CatalogError } from '@/components/ui/CatalogState';
+import { Link } from "react-router-dom";
+import { ArrowUpRight } from "lucide-react";
+import { useCategories } from "@/hooks/useCatalog";
+import { categoriesToType } from "@/services/catalog";
+import { CategoryCard } from "@/components/cards/CategoryCard";
+import { CatalogError } from "@/components/ui/CatalogState";
 
 export function CategoryExplorer() {
   const { data: cats, loading, error, retry } = useCategories();
   const categories = categoriesToType(cats);
-
   return (
-    <section className="section-padding bg-ink-50/40">
-      <div className="container-page">
-        <SectionHeading
-          eyebrow="Browse by Category"
-          title="Find what you need across our digital catalog"
-          description="From WordPress tools to AI-powered solutions, every category is curated to help you build, learn, and work more efficiently."
-          action={
-            <Button to="/categories" variant="outline" size="md">
-              <Grid3x3 size={16} />
-              All Categories
-            </Button>
-          }
-        />
-
-        {loading ? (
-          <div className="mt-12">
-            <ProductGridSkeleton count={8} />
+    <section className="studio-categories" id="discover">
+      <div className="studio-container">
+        <div className="studio-section-heading">
+          <div>
+            <p className="studio-kicker">FIND YOUR CORNER OF THE INTERNET.</p>
+            <h2>
+              A world of resources.
+              <br />
+              <span className="muted-heading">Your kind of possibilities.</span>
+            </h2>
           </div>
-        ) : error ? (
-          <div className="mt-12">
-            <CatalogError onRetry={retry} />
+          <Link to="/categories" className="studio-inline-link">
+            All collections <ArrowUpRight size={18} />
+          </Link>
+        </div>
+        {error ? (
+          <CatalogError onRetry={retry} />
+        ) : loading ? (
+          <div
+            className="studio-category-grid"
+            aria-busy="true"
+            aria-label="Loading categories"
+          >
+            {Array.from({ length: 8 }, (_, i) => (
+              <div className="studio-category-card animate-pulse" key={i}>
+                <div className="h-6 w-6 rounded bg-ink-100" />
+                <div className="mt-8 h-3 w-24 rounded bg-ink-100" />
+              </div>
+            ))}
           </div>
-        ) : categories.length > 0 ? (
-          <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
-            {categories.map((category) => (
-              <CategoryCard key={category.slug} category={category} />
+        ) : categories.length ? (
+          <div className="studio-category-grid">
+            {categories.map((category, index) => (
+              <CategoryCard
+                key={category.slug}
+                category={category}
+                index={index}
+              />
             ))}
           </div>
         ) : (
-          <p className="mt-12 text-center text-sm text-ink-500">No categories available.</p>
+          <p className="studio-no-products">
+            Collections are being prepared.{" "}
+            <Link to="/products">Explore all resources →</Link>
+          </p>
         )}
       </div>
     </section>

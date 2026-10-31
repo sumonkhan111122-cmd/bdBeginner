@@ -532,7 +532,7 @@ export function ProductsPage({ initialCategory, dealsOnly = false }: ProductsPag
   return (
     <Layout>
       {/* Dynamic Header */}
-      <div className="border-b border-ink-100 bg-gradient-to-b from-ink-50/60 to-white">
+      <div className="border-b border-ink-100 bg-[#f0f1ea]">
         <div className="container-page py-10 sm:py-14">
           <SectionHeading
             eyebrow={headerInfo.eyebrow}
@@ -558,7 +558,7 @@ export function ProductsPage({ initialCategory, dealsOnly = false }: ProductsPag
                     onClick={() => handlePillClick(pill)}
                     className={`flex items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold transition-all duration-200 ${
                       isActive
-                        ? 'bg-brand-600 text-white shadow-soft ring-2 ring-brand-600/20 scale-[1.02]'
+                        ? 'bg-ink-900 text-white'
                         : 'border border-ink-200/80 bg-white text-ink-700 hover:border-ink-300 hover:bg-ink-50'
                     }`}
                   >
@@ -572,7 +572,7 @@ export function ProductsPage({ initialCategory, dealsOnly = false }: ProductsPag
 
           {/* Search bar */}
           <div className="mt-5 max-w-2xl">
-            <div className="flex items-center gap-3 rounded-2xl border border-ink-200 bg-white px-5 py-3.5 shadow-soft transition-colors focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100">
+            <div className="flex items-center gap-3 rounded-xl border border-ink-200 bg-white px-5 py-3.5 transition-colors focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100">
               <Search size={19} className="shrink-0 text-ink-400" />
               <input
                 type="text"

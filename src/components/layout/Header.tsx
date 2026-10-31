@@ -1,574 +1,153 @@
-import { useState, useEffect } from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
-import {
-  Search,
-  User,
-  ShoppingCart,
-  LifeBuoy,
-  Menu,
-  X,
-  ChevronRight,
-  ChevronDown,
-  Heart,
-  Crown,
-  Sparkles,
-  ExternalLink,
-  Layers,
-  Grid3x3,
-  FolderArchive,
-  Tag,
-  Laptop,
-  GraduationCap,
-  FileCode,
-  Film,
-  Download,
-} from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { AnnouncementBar } from './AnnouncementBar';
-import { useCart } from '@/context/CartContext';
-import { CartDrawer } from '@/components/cart/CartDrawer';
-import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
-import { useSiteSettings } from '@/context/SiteSettingsContext';
-import { useCustomerAuth } from '@/context/CustomerAuthContext';
-import { useDiscovery } from '@/context/DiscoveryContext';
-import { safeHttpUrl } from '@/lib/urls';
+import { useEffect, useRef, useState } from "react";
+import { Link, NavLink, useLocation } from "react-router-dom";
+import { Menu, X, ShoppingBag, UserRound, Crown, Play } from "lucide-react";
+import { useCart } from "@/context/CartContext";
+import { useCustomerAuth } from "@/context/CustomerAuthContext";
+import { useSiteSettings } from "@/context/SiteSettingsContext";
+import { CartDrawer } from "@/components/cart/CartDrawer";
+import { ImageWithFallback } from "@/components/ui/ImageWithFallback";
+import { safeHttpUrl } from "@/lib/urls";
 
-const exploreLinks = [
-  { label: 'AI মোশন মাস্টারক্লাস (৳290)', to: '/course/ai-motion', description: 'Advanced Agentic Video Editing', icon: Film },
-  { label: 'WordPress Themes (ফ্রি)', to: '/wordpress', description: '৩,০০০+ প্রিমিয়াম থিম (১০০% ফ্রি)', icon: Layers },
-  { label: 'WordPress Plugins (ফ্রি)', to: '/plugins', description: '৩০০+ এসেনশিয়াল প্লাগইন (১০০% ফ্রি)', icon: Sparkles },
-  { label: 'Software & Tools', to: '/products?category=software', description: 'Productivity & utilities', icon: Laptop },
-  { label: 'Digital Courses', to: '/products?category=courses', description: 'Practical skills & training', icon: GraduationCap },
-  { label: 'PHP Scripts & Code (ফ্রি)', to: '/products?category=scripts', description: 'পিএইচপি স্ক্রিপ্ট ও ফুল কোড (১০০% ফ্রি)', icon: FileCode },
-  { label: 'Digital Resources', to: '/resources', description: 'Templates, scripts & assets', icon: FolderArchive },
-  { label: 'Special Deals', to: '/deals', description: 'Discounts & limited-time offers', icon: Tag },
-  { label: 'All Categories', to: '/categories', description: 'Browse complete catalog', icon: Grid3x3 },
+const links = [
+  { to: "/products", label: "Discover" },
+  { to: "/wordpress", label: "Free resources" },
+  { to: "/services", label: "Services" },
 ];
 
-function FallbackLogo({ compact = false }: { compact?: boolean }) {
-  return (
+export function Header() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const location = useLocation();
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const { count, openCart } = useCart();
+  const { session } = useCustomerAuth();
+  const { siteSettings } = useSiteSettings();
+  const logo = safeHttpUrl(siteSettings.logo_url);
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname, location.search]);
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const close = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMobileOpen(false);
+        menuButton.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, [mobileOpen]);
+  const brand = (
     <>
-      <span className={`flex ${compact ? 'h-8 w-8 rounded-lg' : 'h-9 w-9 rounded-xl'} items-center justify-center bg-brand-600 text-white font-display font-extrabold shadow-sm`}>
-        b
+      <span className="studio-logo-mark" aria-hidden="true">
+        <i />
+        <i />
+        <i />
+        <i />
       </span>
-      <span className={`font-display ${compact ? 'text-lg' : 'text-xl'} font-extrabold tracking-tight text-ink-900`}>
-        bd<span className="text-brand-600">Beginner</span>
+      <span className="studio-logo-type">
+        bd<span>Beginner</span>
+        <sup className="ml-0.5 text-[9px]">®</sup>
       </span>
     </>
   );
-}
-
-function HeaderLogo({ compact = false }: { compact?: boolean }) {
-  const { siteSettings } = useSiteSettings();
-  const logoUrl = safeHttpUrl(siteSettings.logo_url);
-  if (!logoUrl) return <FallbackLogo compact={compact} />;
-  return (
-    <ImageWithFallback
-      src={logoUrl}
-      alt={`${siteSettings.site_name} logo`}
-      className={`${compact ? 'h-8 max-w-40' : 'h-10 max-w-48'} w-auto object-contain`}
-      fallback={<FallbackLogo compact={compact} />}
-    />
-  );
-}
-
-export function Header() {
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const location = useLocation();
-  const { count, openCart } = useCart();
-  const { siteSettings } = useSiteSettings();
-  const { session, logout } = useCustomerAuth();
-  const { wishlistIds } = useDiscovery();
-  const wishlistCount = wishlistIds.length;
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [location.pathname]);
-
-  useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [mobileOpen]);
-
   return (
     <>
-      <AnnouncementBar />
-      <header
-        className={`sticky top-0 z-50 border-b transition-all duration-300 ${
-          scrolled
-            ? 'border-ink-100 bg-white/90 backdrop-blur-lg shadow-soft'
-            : 'border-transparent bg-white'
-        }`}
-      >
-        <div className="container-page flex h-16 items-center justify-between gap-3 lg:h-18">
-          {/* Logo */}
-          <Link to="/" className="flex shrink-0 items-center gap-2.5" aria-label={`${siteSettings.site_name} home`}>
-            <HeaderLogo />
+      <header className="studio-header">
+        <div className="studio-header-inner">
+          <Link
+            to="/"
+            aria-label={`${siteSettings.site_name} home`}
+            className="studio-logo"
+          >
+            {logo ? (
+              <ImageWithFallback
+                src={logo}
+                alt={siteSettings.site_name}
+                fallback={brand}
+              />
+            ) : (
+              brand
+            )}
           </Link>
-
-          {/* Desktop nav */}
-          <nav className="hidden items-center gap-1 xl:gap-1.5 lg:flex" aria-label="Main navigation">
-            <NavLink
-              to="/products"
-              className={({ isActive }) =>
-                `whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
-                  isActive ? 'text-brand-700 bg-brand-50' : 'text-ink-700 hover:text-ink-950 hover:bg-ink-50'
-                }`
-              }
-            >
-              Products
-            </NavLink>
-
-            <NavLink
-              to="/services"
-              className={({ isActive }) =>
-                `whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
-                  isActive ? 'text-brand-700 bg-brand-50' : 'text-ink-700 hover:text-ink-950 hover:bg-ink-50'
-                }`
-              }
-            >
-              Services
-            </NavLink>
-
-            {/* Free Themes & Plugins - Marketing Hook */}
-            <NavLink
-              to="/wordpress"
-              className={({ isActive }) =>
-                `inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-bold transition-all shadow-xs ${
-                  isActive
-                    ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-500'
-                    : 'bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-950 border border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400'
-                }`
-              }
-            >
-              <Download size={13} className="text-emerald-600 shrink-0 stroke-[2.5]" />
-              <span>ফ্রি থিম ও প্লাগইন</span>
-              <span className="rounded-md bg-emerald-600 px-1 py-0.2 text-[9px] font-extrabold uppercase tracking-wider text-white">
-                FREE
-              </span>
-            </NavLink>
-
-            {/* VIP Membership - Always visible, never breaks */}
-            <NavLink
-              to="/membership"
-              className={({ isActive }) =>
-                `inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-bold transition-all shadow-xs ${
-                  isActive
-                    ? 'bg-amber-400 text-ink-950 shadow-sm ring-1 ring-amber-500'
-                    : 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-950 border border-amber-300 hover:bg-amber-100 hover:border-amber-400'
-                }`
-              }
-            >
-              <Crown size={14} className="text-amber-500 fill-amber-400 shrink-0" />
-              <span>VIP Membership</span>
-            </NavLink>
-
-            {/* AI Motion Masterclass - Hot New Course */}
-            <NavLink
-              to="/course/ai-motion"
-              className={({ isActive }) =>
-                `inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-bold transition-all shadow-xs ${
-                  isActive
-                    ? 'bg-gradient-to-r from-purple-600 to-brand-600 text-white shadow-sm ring-1 ring-purple-500'
-                    : 'bg-gradient-to-r from-purple-50 via-indigo-50 to-brand-50 text-purple-950 border border-purple-300 hover:bg-purple-100 hover:border-purple-400'
-                }`
-              }
-            >
-              <Film size={13} className="text-purple-600 shrink-0" />
-              <span>AI মোশন ক্লাস</span>
-              <span className="rounded-md bg-purple-600 px-1 py-0.2 text-[9px] font-extrabold uppercase tracking-wider text-white font-sans">
-                ৳290
-              </span>
-            </NavLink>
-
-            {/* Playflix Tool - Premium External Tool Badge */}
+          <nav className="studio-desktop-nav" aria-label="Main navigation">
+            {links.map((link) => (
+              <NavLink key={link.to} to={link.to}>
+                {link.label}
+              </NavLink>
+            ))}
             <a
               href="https://www.bdbeginner.com/playflix"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-brand-200 bg-brand-50/70 px-3 py-1.5 text-xs font-bold text-brand-800 transition-all hover:bg-brand-100 hover:border-brand-300 shadow-xs"
+              className="studio-nav-playflix"
             >
-              <Sparkles size={13} className="text-brand-600 shrink-0 transition-transform group-hover:rotate-12" />
-              <span>Playflix Tool</span>
-              <span className="rounded-md bg-brand-600 px-1 py-0.2 text-[9px] font-extrabold uppercase tracking-wider text-white">
-                PRO
-              </span>
-              <ExternalLink size={11} className="text-brand-400 shrink-0 opacity-70 group-hover:opacity-100" />
+              <Play size={12} fill="currentColor" /> Playflix{" "}
+              <span aria-hidden="true">↗</span>
             </a>
-
-            {/* Explore Dropdown */}
-            <div className="relative group">
-              <button
-                type="button"
-                className="inline-flex items-center gap-1 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold text-ink-700 transition-colors hover:bg-ink-50 hover:text-ink-950"
-              >
-                <span>Explore</span>
-                <ChevronDown size={14} className="text-ink-400 transition-transform duration-200 group-hover:rotate-180" />
-              </button>
-
-              <div className="absolute left-0 top-full pt-1.5 opacity-0 invisible translate-y-1 transition-all duration-200 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 z-50">
-                <div className="w-64 rounded-2xl border border-ink-100 bg-white p-2 shadow-floating">
-                  {exploreLinks.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <Link
-                        key={item.to}
-                        to={item.to}
-                        className="flex items-start gap-3 rounded-xl p-2.5 transition-colors hover:bg-ink-50 group/item"
-                      >
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-ink-50 text-ink-600 group-hover/item:bg-brand-50 group-hover/item:text-brand-600 transition-colors">
-                          <Icon size={16} />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="text-xs font-bold text-ink-900 group-hover/item:text-brand-700 transition-colors">
-                            {item.label}
-                          </div>
-                          <div className="text-[11px] text-ink-500 truncate">{item.description}</div>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
           </nav>
-
-          {/* Desktop actions */}
-          <div className="hidden items-center gap-1.5 lg:flex">
-            <Link
-              to="/products"
-              className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-500 transition-colors hover:bg-ink-50 hover:text-ink-900"
-              aria-label="Search"
-            >
-              <Search size={20} />
+          <div className="studio-header-actions">
+            <Link to="/membership" className="studio-header-member">
+              <Crown size={14} /> Membership <span aria-hidden="true">↗</span>
             </Link>
-            
-            <div className="relative group">
-              <Link
-                to={session ? "/account" : "/login"}
-                className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-500 transition-colors hover:bg-ink-50 hover:text-ink-900"
-                aria-label="Account"
-              >
-                <User size={20} />
-              </Link>
-              
-              {session && (
-                <div className="absolute right-0 top-full pt-1 opacity-0 invisible translate-y-1 transition-all duration-200 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 z-50">
-                  <div className="w-52 rounded-xl border border-ink-100 bg-white p-2 shadow-soft">
-                    <Link to="/account" className="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-ink-700 hover:bg-ink-50 hover:text-brand-600">Overview</Link>
-                    <Link to="/account/courses" className="flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-purple-700 hover:bg-purple-50">My Courses (আমার কোর্স)</Link>
-                    <Link to="/account/orders" className="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-ink-700 hover:bg-ink-50 hover:text-brand-600">My Orders</Link>
-                    <Link to="/account/downloads" className="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-ink-700 hover:bg-ink-50 hover:text-brand-600">Downloads Hub</Link>
-                    <div className="my-1 mx-2 h-px bg-ink-100" />
-                    <Link to="/account/profile" className="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-ink-700 hover:bg-ink-50 hover:text-brand-600">Profile Settings</Link>
-                    <Link to="/account/security" className="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-ink-700 hover:bg-ink-50 hover:text-brand-600">Security</Link>
-                    <div className="my-1 mx-2 h-px bg-ink-100" />
-                    <button 
-                      onClick={() => logout()} 
-                      className="flex w-full items-center rounded-lg px-3 py-2 text-sm font-medium text-error-600 hover:bg-error-50 text-left cursor-pointer"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <Link
-              to={session ? "/account/wishlist" : "/wishlist"}
-              className="relative flex h-10 w-10 items-center justify-center rounded-lg text-ink-500 transition-colors hover:bg-ink-50 hover:text-ink-900"
-              aria-label={`Wishlist with ${wishlistCount} items`}
-            >
-              <Heart size={20} />
-              {wishlistCount > 0 && (
-                <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-bold text-white">
-                  {wishlistCount}
-                </span>
-              )}
-            </Link>
-
-            <button
-              onClick={openCart}
-              className="relative flex h-10 w-10 items-center justify-center rounded-lg text-ink-500 transition-colors hover:bg-ink-50 hover:text-ink-900"
-              aria-label={`Cart with ${count} items`}
-            >
-              <ShoppingCart size={20} />
-              {count > 0 && (
-                <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-bold text-white">
-                  {count}
-                </span>
-              )}
-            </button>
-            {siteSettings.support_button_enabled && (
-              <>
-                <div className="mx-1 h-6 w-px bg-ink-100" />
-                <Button to="/support" variant="outline" size="sm">
-                  <LifeBuoy size={16} />
-                  Get Support
-                </Button>
-              </>
-            )}
-          </div>
-
-          {/* Mobile actions */}
-          <div className="flex items-center gap-1 lg:hidden">
             <Link
               to={session ? "/account" : "/login"}
-              className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-500 transition-colors hover:bg-ink-50"
-              aria-label="Account"
+              aria-label={session ? "My account" : "Sign in"}
+              className="studio-icon-button studio-account-button"
             >
-              <User size={20} />
-            </Link>
-            <Link
-              to={session ? "/account/wishlist" : "/wishlist"}
-              className="relative flex h-10 w-10 items-center justify-center rounded-lg text-ink-500 transition-colors hover:bg-ink-50 hover:text-ink-900"
-              aria-label={`Wishlist with ${wishlistCount} items`}
-            >
-              <Heart size={20} />
-              {wishlistCount > 0 && (
-                <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-bold text-white">
-                  {wishlistCount}
-                </span>
-              )}
+              <UserRound size={18} />
             </Link>
             <button
               onClick={openCart}
-              className="relative flex h-10 w-10 items-center justify-center rounded-lg text-ink-500 transition-colors hover:bg-ink-50 hover:text-ink-900"
               aria-label={`Cart with ${count} items`}
+              className="studio-icon-button"
             >
-              <ShoppingCart size={20} />
-              {count > 0 && (
-                <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-bold text-white">
-                  {count}
-                </span>
-              )}
+              <ShoppingBag size={18} />
+              {count > 0 && <span className="studio-cart-count">{count}</span>}
             </button>
             <button
-              onClick={() => setMobileOpen(true)}
-              className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-700 transition-colors hover:bg-ink-50"
-              aria-label="Open menu"
+              ref={menuButton}
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileOpen}
+              aria-controls="mobile-navigation"
+              className="studio-icon-button studio-menu-toggle"
             >
-              <Menu size={22} />
+              {mobileOpen ? <X size={21} /> : <Menu size={21} />}
             </button>
           </div>
         </div>
+        {mobileOpen && (
+          <nav
+            id="mobile-navigation"
+            aria-label="Mobile navigation"
+            className="studio-mobile-nav"
+          >
+            {[
+              ...links,
+              { to: "/products?category=courses", label: "Courses" },
+              { to: "/membership", label: "Membership" },
+              { to: "/support", label: "Support" },
+              {
+                to: session ? "/account" : "/login",
+                label: session ? "My account" : "Sign in",
+              },
+              {
+                to: session ? "/account/wishlist" : "/wishlist",
+                label: "Wishlist",
+              },
+            ].map((link) => (
+              <NavLink key={link.to} to={link.to}>
+                {link.label}
+              </NavLink>
+            ))}
+            <a
+              href="https://www.bdbeginner.com/playflix"
+              className="studio-nav-playflix"
+            >
+              <Play size={13} /> Explore Playflix ↗
+            </a>
+          </nav>
+        )}
       </header>
-
       <CartDrawer />
-
-      {/* Mobile navigation drawer */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-[60] lg:hidden">
-          <div
-            className="absolute inset-0 bg-ink-950/40 backdrop-blur-sm animate-fade-in"
-            onClick={() => setMobileOpen(false)}
-          />
-          <div className="absolute right-0 top-0 flex h-full w-[85%] max-w-sm flex-col bg-white shadow-2xl animate-scale-in">
-            <div className="flex h-16 items-center justify-between border-b border-ink-100 px-5">
-              <Link to="/" className="flex items-center gap-2.5" onClick={() => setMobileOpen(false)}>
-                <HeaderLogo compact />
-              </Link>
-              <button
-                onClick={() => setMobileOpen(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-500 hover:bg-ink-50"
-                aria-label="Close menu"
-              >
-                <X size={22} />
-              </button>
-            </div>
-
-            <div className="flex flex-1 flex-col overflow-y-auto p-5">
-              {/* Search */}
-              <div className="mb-5">
-                <div className="flex items-center gap-2.5 rounded-xl border border-ink-200 bg-ink-50 px-4 py-3">
-                  <Search size={18} className="text-ink-400" />
-                  <input
-                    type="text"
-                    placeholder="Search products..."
-                    className="w-full bg-transparent text-sm text-ink-800 placeholder:text-ink-400 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Primary Nav links */}
-              <nav className="flex flex-col gap-1.5" aria-label="Mobile navigation">
-                <NavLink
-                  to="/products"
-                  onClick={() => setMobileOpen(false)}
-                  className={({ isActive }) =>
-                    `flex items-center justify-between rounded-xl px-4 py-3 text-base font-semibold transition-colors ${
-                      isActive ? 'bg-brand-50 text-brand-700' : 'text-ink-800 hover:bg-ink-50'
-                    }`
-                  }
-                >
-                  Products
-                  <ChevronRight size={18} className="text-ink-300" />
-                </NavLink>
-
-                <NavLink
-                  to="/services"
-                  onClick={() => setMobileOpen(false)}
-                  className={({ isActive }) =>
-                    `flex items-center justify-between rounded-xl px-4 py-3 text-base font-semibold transition-colors ${
-                      isActive ? 'bg-brand-50 text-brand-700' : 'text-ink-800 hover:bg-ink-50'
-                    }`
-                  }
-                >
-                  Services
-                  <ChevronRight size={18} className="text-ink-300" />
-                </NavLink>
-
-                {/* Free Themes & Plugins in mobile */}
-                <NavLink
-                  to="/wordpress"
-                  onClick={() => setMobileOpen(false)}
-                  className={({ isActive }) =>
-                    `flex items-center justify-between rounded-xl p-3.5 text-base font-bold transition-all shadow-xs ${
-                      isActive
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-950 border border-emerald-300'
-                    }`
-                  }
-                >
-                  <span className="flex items-center gap-2">
-                    <Download size={18} className="text-emerald-600 stroke-[2.5]" />
-                    <span>ফ্রি থিম ও প্লাগইন</span>
-                  </span>
-                  <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-extrabold text-white">
-                    100% FREE
-                  </span>
-                </NavLink>
-
-                {/* VIP Membership in mobile */}
-                <NavLink
-                  to="/membership"
-                  onClick={() => setMobileOpen(false)}
-                  className={({ isActive }) =>
-                    `flex items-center justify-between rounded-xl p-3.5 text-base font-bold transition-all shadow-xs ${
-                      isActive
-                        ? 'bg-amber-400 text-ink-950'
-                        : 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-950 border border-amber-300'
-                    }`
-                  }
-                >
-                  <span className="flex items-center gap-2">
-                    <Crown size={18} className="text-amber-500 fill-amber-400" />
-                    <span>VIP Membership</span>
-                  </span>
-                  <span className="rounded-full bg-amber-400/30 px-2 py-0.5 text-[10px] font-extrabold text-amber-900">
-                    ALL-ACCESS
-                  </span>
-                </NavLink>
-
-                {/* AI Motion Masterclass in mobile */}
-                <NavLink
-                  to="/course/ai-motion"
-                  onClick={() => setMobileOpen(false)}
-                  className={({ isActive }) =>
-                    `flex items-center justify-between rounded-xl p-3.5 text-base font-bold transition-all shadow-xs ${
-                      isActive
-                        ? 'bg-gradient-to-r from-purple-600 to-brand-600 text-white'
-                        : 'bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-950 border border-purple-300'
-                    }`
-                  }
-                >
-                  <span className="flex items-center gap-2">
-                    <Film size={18} className="text-purple-600" />
-                    <span>AI মোশন ক্লাস</span>
-                  </span>
-                  <span className="rounded-full bg-purple-600 px-2 py-0.5 text-[10px] font-extrabold text-white font-sans">
-                    ৳290
-                  </span>
-                </NavLink>
-
-                {/* Playflix Tool in mobile */}
-                <a
-                  href="https://www.bdbeginner.com/playflix"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center justify-between rounded-xl border border-brand-200 bg-brand-50/70 p-3.5 text-base font-bold text-brand-800 transition-colors hover:bg-brand-100"
-                >
-                  <span className="flex items-center gap-2">
-                    <Sparkles size={16} className="text-brand-600" />
-                    <span>Playflix Tool</span>
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="rounded bg-brand-600 px-1.5 py-0.5 text-[9px] font-extrabold uppercase text-white">
-                      TOOL
-                    </span>
-                    <ExternalLink size={14} className="text-brand-400" />
-                  </div>
-                </a>
-              </nav>
-
-              <div className="my-4 h-px bg-ink-100" />
-
-              {/* Explore Catalog */}
-              <div className="mb-2 px-1 text-xs font-bold uppercase tracking-wider text-ink-400">
-                Explore Catalog
-              </div>
-              <nav className="flex flex-col gap-1">
-                {exploreLinks.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      onClick={() => setMobileOpen(false)}
-                      className={({ isActive }) =>
-                        `flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
-                          isActive ? 'bg-brand-50 text-brand-700' : 'text-ink-700 hover:bg-ink-50 hover:text-ink-900'
-                        }`
-                      }
-                    >
-                      <Icon size={16} className="text-ink-400" />
-                      <span>{item.label}</span>
-                    </NavLink>
-                  );
-                })}
-              </nav>
-
-              <div className="my-5 h-px bg-ink-100" />
-
-              {/* Secondary links */}
-              <nav className="flex flex-col gap-1">
-                {siteSettings.support_button_enabled && (
-                  <Link to="/support" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-ink-600 hover:bg-ink-50">
-                    <LifeBuoy size={18} className="text-ink-400" />
-                    Get Support
-                  </Link>
-                )}
-                <Link to={session ? "/account" : "/login"} className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-ink-600 hover:bg-ink-50">
-                  <User size={18} className="text-ink-400" />
-                  My Account
-                </Link>
-              </nav>
-            </div>
-
-            <div className="border-t border-ink-100 p-5">
-              <Button to="/products" fullWidth size="lg">
-                Explore Products
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }
