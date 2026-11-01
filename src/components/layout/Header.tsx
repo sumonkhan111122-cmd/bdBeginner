@@ -79,27 +79,27 @@ export function Header() {
               href="https://www.bdbeginner.com/playflix"
               className="studio-nav-playflix"
             >
-              <Play size={12} fill="currentColor" /> Playflix{" "}
+              <Play size={12} fill="currentColor" aria-hidden="true" /> Playflix{" "}
               <span aria-hidden="true">↗</span>
             </a>
           </nav>
           <div className="studio-header-actions">
             <Link to="/membership" className="studio-header-member">
-              <Crown size={14} /> Membership <span aria-hidden="true">↗</span>
+              <Crown size={14} aria-hidden="true" /> Membership <span aria-hidden="true">↗</span>
             </Link>
             <Link
               to={session ? "/account" : "/login"}
               aria-label={session ? "My account" : "Sign in"}
               className="studio-icon-button studio-account-button"
             >
-              <UserRound size={18} />
+              <UserRound size={18} aria-hidden="true" />
             </Link>
             <button
               onClick={openCart}
               aria-label={`Cart with ${count} items`}
               className="studio-icon-button"
             >
-              <ShoppingBag size={18} />
+              <ShoppingBag size={18} aria-hidden="true" />
               {count > 0 && <span className="studio-cart-count">{count}</span>}
             </button>
             <button
@@ -110,7 +110,7 @@ export function Header() {
               aria-controls="mobile-navigation"
               className="studio-icon-button studio-menu-toggle"
             >
-              {mobileOpen ? <X size={21} /> : <Menu size={21} />}
+              {mobileOpen ? <X size={21} aria-hidden="true" /> : <Menu size={21} aria-hidden="true" />}
             </button>
           </div>
         </div>
@@ -142,7 +142,7 @@ export function Header() {
               href="https://www.bdbeginner.com/playflix"
               className="studio-nav-playflix"
             >
-              <Play size={13} /> Explore Playflix ↗
+              <Play size={13} aria-hidden="true" /> Explore Playflix ↗
             </a>
           </nav>
         )}

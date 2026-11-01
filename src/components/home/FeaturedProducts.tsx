@@ -113,6 +113,7 @@ export function FeaturedProducts() {
           {tabs.map((tab) => (
             <button
               key={tab.value}
+              type="button"
               onClick={() => setFilter(tab.value)}
               aria-pressed={filter === tab.value}
             >

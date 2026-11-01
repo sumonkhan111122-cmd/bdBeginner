@@ -28,7 +28,7 @@ export function SignatureFeatures() {
           <article className="playflix-feature">
             <div className="signature-label">
               <span>
-                <Play size={14} fill="currentColor" /> THE SIGNATURE TOOL
+                <Play size={14} fill="currentColor" aria-hidden="true" /> THE SIGNATURE TOOL
               </span>
               <span>01 / PLAYFLIX</span>
             </div>
@@ -45,7 +45,7 @@ export function SignatureFeatures() {
               href="https://www.bdbeginner.com/playflix"
               className="studio-button studio-button-white"
             >
-              Discover Playflix <ArrowUpRight size={18} />
+              Discover Playflix <ArrowUpRight size={18} aria-hidden="true" />
             </a>
             <a
               className="playflix-window"
@@ -53,21 +53,24 @@ export function SignatureFeatures() {
               aria-label="Explore Playflix website script"
             >
               <div className="preview-browserbar">
-                <span>
+                <span aria-hidden="true">
                   <i />
                   <i />
                   <i />
                 </span>
                 <span>playflix / your next project</span>
-                <ArrowUpRight size={13} />
+                <ArrowUpRight size={13} aria-hidden="true" />
               </div>
               <img
                 src="/images/playflix-preview.png"
                 alt="Actual Playflix movie website interface preview"
                 loading="lazy"
+                decoding="async"
+                width={640}
+                height={337}
               />
               <span className="preview-caption">
-                YOUR WEBSITE. YOUR SPOTLIGHT. <ArrowUpRight size={16} />
+                YOUR WEBSITE. YOUR SPOTLIGHT. <ArrowUpRight size={16} aria-hidden="true" />
               </span>
             </a>
             <div className="signature-bottom">
@@ -79,7 +82,7 @@ export function SignatureFeatures() {
           <article className="membership-feature">
             <div className="signature-label">
               <span>
-                <Crown size={16} /> THE ALL-ACCESS ADVANTAGE
+                <Crown size={16} aria-hidden="true" /> THE ALL-ACCESS ADVANTAGE
               </span>
               <span>02 / MEMBERSHIP</span>
             </div>
@@ -98,13 +101,13 @@ export function SignatureFeatures() {
             >
               <div className="pass-top">
                 <span className="pass-brand">bdBeginner®</span>
-                <Crown size={27} />
+                <Crown size={27} aria-hidden="true" />
               </div>
               <span className="pass-small">THE CREATOR'S PASS</span>
               <div className="pass-title">
                 ALL
                 <br />
-                ACCESS<span>↗</span>
+                ACCESS<span aria-hidden="true">↗</span>
               </div>
               <div className="pass-bottom">
                 <span>LIFETIME MEMBERSHIP</span>
@@ -113,10 +116,10 @@ export function SignatureFeatures() {
             </div>
             <div className="member-benefits">
               <span>
-                <Check size={14} /> Paid courses & software
+                <Check size={14} aria-hidden="true" /> Paid courses & software
               </span>
               <span>
-                <Check size={14} /> Digital assets & tools
+                <Check size={14} aria-hidden="true" /> Digital assets & tools
               </span>
             </div>
             <div className="membership-price">
@@ -132,11 +135,11 @@ export function SignatureFeatures() {
                 className="member-round-link"
                 aria-label="Explore membership plans"
               >
-                <ArrowUpRight size={26} />
+                <ArrowUpRight size={26} aria-hidden="true" />
               </Link>
             </div>
             <Link to="/membership" className="membership-all-plans">
-              Find your perfect plan <ArrowRight size={16} />
+              Find your perfect plan <ArrowRight size={16} aria-hidden="true" />
             </Link>
           </article>
         </div>

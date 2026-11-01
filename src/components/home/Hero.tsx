@@ -26,16 +26,16 @@ export function Hero() {
       <div className="studio-container">
         <div className="hero-topline">
           <span>
-            <span className="status-dot" /> THE DIGITAL POSSIBILITIES STUDIO
+            <span className="status-dot" aria-hidden="true" /> THE DIGITAL POSSIBILITIES STUDIO
           </span>
           <span>
-            MADE FOR YOUR NEXT CHAPTER <ArrowDown size={13} />
+            MADE FOR YOUR NEXT CHAPTER <ArrowDown size={13} aria-hidden="true" />
           </span>
         </div>
         <div className="studio-hero-grid">
           <div className="studio-hero-copy">
             <p className="studio-kicker">
-              <Sparkles size={15} /> A GOOD PLACE TO BEGIN.
+              <Sparkles size={15} aria-hidden="true" /> A GOOD PLACE TO BEGIN.
             </p>
             <h1>
               Small spark.
@@ -43,7 +43,7 @@ export function Hero() {
               Big ideas.
               <br />
               <span>Start here.</span>
-              <span className="hero-period">✳</span>
+              <span className="hero-period" aria-hidden="true">✳</span>
             </h1>
             <p className="hero-description">
               আপনার পরের বড় কাজের শুরুটা হোক এখানেই। বেছে নিন ডিজিটাল টুলস,
@@ -51,18 +51,18 @@ export function Hero() {
             </p>
             <div className="hero-actions">
               <Link to="/products" className="studio-button studio-button-blue">
-                Explore the collection <ArrowUpRight size={19} />
+                Explore the collection <ArrowUpRight size={19} aria-hidden="true" />
               </Link>
               <a
                 href="https://www.bdbeginner.com/playflix"
                 className="hero-text-link"
               >
-                <Play size={12} fill="currentColor" /> Meet Playflix{" "}
-                <ArrowUpRight size={17} />
+                <Play size={12} fill="currentColor" aria-hidden="true" /> Meet Playflix{" "}
+                <ArrowUpRight size={17} aria-hidden="true" />
               </a>
             </div>
             <form className="studio-search" onSubmit={search} role="search">
-              <Search size={18} />
+              <Search size={18} aria-hidden="true" />
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
@@ -70,7 +70,7 @@ export function Hero() {
                 aria-label="Search products"
               />
               <button type="submit" aria-label="Search products">
-                <ArrowUpRight size={19} />
+                <ArrowUpRight size={19} aria-hidden="true" />
               </button>
             </form>
           </div>
@@ -84,29 +84,32 @@ export function Hero() {
               src="/images/possibility-sculpture.webp"
               alt="Sculptural cobalt blue ribbon with polished chrome and a lime glass sphere"
               fetchPriority="high"
+              decoding="async"
+              width={700}
+              height={525}
             />
-            <div className="art-grid-mark mark-one">
+            <div className="art-grid-mark mark-one" aria-hidden="true">
               <Plus size={17} />
             </div>
-            <div className="art-grid-mark mark-two">
+            <div className="art-grid-mark mark-two" aria-hidden="true">
               <Plus size={17} />
             </div>
             <a
               className="art-float art-playflix"
               href="https://www.bdbeginner.com/playflix"
             >
-              <span className="float-icon">
+              <span className="float-icon" aria-hidden="true">
                 <Play size={19} fill="currentColor" />
               </span>
               <span>
                 <small>BUILD SOMETHING DIFFERENT</small>
                 <strong>
-                  Playflix <ArrowUpRight size={16} />
+                  Playflix <ArrowUpRight size={16} aria-hidden="true" />
                 </strong>
               </span>
             </a>
             <Link className="art-float art-member" to="/membership">
-              <span className="member-mini-mark">
+              <span className="member-mini-mark" aria-hidden="true">
                 <Crown size={22} />
               </span>
               <span>
@@ -117,7 +120,7 @@ export function Hero() {
                   More possibilities.
                 </strong>
               </span>
-              <ArrowUpRight size={20} />
+              <ArrowUpRight size={20} aria-hidden="true" />
             </Link>
             <div className="art-caption">
               <span>TOOLS. IDEAS. A LITTLE AMBITION.</span>
@@ -128,7 +131,7 @@ export function Hero() {
         <div className="hero-footnote">
           <span>FOR THE BUILDERS. THE LEARNERS. THE WHAT-IF PEOPLE.</span>
           <a href="#discover" aria-label="Discover the collections">
-            SCROLL TO DISCOVER <ArrowDown size={15} />
+            SCROLL TO DISCOVER <ArrowDown size={15} aria-hidden="true" />
           </a>
         </div>
       </div>

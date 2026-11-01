@@ -30,3 +30,6 @@ dist.zip
 .netlify/
 supabase/.temp/
 .extraction-queue.json
+design-assets/
+vite.config.ts.timestamp-*
+

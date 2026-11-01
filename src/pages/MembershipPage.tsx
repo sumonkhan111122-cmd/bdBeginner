@@ -142,7 +142,7 @@ export function MembershipPage() {
                     Choose this plan <ArrowUpRight size={17} />
                   </button>
                   <div className="plan-limit">
-                    <Download size={14} />
+                    <Download size={14} aria-hidden="true" />
                     {plan.dailyDownloadLimit
                       ? `Daily downloads: ${plan.dailyDownloadLimit}`
                       : "Unlimited daily downloads"}
@@ -154,9 +154,9 @@ export function MembershipPage() {
                         className={feature.unavailable ? "unavailable" : ""}
                       >
                         {feature.unavailable ? (
-                          <Minus size={13} />
+                          <Minus size={13} aria-hidden="true" />
                         ) : (
-                          <Check size={13} />
+                          <Check size={13} aria-hidden="true" />
                         )}
                         <span>{feature.textBn || feature.text}</span>
                       </li>
@@ -168,11 +168,11 @@ export function MembershipPage() {
           </div>
           <div className="membership-free-note">
             <span>
-              <Layers size={17} /> WordPress থিম, প্লাগইন ও স্ক্রিপ্ট সবার জন্য
+              <Layers size={17} aria-hidden="true" /> WordPress থিম, প্লাগইন ও স্ক্রিপ্ট সবার জন্য
               ফ্রি।
             </span>
             <Link to="/wordpress">
-              Explore free resources <ArrowUpRight size={16} />
+              Explore free resources <ArrowUpRight size={16} aria-hidden="true" />
             </Link>
           </div>
         </section>
