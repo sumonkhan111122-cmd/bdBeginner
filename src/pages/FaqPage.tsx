@@ -11,6 +11,7 @@ export function FaqPage() {
       <div className="border-b border-ink-100 bg-ink-50/40">
         <div className="container-page py-12 sm:py-16">
           <SectionHeading
+            as="h1"
             eyebrow="FAQ"
             title="Frequently Asked Questions"
             description="Find answers to the most common questions about purchasing digital products and services from bdBeginner."

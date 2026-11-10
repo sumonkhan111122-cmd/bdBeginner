@@ -32,6 +32,7 @@ export function AboutPage() {
       <div className="border-b border-ink-100 bg-ink-50/40">
         <div className="container-page py-12 sm:py-16">
           <SectionHeading
+            as="h1"
             eyebrow="About Us"
             title="About bdBeginner"
             description="bdBeginner is a digital marketplace and technology service brand offering premium digital products, WordPress tools, software, resources, and professional web solutions."

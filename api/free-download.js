@@ -57,6 +57,51 @@ export default async function handler(req, res) {
       .order('title', { ascending: true });
 
     if (linkErr || !links || links.length === 0) {
+      // Attempt on-demand extraction from source_url
+      try {
+        const { data: imp } = await supabase
+          .from('product_source_imports')
+          .select('source_url, source_title, metadata')
+          .eq('product_id', product.id)
+          .maybeSingle();
+
+        if (imp && imp.source_url) {
+          const { createRequire } = await import('module');
+          const require = createRequire(import.meta.url);
+          const { extractDirectDownloadLink } = require('../scripts/fastLinkExtractor.cjs');
+          const dlRes = await extractDirectDownloadLink(imp.source_url, { timeout: 20000 });
+
+          if (dlRes && dlRes.downloadUrl) {
+            // Persist to DB for all subsequent requests
+            await supabase.from('product_download_links').insert({
+              product_id: product.id,
+              title: dlRes.title || `${product.name} (Direct Download)`,
+              download_url: dlRes.downloadUrl,
+              version: product.version,
+              is_active: true,
+              sort_order: 0,
+            });
+
+            return res.status(200).json({
+              success: true,
+              productId: product.id,
+              productName: product.name,
+              url: dlRes.downloadUrl,
+              title: dlRes.title,
+              version: product.version,
+              links: [{
+                id: 'on-demand-extracted',
+                title: dlRes.title,
+                url: dlRes.downloadUrl,
+                version: product.version,
+              }],
+            });
+          }
+        }
+      } catch (onDemandErr) {
+        console.warn('On-demand link extraction notice:', onDemandErr?.message);
+      }
+
       return res.status(404).json({
         success: false,
         error: 'No download links currently available for this product.',

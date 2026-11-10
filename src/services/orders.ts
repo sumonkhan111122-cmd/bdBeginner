@@ -1,4 +1,5 @@
 import { getSupabase } from '@/lib/supabase';
+import { reviewManualPayment } from '@/services/payment';
 import type { CartItem } from '@/types';
 import type {
   CheckoutCatalogProduct,
@@ -453,13 +454,108 @@ export async function updateAdminOrderStatus(
   return updatedOrder;
 }
 
+const pendingOrderDecisions = new Set<string>();
+const manualReviewProviders = ['bkash_personal', 'nagad_personal', 'rocket_personal'];
+
+export function canReviewAdminOrder(order: OrderRow): boolean {
+  const status = order.order_status ?? order.status ?? 'pending';
+  return status !== 'cancelled' && status !== 'completed'
+    && ['unpaid', 'pending', 'failed'].includes(order.payment_status);
+}
+
+async function readAdminDecisionOrder(orderId: string): Promise<OrderRow> {
+  const { data, error } = await getSupabase().from('orders').select('*').eq('id', orderId).maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error('This order no longer exists. Please refresh the order list.');
+  return data as OrderRow;
+}
+
+async function decideAdminOrder(orderId: string, action: 'approve' | 'disapprove'): Promise<OrderRow> {
+  if (pendingOrderDecisions.has(orderId)) throw new Error('This order is already being updated.');
+  pendingOrderDecisions.add(orderId);
+  try {
+    let current = await readAdminDecisionOrder(orderId);
+    if (!canReviewAdminOrder(current)) {
+      throw new Error('This order has already been processed. Please refresh before reviewing it.');
+    }
+
+    const { data: transactions, error: transactionError } = await getSupabase()
+      .from('payment_transactions')
+      .select('id,provider,status')
+      .eq('order_id', orderId);
+    if (transactionError) throw transactionError;
+    const reviewedTransactions = transactions ?? [];
+    if (action === 'disapprove' && reviewedTransactions.some(transaction => ['succeeded', 'completed', 'refunded'].includes(transaction.status))) {
+      throw new Error('This order has a completed or refunded payment and cannot be disapproved. Please review its payment history.');
+    }
+    const pendingManual = reviewedTransactions.filter(transaction => transaction.status === 'pending' && manualReviewProviders.includes(transaction.provider));
+    if (action === 'approve' && pendingManual.length > 1) {
+      throw new Error('This order has multiple pending payment submissions. Review the payments individually first.');
+    }
+
+    // The protected review endpoint only accepts open, unpaid orders. Review the
+    // transaction first; cancelling or marking the order paid first would block it.
+    for (const transaction of pendingManual) {
+      await reviewManualPayment({
+        action: action === 'approve' ? 'approve' : 'reject',
+        transactionId: transaction.id,
+        ...(action === 'disapprove' ? {
+          reasonCode: 'other' as const,
+          reasonText: 'This payment submission was disapproved by an administrator.',
+        } : {}),
+      });
+    }
+    if (pendingManual.length) {
+      current = await readAdminDecisionOrder(orderId);
+      const currentStatus = current.order_status ?? current.status ?? 'pending';
+      if (currentStatus === 'cancelled' || current.payment_status === 'refunded'
+        || (action === 'disapprove' && !canReviewAdminOrder(current))
+        || (action === 'approve' && current.payment_status !== 'paid')) {
+        throw new Error('The order changed during payment review. Please refresh and check its current status.');
+      }
+    }
+
+    const statusKey = Object.prototype.hasOwnProperty.call(current, 'order_status') ? 'order_status' : 'status';
+    const orderStatus: OrderStatus = action === 'approve' ? 'completed' : 'cancelled';
+    const paymentStatus: PaymentStatus = action === 'approve' ? 'paid' : 'failed';
+    const fulfillmentStatus: FulfillmentStatus = action === 'approve' ? 'fulfilled' : 'cancelled';
+    let mutation = getSupabase().from('orders').update({
+      [statusKey]: orderStatus,
+      payment_status: paymentStatus,
+      fulfillment_status: fulfillmentStatus,
+      updated_at: new Date().toISOString(),
+    }).eq('id', orderId)
+      .eq(statusKey, current[statusKey] ?? 'pending')
+      .eq('payment_status', current.payment_status)
+      .eq('fulfillment_status', current.fulfillment_status);
+    if (current.updated_at) mutation = mutation.eq('updated_at', current.updated_at);
+    const { data: updated, error: updateError } = await mutation.select().maybeSingle();
+    if (updateError) throw updateError;
+    if (!updated) throw new Error('This order was changed by another review. Please refresh and check its current status.');
+
+    // Notification failure must not turn a persisted review into an apparent failure.
+    for (const [previous, next, prefix] of [
+      [current[statusKey], orderStatus, 'order_status'],
+      [current.payment_status, paymentStatus, 'payment_status'],
+      [current.fulfillment_status, fulfillmentStatus, 'fulfillment_status'],
+    ]) {
+      if (previous !== next) {
+        void triggerOrderNotification(`${prefix}_${next}_customer`, current.order_number)
+          .catch(error => console.warn('Order review notification could not be sent', error));
+      }
+    }
+    return updated as OrderRow;
+  } finally {
+    pendingOrderDecisions.delete(orderId);
+  }
+}
+
 export async function approveAndConfirmAdminOrder(order: OrderRow): Promise<OrderRow> {
-  return updateAdminOrderStatus(order, {
-    orderStatus: 'completed',
-    paymentStatus: 'paid',
-    fulfillmentStatus: 'fulfilled',
-    adminNote: order.admin_note || null,
-  });
+  return decideAdminOrder(order.id, 'approve');
+}
+
+export async function disapproveAdminOrder(order: OrderRow): Promise<OrderRow> {
+  return decideAdminOrder(order.id, 'disapprove');
 }
 
 export async function deleteAdminOrders(orderIds: string[]): Promise<void> {

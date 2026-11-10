@@ -213,10 +213,21 @@ export async function fetchExtractionQueueStatus(): Promise<ProductExtractionQue
   // 3. Direct Supabase database fallback
   try {
     const sb = getSupabase();
-    const { data: allImports } = await sb
-      .from('product_source_imports')
-      .select('id, product_id, source_url, source_title, metadata, created_at')
-      .order('created_at', { ascending: false });
+    const allImports: any[] = [];
+    let from = 0;
+    const pageSize = 1000;
+    while (true) {
+      const { data, error } = await sb
+        .from('product_source_imports')
+        .select('id, product_id, source_url, source_title, metadata, created_at')
+        .order('created_at', { ascending: false })
+        .range(from, from + pageSize - 1);
+      if (error) throw error;
+      if (!data || data.length === 0) break;
+      allImports.push(...data);
+      if (data.length < pageSize) break;
+      from += pageSize;
+    }
 
     if (allImports) {
       let successCount = 0;

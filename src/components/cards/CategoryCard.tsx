@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import { ArrowUpRight } from "lucide-react";
-import * as Icons from "lucide-react";
+import { ArrowUpRight, Folder } from "lucide-react";
+import { getIcon } from '@/lib/icons';
 import type { Category } from "@/types";
 export function CategoryCard({
   category,
@@ -9,8 +9,7 @@ export function CategoryCard({
   category: Category;
   index?: number;
 }) {
-  const Icon = (Icons[category.icon as keyof typeof Icons] ??
-    Icons.Folder) as Icons.LucideIcon;
+  const Icon = getIcon(category.icon, Folder);
   const to =
     category.slug === "web-services"
       ? "/services"

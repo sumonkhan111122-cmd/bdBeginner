@@ -201,11 +201,9 @@ export function ProtectedVideoPlayer({
         if (data.event === 'onReady') {
           setPlayerReady(true);
           postToPlayer('setVolume', [volume]);
-          postToPlayer('pauseVideo');
           const saved = getLessonPlaybackTime(courseId, lessonId);
           if (saved > 3) {
-            postToPlayer('seekTo', [saved, false]);
-            postToPlayer('pauseVideo');
+            postToPlayer('seekTo', [saved, true]);
           }
         }
 
@@ -258,28 +256,17 @@ export function ProtectedVideoPlayer({
     return () => window.removeEventListener('message', handleMessage);
   }, [courseId, lessonId, duration, onEnded, postToPlayer, isLocked, volume, isPlaying, hasUserStartedPlaying]);
 
-  // Continuous tracking loop: saves playback every second while playing
+  // Continuous tracking loop: polls player time while playing
   useEffect(() => {
     if (!isPlaying || isLocked) return;
 
     const tracker = setInterval(() => {
       postToPlayer('getCurrentTime');
       postToPlayer('getDuration');
-
-      setCurrentTime((prev) => {
-        const next = prev + 1;
-        currentTimeRef.current = next;
-        saveLessonPlaybackTime(courseId, lessonId, next);
-
-        if (duration > 30 && next / duration >= 0.9) {
-          toggleLessonCompletion(courseId, lessonId, true);
-        }
-        return next;
-      });
-    }, 1000);
+    }, 500);
 
     return () => clearInterval(tracker);
-  }, [isPlaying, isLocked, courseId, lessonId, duration, postToPlayer]);
+  }, [isPlaying, isLocked, postToPlayer]);
 
   // Click outside quality dropdown menu
   useEffect(() => {
@@ -308,11 +295,10 @@ export function ProtectedVideoPlayer({
       setIsPlaying(false);
       saveLessonPlaybackTime(courseId, lessonId, currentTimeRef.current);
     } else {
+      const target = currentTime > 0 ? currentTime : (savedResumeSeconds > 3 ? savedResumeSeconds : 0.01);
+      postToPlayer('seekTo', [target, true]);
       postToPlayer('playVideo');
       setIsPlaying(true);
-      if (savedResumeSeconds > 3 && currentTime < 3) {
-        postToPlayer('seekTo', [savedResumeSeconds, true]);
-      }
     }
   };
 
@@ -541,17 +527,15 @@ export function ProtectedVideoPlayer({
         JSON.stringify({ event: 'listening' }),
         '*'
       );
-      postToPlayer('pauseVideo');
       if (savedResumeSeconds > 3) {
-        postToPlayer('seekTo', [savedResumeSeconds, false]);
-        postToPlayer('pauseVideo');
+        postToPlayer('seekTo', [savedResumeSeconds, true]);
       }
     }
   };
 
   // YouTube embed URL with explicit autoplay=0 and native start parameter
   const startParam = savedResumeSeconds > 3 ? `&start=${savedResumeSeconds}` : '';
-  const embedUrl = `https://www.youtube-nocookie.com/embed/${youtubeId}?enablejsapi=1&autoplay=0&controls=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&fs=0&playsinline=1${startParam}&origin=${encodeURIComponent(
+  const embedUrl = `https://www.youtube.com/embed/${youtubeId}?enablejsapi=1&autoplay=0&controls=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&fs=0&playsinline=1${startParam}&origin=${encodeURIComponent(
     typeof window !== 'undefined' ? window.location.origin : ''
   )}`;
 
@@ -664,18 +648,54 @@ export function ProtectedVideoPlayer({
             </div>
           </div>
 
-          {/* INVISIBLE CLICK CATCHER (For Play / Pause) */}
-          <div
-            onClick={togglePlay}
-            className="absolute inset-0 z-10 flex items-center justify-center cursor-pointer bg-transparent"
-          >
-            {!isPlaying && (
-              <div className="flex h-16 w-16 sm:h-22 sm:w-22 items-center justify-center rounded-full bg-brand-600/90 text-white shadow-[0_0_40px_rgba(37,99,235,0.6)] ring-4 ring-white/20 backdrop-blur-md transition-all transform hover:scale-110 active:scale-95 group-hover:bg-brand-500">
+          {/* HIGH-RES POSTER THUMBNAIL COVER (Eliminates black screen before playing) */}
+          {!hasUserStartedPlaying && (
+            <div
+              onClick={togglePlay}
+              className="absolute inset-0 z-15 cursor-pointer overflow-hidden bg-black flex items-center justify-center group/poster"
+            >
+              <img
+                src={`https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`}
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+                }}
+                alt={title}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover/poster:scale-105 opacity-90"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/40" />
+
+              {/* Big Center Play Button */}
+              <div className="relative z-10 flex h-16 w-16 sm:h-22 sm:w-22 items-center justify-center rounded-full bg-brand-600 text-white shadow-[0_0_50px_rgba(37,99,235,0.8)] ring-4 ring-white/30 backdrop-blur-md transition-all transform group-hover/poster:scale-110 active:scale-95">
                 <Play size={28} className="translate-x-0.5 fill-white sm:hidden" />
                 <Play size={34} className="translate-x-1 fill-white hidden sm:block" />
               </div>
-            )}
-          </div>
+
+              {/* Preview badge */}
+              <div className="absolute bottom-4 left-4 z-10 flex items-center gap-2">
+                <span className="rounded-lg bg-black/70 border border-white/20 px-2.5 py-1 text-xs font-bold text-white backdrop-blur-md">
+                  HD 1080p
+                </span>
+                <span className="rounded-lg bg-brand-600 px-2.5 py-1 text-xs font-bold text-white">
+                  ভিডিও শুরু করুন
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* PAUSE / PLAY CLICK OVERLAY (When user has started playing) */}
+          {hasUserStartedPlaying && (
+            <div
+              onClick={togglePlay}
+              className="absolute inset-0 z-10 flex items-center justify-center cursor-pointer bg-transparent"
+            >
+              {!isPlaying && (
+                <div className="flex h-16 w-16 sm:h-22 sm:w-22 items-center justify-center rounded-full bg-brand-600/90 text-white shadow-[0_0_40px_rgba(37,99,235,0.6)] ring-4 ring-white/20 backdrop-blur-md transition-all transform hover:scale-110 active:scale-95 group-hover:bg-brand-500">
+                  <Play size={28} className="translate-x-0.5 fill-white sm:hidden" />
+                  <Play size={34} className="translate-x-1 fill-white hidden sm:block" />
+                </div>
+              )}
+            </div>
+          )}
 
           {/* RESUME / QUALITY NOTIFICATION TOAST */}
           {resumeNotice && (

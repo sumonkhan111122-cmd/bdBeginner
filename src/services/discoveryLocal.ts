@@ -1,15 +1,19 @@
-const WISHLIST_KEY = 'bdbeginner_guest_wishlist_v1';
-const RECENTLY_VIEWED_KEY = 'bdbeginner_recently_viewed_v1';
+export const WISHLIST_KEY = 'bdbeginner_guest_wishlist_v1';
+export const RECENTLY_VIEWED_KEY = 'bdbeginner_recently_viewed_v1';
 const MAX_RECENTLY_VIEWED = 12;
 
-function safeParse<T>(key: string, fallback: T): T {
-  if (typeof window === 'undefined') return fallback;
+function normalizeIds(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(value.filter((id): id is string => typeof id === 'string').map(id => id.trim()).filter(Boolean))];
+}
+
+function readIds(key: string): string[] {
+  if (typeof window === 'undefined') return [];
   try {
     const item = window.localStorage.getItem(key);
-    return item ? (JSON.parse(item) as T) : fallback;
-  } catch (err) {
-    console.error(`Error parsing localStorage key "${key}"`, err);
-    return fallback;
+    return item ? normalizeIds(JSON.parse(item)) : [];
+  } catch {
+    return [];
   }
 }
 
@@ -17,20 +21,22 @@ function safeSet(key: string, value: unknown) {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
-  } catch (err) {
-    console.error(`Error setting localStorage key "${key}"`, err);
-  }
+  } catch { /* Browsers may block storage; the current session still works. */ }
+}
+
+function safeRemove(key: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem(key);
+  } catch { /* Storage is optional. */ }
 }
 
 export function getGuestWishlist(): string[] {
-  const data = safeParse<string[]>(WISHLIST_KEY, []);
-  return Array.isArray(data) ? data : [];
+  return readIds(WISHLIST_KEY);
 }
 
 export function setGuestWishlist(productIds: string[]) {
-  // Ensure array of strings and unique
-  const uniqueIds = Array.from(new Set(productIds.filter((id) => typeof id === 'string')));
-  safeSet(WISHLIST_KEY, uniqueIds);
+  safeSet(WISHLIST_KEY, normalizeIds(productIds));
 }
 
 export function addToGuestWishlist(productId: string) {
@@ -46,17 +52,15 @@ export function removeFromGuestWishlist(productId: string) {
 }
 
 export function clearGuestWishlist() {
-  if (typeof window === 'undefined') return;
-  window.localStorage.removeItem(WISHLIST_KEY);
+  safeRemove(WISHLIST_KEY);
 }
 
 export function getGuestRecentlyViewed(): string[] {
-  const data = safeParse<string[]>(RECENTLY_VIEWED_KEY, []);
-  return Array.isArray(data) ? data : [];
+  return readIds(RECENTLY_VIEWED_KEY).slice(0, MAX_RECENTLY_VIEWED);
 }
 
 export function setGuestRecentlyViewed(productIds: string[]) {
-  const uniqueIds = Array.from(new Set(productIds.filter((id) => typeof id === 'string'))).slice(0, MAX_RECENTLY_VIEWED);
+  const uniqueIds = normalizeIds(productIds).slice(0, MAX_RECENTLY_VIEWED);
   safeSet(RECENTLY_VIEWED_KEY, uniqueIds);
 }
 
@@ -67,6 +71,14 @@ export function addGuestRecentlyViewed(productId: string) {
 }
 
 export function clearGuestRecentlyViewed() {
-  if (typeof window === 'undefined') return;
-  window.localStorage.removeItem(RECENTLY_VIEWED_KEY);
+  safeRemove(RECENTLY_VIEWED_KEY);
+}
+
+export function subscribeGuestDiscovery(onChange: () => void): () => void {
+  if (typeof window === 'undefined') return () => {};
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === null || event.key === WISHLIST_KEY || event.key === RECENTLY_VIEWED_KEY) onChange();
+  };
+  window.addEventListener('storage', handleStorage);
+  return () => window.removeEventListener('storage', handleStorage);
 }

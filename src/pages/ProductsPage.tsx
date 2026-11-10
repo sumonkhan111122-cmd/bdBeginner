@@ -1,9 +1,8 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { ProductCard } from '@/components/cards/ProductCard';
 import { Button } from '@/components/ui/Button';
-import { SectionHeading } from '@/components/ui/SectionHeading';
 import { ProductGridSkeleton } from '@/components/ui/SkeletonCard';
 import { CatalogError, CatalogEmpty } from '@/components/ui/CatalogState';
 import { Pagination } from '@/components/ui/Pagination';
@@ -12,8 +11,15 @@ import { useCurrencyFormatter } from '@/hooks/useCurrency';
 import { useSiteSettings } from '@/context/SiteSettingsContext';
 import { applySeo } from '@/lib/seo';
 import { trackSearch } from '@/lib/tracking';
+import { catalogSearchTerms, readCatalogQuery, updateCatalogQuery, type CatalogSortOption } from '@/lib/catalogFilters';
 import {
   Search,
+  ArrowUpRight,
+  ArrowRight,
+  BookOpen,
+  Play,
+  Compass,
+  Layers,
   SlidersHorizontal,
   X,
   ChevronDown,
@@ -30,6 +36,7 @@ import {
   Bot,
 } from 'lucide-react';
 import type { DeliveryType } from '@/types';
+import '@/catalog-redesign.css';
 
 const PRODUCT_TYPES: { label: string; value: DeliveryType }[] = [
   { label: 'Digital Download', value: 'instant-download' },
@@ -39,13 +46,13 @@ const PRODUCT_TYPES: { label: string; value: DeliveryType }[] = [
 ];
 
 const PRICE_RANGES = [
-  { min: 0, max: 499 },
+  { min: 0, max: 500 },
   { min: 500, max: 1000 },
-  { min: 1001, max: 2000 },
-  { min: 2001, max: Infinity },
+  { min: 1000, max: 2000 },
+  { min: 2000, max: Infinity },
 ];
 
-type SortOption = 'featured' | 'newest' | 'price-asc' | 'price-desc';
+type SortOption = CatalogSortOption;
 
 const SORT_LABELS: Record<SortOption, string> = {
   featured: 'Featured',
@@ -91,7 +98,8 @@ const QUICK_CATEGORY_PILLS = [
 function resolveCategoryName(raw: string, availableCategories: string[]): string {
   const normalized = raw.toLowerCase().trim();
   if (CATEGORY_SLUG_MAP[normalized]) {
-    return CATEGORY_SLUG_MAP[normalized];
+    const name = CATEGORY_SLUG_MAP[normalized];
+    return availableCategories.find((category) => category.toLowerCase() === name.toLowerCase()) || name;
   }
   const match = availableCategories.find(
     (c) => c.toLowerCase() === normalized || c.toLowerCase().includes(normalized)
@@ -123,28 +131,63 @@ export function ProductsPage({ initialCategory, dealsOnly = false }: ProductsPag
   );
 
   const PRODUCTS_PER_PAGE = 30;
-  const [currentPage, setCurrentPage] = useState(1);
-
+  const query = useMemo(() => readCatalogQuery(searchParams, { category: initialCategory, dealsOnly }), [searchParams, initialCategory, dealsOnly]);
   const urlCategoryParam = searchParams.get('category');
-  const urlDealsParam = searchParams.get('deals') === 'true' || dealsOnly;
-  const urlSearchParam = searchParams.get('search') || searchParams.get('q') || '';
+  const search = query.search;
+  const selectedCategories = useMemo(() => [...new Set(query.categories.map((category) => resolveCategoryName(category, categoryNames)))], [query.categories, categoryNames]);
+  const isDealsOnly = query.dealsOnly;
+  const selectedTypes = query.types;
+  const selectedPriceRanges = query.priceRanges;
+  const sort = query.sort;
 
-  const [search, setSearch] = useState(urlSearchParam);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(() => {
-    const raw = urlCategoryParam || initialCategory;
-    return raw ? [resolveCategoryName(raw, [])] : [];
-  });
-  const [isDealsOnly, setIsDealsOnly] = useState<boolean>(urlDealsParam);
-  const [selectedTypes, setSelectedTypes] = useState<DeliveryType[]>([]);
-  const [selectedPriceRanges, setSelectedPriceRanges] = useState<number[]>([]);
-  const [sort, setSort] = useState<SortOption>('featured');
+  const updateFilters = useCallback((changes: Record<string, string | null>, replace = false, resetPage = true) => {
+    setSearchParams((current) => updateCatalogQuery(current, changes, resetPage), { replace, preventScrollReset: true });
+  }, [setSearchParams]);
+  const setSearch = useCallback((value: string) => updateFilters({ search: value || null }, true), [updateFilters]);
+  const setSort = useCallback((value: SortOption) => updateFilters({ sort: value === 'featured' ? null : value }), [updateFilters]);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const filterDialogRef = useRef<HTMLDivElement>(null);
+  const categoryPillsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (urlSearchParam && urlSearchParam.trim().length >= 2) {
-      trackSearch(urlSearchParam.trim());
-    }
-  }, [urlSearchParam]);
+    const strip = categoryPillsRef.current;
+    const active = strip?.querySelector<HTMLElement>('[aria-pressed="true"]');
+    if (!strip || !active || strip.scrollWidth <= strip.clientWidth) return;
+    const stripRect = strip.getBoundingClientRect();
+    const activeRect = active.getBoundingClientRect();
+    strip.scrollLeft += activeRect.left - stripRect.left - (strip.clientWidth - active.clientWidth) / 2;
+  }, [selectedCategories, isDealsOnly]);
+
+  useEffect(() => {
+    if (!mobileFiltersOpen) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    filterDialogRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMobileFiltersOpen(false);
+      if (event.key !== 'Tab') return;
+      const focusable = filterDialogRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), input, select, a[href]');
+      if (!focusable?.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', onKeyDown);
+      previousFocus?.focus();
+    };
+  }, [mobileFiltersOpen]);
+
+  useEffect(() => {
+    const term = search.trim();
+    if (term.length < 2) return;
+    const timer = window.setTimeout(() => trackSearch(term), 500);
+    return () => window.clearTimeout(timer);
+  }, [search]);
 
   // Dynamic SEO based on active filters
   useEffect(() => {
@@ -154,10 +197,11 @@ export function ProductsPage({ initialCategory, dealsOnly = false }: ProductsPag
 
     if (selectedCategories.length === 1) {
       const cat = selectedCategories[0];
-      title = `${cat} — Themes, Plugins & Tools | bdBeginner`;
-      desc = `Browse verified ${cat} with authentic downloads, lifetime updates, and verified licenses at bdBeginner.`;
+      const isCourseCategory = /course|কোর্স/i.test(cat);
+      title = isCourseCategory ? 'Online Courses & Masterclasses | bdBeginner' : `${cat} | bdBeginner`;
+      desc = isCourseCategory ? 'Explore practical digital courses, discover new skills, and learn at your pace with bdBeginner.' : `Explore our ${cat} collection. View product details, delivery options and support information at bdBeginner.`;
       const foundSlug = Object.entries(CATEGORY_SLUG_MAP).find(([, name]) => name === cat)?.[0] || cat.toLowerCase().replace(/\s+/g, '-');
-      canonical = `/products?category=${encodeURIComponent(foundSlug)}`;
+      canonical = initialCategory?.toLowerCase() === 'courses' && isCourseCategory && !urlCategoryParam ? '/courses' : `/products?category=${encodeURIComponent(foundSlug)}`;
     } else if (isDealsOnly) {
       title = 'Special Deals & Discounted Products | bdBeginner';
       desc = 'Discover limited-time discounts and special deals on WordPress themes, plugins, and software licenses.';
@@ -176,107 +220,40 @@ export function ProductsPage({ initialCategory, dealsOnly = false }: ProductsPag
       },
       seoSettings,
     );
-  }, [selectedCategories, isDealsOnly, search, seoSettings]);
-
-  // Sync state whenever URL or props change
-  useEffect(() => {
-    const raw = urlCategoryParam || initialCategory;
-    if (raw) {
-      setSelectedCategories([resolveCategoryName(raw, categoryNames)]);
-    } else if (!urlCategoryParam && !initialCategory) {
-      setSelectedCategories([]);
-    }
-    setIsDealsOnly(urlDealsParam);
-  }, [urlCategoryParam, initialCategory, urlDealsParam, categoryNames]);
-
-  useEffect(() => {
-    if (urlSearchParam) {
-      setSearch(urlSearchParam);
-    }
-  }, [urlSearchParam]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search, selectedCategories, isDealsOnly, selectedTypes, selectedPriceRanges, sort]);
+  }, [selectedCategories, isDealsOnly, search, seoSettings, initialCategory, urlCategoryParam]);
 
   const toggleCategory = useCallback((cat: string) => {
-    setSelectedCategories((prev) => {
-      const next = prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat];
-      const params = new URLSearchParams(searchParams);
-      if (next.length === 1) {
-        const foundSlug = Object.entries(CATEGORY_SLUG_MAP).find(([, name]) => name === next[0])?.[0] || next[0];
-        params.set('category', foundSlug);
-      } else {
-        params.delete('category');
-      }
-      setSearchParams(params, { replace: true });
-      return next;
-    });
-  }, [searchParams, setSearchParams]);
+    const next = selectedCategories.includes(cat) ? selectedCategories.filter((category) => category !== cat) : [...selectedCategories, cat];
+    updateFilters({ category: next.length ? next.map((category) => Object.entries(CATEGORY_SLUG_MAP).find(([, name]) => name.toLowerCase() === category.toLowerCase())?.[0] || category).join(',') : initialCategory ? 'all' : null });
+  }, [selectedCategories, initialCategory, updateFilters]);
 
   const toggleDeals = useCallback(() => {
-    setIsDealsOnly((prev) => {
-      const nextVal = !prev;
-      const params = new URLSearchParams(searchParams);
-      if (nextVal) {
-        params.set('deals', 'true');
-      } else {
-        params.delete('deals');
-      }
-      setSearchParams(params, { replace: true });
-      return nextVal;
-    });
-  }, [searchParams, setSearchParams]);
+    updateFilters({ deals: isDealsOnly ? (dealsOnly ? 'false' : null) : 'true' });
+  }, [isDealsOnly, dealsOnly, updateFilters]);
 
   const toggleType = useCallback((type: DeliveryType) => {
-    setSelectedTypes((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
-    );
-  }, []);
+    const next = selectedTypes.includes(type) ? selectedTypes.filter((value) => value !== type) : [...selectedTypes, type];
+    updateFilters({ type: next.join(',') || null });
+  }, [selectedTypes, updateFilters]);
 
   const togglePriceRange = useCallback((index: number) => {
-    setSelectedPriceRanges((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index],
-    );
-  }, []);
+    const next = selectedPriceRanges.includes(index) ? selectedPriceRanges.filter((value) => value !== index) : [...selectedPriceRanges, index];
+    updateFilters({ price: next.join(',') || null });
+  }, [selectedPriceRanges, updateFilters]);
 
   const clearAllFilters = useCallback(() => {
-    setSelectedCategories([]);
-    setIsDealsOnly(false);
-    setSelectedTypes([]);
-    setSelectedPriceRanges([]);
-    setSearch('');
-    const params = new URLSearchParams(searchParams);
-    params.delete('category');
-    params.delete('deals');
-    params.delete('search');
-    params.delete('q');
-    setSearchParams(params, { replace: true });
-  }, [searchParams, setSearchParams]);
+    updateFilters({ category: initialCategory ? 'all' : null, deals: dealsOnly ? 'false' : null, type: null, price: null, search: null, sort: null });
+  }, [initialCategory, dealsOnly, updateFilters]);
 
   const handlePillClick = (pill: typeof QUICK_CATEGORY_PILLS[number]) => {
-    setCurrentPage(1);
-    const params = new URLSearchParams(searchParams);
+    updateFilters({
+      category: pill.slug === 'all' || pill.slug === 'deals' ? (initialCategory ? 'all' : null) : pill.slug,
+      deals: pill.slug === 'deals' ? 'true' : dealsOnly ? 'false' : null,
+    });
+  };
 
-    if (pill.slug === 'all') {
-      setSelectedCategories([]);
-      setIsDealsOnly(false);
-      params.delete('category');
-      params.delete('deals');
-    } else if (pill.slug === 'deals') {
-      setSelectedCategories([]);
-      setIsDealsOnly(true);
-      params.delete('category');
-      params.set('deals', 'true');
-    } else {
-      setIsDealsOnly(false);
-      params.delete('deals');
-      if (pill.categoryName) {
-        setSelectedCategories([pill.categoryName]);
-        params.set('category', pill.slug);
-      }
-    }
-    setSearchParams(params, { replace: true });
+  const scrollToResults = () => {
+    document.getElementById('catalog-results')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
   };
 
   const hasActiveFilters =
@@ -284,28 +261,24 @@ export function ProductsPage({ initialCategory, dealsOnly = false }: ProductsPag
     isDealsOnly ||
     selectedTypes.length > 0 ||
     selectedPriceRanges.length > 0 ||
-    search.length > 0;
+    search.trim().length > 0;
 
   const filtered = useMemo(() => {
+    const searchTerms = catalogSearchTerms(search);
     let result = products.filter((p) => {
-      if (
-        search &&
-        !p.name.toLowerCase().includes(search.toLowerCase()) &&
-        !p.shortDescription.toLowerCase().includes(search.toLowerCase()) &&
-        !p.category.toLowerCase().includes(search.toLowerCase())
-      )
-        return false;
+      if (searchTerms.length) {
+        const searchable = [p.name, p.shortDescription, p.category, p.subcategory, ...(p.tags || [])].filter(Boolean).join(' ').normalize('NFKC').toLocaleLowerCase();
+        if (!searchTerms.every((term) => searchable.includes(term))) return false;
+      }
 
       if (isDealsOnly) {
         const hasDiscount =
           (p.compareAtPrice && p.compareAtPrice > p.price) ||
-          p.badge === 'sale' ||
-          p.badge === 'featured' ||
-          p.featured;
+          p.badge === 'sale';
         if (!hasDiscount) return false;
       }
 
-      if (selectedCategories.length > 0 && !selectedCategories.includes(p.category))
+      if (selectedCategories.length > 0 && !selectedCategories.some((category) => category.toLowerCase() === p.category.toLowerCase()))
         return false;
 
       if (selectedTypes.length > 0 && !selectedTypes.includes(p.deliveryType))
@@ -314,7 +287,7 @@ export function ProductsPage({ initialCategory, dealsOnly = false }: ProductsPag
       if (selectedPriceRanges.length > 0) {
         const matches = selectedPriceRanges.some((idx) => {
           const range = PRICE_RANGES[idx];
-          return p.price >= range.min && p.price <= range.max;
+          return p.price >= range.min && p.price < range.max;
         });
         if (!matches) return false;
       }
@@ -340,6 +313,16 @@ export function ProductsPage({ initialCategory, dealsOnly = false }: ProductsPag
   }, [products, search, isDealsOnly, selectedCategories, selectedTypes, selectedPriceRanges, sort]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PRODUCTS_PER_PAGE));
+  const currentPage = Math.min(query.page, totalPages);
+  const setCurrentPage = useCallback((page: number) => {
+    const nextPage = Math.max(1, Math.min(page, totalPages));
+    updateFilters({ page: nextPage > 1 ? String(nextPage) : null }, false, false);
+  }, [totalPages, updateFilters]);
+  useEffect(() => {
+    if (!loading && !error && query.page !== currentPage) {
+      updateFilters({ page: currentPage > 1 ? String(currentPage) : null }, true, false);
+    }
+  }, [loading, error, query.page, currentPage, updateFilters]);
   const paginatedProducts = useMemo(() => {
     const start = (currentPage - 1) * PRODUCTS_PER_PAGE;
     return filtered.slice(start, start + PRODUCTS_PER_PAGE);
@@ -361,6 +344,7 @@ export function ProductsPage({ initialCategory, dealsOnly = false }: ProductsPag
     }
     if (selectedCategories.length === 1) {
       const cat = selectedCategories[0];
+      if (/course|কোর্স/i.test(cat)) return { eyebrow: 'THE LEARNING COLLECTION', title: 'Your next skill. Your next chapter.', description: 'Build real skills, bring your ideas to life, and learn something you can put to work. Explore our collection of practical digital courses.' };
       const isFreeCat = cat === 'WordPress Themes' || cat === 'WordPress Plugins' || cat === 'PHP Scripts & Code';
       return {
         eyebrow: isFreeCat ? '100% Free Downloads' : 'Category',
@@ -378,11 +362,12 @@ export function ProductsPage({ initialCategory, dealsOnly = false }: ProductsPag
   }, [isDealsOnly, selectedCategories]);
 
   const filterContent = (
-    <div className="flex flex-col gap-6">
+    <div className="catalog-filter-groups flex flex-col gap-6">
       {/* Special Deals Quick Filter */}
       <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3.5">
         <button
           onClick={toggleDeals}
+          aria-pressed={isDealsOnly}
           className="flex w-full items-center justify-between text-left text-sm font-bold text-amber-950"
         >
           <span className="flex items-center gap-2">
@@ -411,6 +396,7 @@ export function ProductsPage({ initialCategory, dealsOnly = false }: ProductsPag
             <li key={cat}>
               <button
                 onClick={() => toggleCategory(cat)}
+                aria-pressed={selectedCategories.includes(cat)}
                 className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-ink-50"
               >
                 <span
@@ -449,6 +435,7 @@ export function ProductsPage({ initialCategory, dealsOnly = false }: ProductsPag
             <li key={type.value}>
               <button
                 onClick={() => toggleType(type.value)}
+                aria-pressed={selectedTypes.includes(type.value)}
                 className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-ink-50"
               >
                 <span
@@ -487,6 +474,7 @@ export function ProductsPage({ initialCategory, dealsOnly = false }: ProductsPag
             <li key={idx}>
               <button
                 onClick={() => togglePriceRange(idx)}
+                aria-pressed={selectedPriceRanges.includes(idx)}
                 className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-ink-50"
               >
                 <span
@@ -529,282 +517,96 @@ export function ProductsPage({ initialCategory, dealsOnly = false }: ProductsPag
     </div>
   );
 
+  const isCourseCollection = selectedCategories.length === 1 && /course|কোর্স/i.test(selectedCategories[0]);
+
   return (
     <Layout>
-      {/* Dynamic Header */}
-      <div className="border-b border-ink-100 bg-[#f0f1ea]">
-        <div className="container-page py-10 sm:py-14">
-          <SectionHeading
-            eyebrow={headerInfo.eyebrow}
-            title={headerInfo.title}
-            description={headerInfo.description}
-          />
+      <div className="catalog-experience">
+        <section className={`catalog-hero ${isCourseCollection ? 'catalog-hero--courses' : ''}`}>
+          <div className="container-page">
+            <nav className="catalog-breadcrumb" aria-label="Breadcrumb"><Link to="/">Home</Link><span>/</span><span>{isCourseCollection ? 'Courses' : 'Marketplace'}</span></nav>
+            <div className="catalog-hero__layout">
+              <div className="catalog-hero__copy">
+                <p className="catalog-eyebrow"><span />{headerInfo.eyebrow}</p>
+                <h1>{!selectedCategories.length && !isDealsOnly ? <>Good resources.<br /><span>Great possibilities.</span></> : isCourseCollection ? <>A new skill.<br /><span>A whole new you.</span></> : headerInfo.title}</h1>
+                <p className="catalog-hero__description">{headerInfo.description}</p>
+                <div className="catalog-hero__details"><span><Compass size={15} /> Find your next inspiration</span><span><ArrowUpRight size={15} /> Make something that matters</span></div>
+              </div>
+              <div className="catalog-hero__art" aria-hidden="true">
+                <div className="catalog-art-orbit" />
+                <div className="catalog-art-tile catalog-art-tile--back"><Code2 size={34} strokeWidth={1.4} /><span>BUILD</span></div>
+                <div className="catalog-art-tile catalog-art-tile--main">{isCourseCollection ? <GraduationCap size={65} strokeWidth={1.2} /> : <Layers size={65} strokeWidth={1.2} />}<span>{isCourseCollection ? 'STAY CURIOUS.' : 'IDEAS START HERE.'}</span></div>
+                <div className="catalog-art-tile catalog-art-tile--front"><Play size={22} fill="currentColor" /><span>CREATE</span></div>
+                <span className="catalog-art-asterisk">✳</span>
+              </div>
+            </div>
+            <form className="catalog-search" role="search" onSubmit={(event) => { event.preventDefault(); scrollToResults(); }}>
+              <Search size={21} />
+              <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} maxLength={200} enterKeyHint="search" placeholder={isCourseCollection ? 'What would you like to learn?' : 'Find a course, creative tool, theme or resource...'} aria-label="Search products" aria-controls="catalog-results" />
+              {search && <button type="button" className="catalog-search__clear" onClick={() => setSearch('')} aria-label="Clear search"><X size={18} /></button>}
+              <button type="submit" className="catalog-search__action" aria-label="View matching resources"><span>Explore</span><ArrowRight size={18} /></button>
+            </form>
+          </div>
+        </section>
 
-          {/* Quick Category Navigation Pills */}
-          <div className="mt-8">
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+        <div className="catalog-category-strip">
+          <div className="container-page">
+            <div ref={categoryPillsRef} className="catalog-category-pills" aria-label="Browse categories">
               {QUICK_CATEGORY_PILLS.map((pill) => {
-                const isActive =
-                  pill.slug === 'all'
-                    ? selectedCategories.length === 0 && !isDealsOnly
-                    : pill.slug === 'deals'
-                      ? isDealsOnly
-                      : selectedCategories.includes(pill.categoryName || '');
-
+                const isActive = pill.slug === 'all' ? selectedCategories.length === 0 && !isDealsOnly : pill.slug === 'deals' ? isDealsOnly : selectedCategories.some((category) => category.toLowerCase() === pill.categoryName?.toLowerCase());
                 const Icon = pill.icon;
-                return (
-                  <button
-                    key={pill.slug}
-                    onClick={() => handlePillClick(pill)}
-                    className={`flex items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold transition-all duration-200 ${
-                      isActive
-                        ? 'bg-ink-900 text-white'
-                        : 'border border-ink-200/80 bg-white text-ink-700 hover:border-ink-300 hover:bg-ink-50'
-                    }`}
-                  >
-                    <Icon size={15} className={isActive ? 'text-white' : 'text-brand-600'} />
-                    <span>{pill.label}</span>
-                  </button>
-                );
+                return <button type="button" key={pill.slug} onClick={() => handlePillClick(pill)} className={isActive ? 'is-active' : ''} aria-pressed={isActive}><Icon size={16} /><span>{pill.slug === 'all' ? 'All resources' : pill.slug === 'wordpress' ? 'WordPress themes' : pill.slug === 'plugins' ? 'Plugins' : pill.slug === 'scripts' ? 'PHP scripts' : pill.slug === 'deals' ? 'Special offers' : pill.label}</span></button>;
               })}
             </div>
           </div>
-
-          {/* Search bar */}
-          <div className="mt-5 max-w-2xl">
-            <div className="flex items-center gap-3 rounded-xl border border-ink-200 bg-white px-5 py-3.5 transition-colors focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100">
-              <Search size={19} className="shrink-0 text-ink-400" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="প্রোডাক্টের নাম, বিবরণ বা ক্যাটাগরি সার্চ করুন..."
-                className="w-full bg-transparent text-sm sm:text-base text-ink-800 placeholder:text-ink-400 focus:outline-none"
-                aria-label="Search products"
-              />
-              {search && (
-                <button
-                  onClick={() => setSearch('')}
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-ink-400 transition-colors hover:bg-ink-50 hover:text-ink-700"
-                  aria-label="Clear search"
-                >
-                  <X size={17} />
-                </button>
-              )}
-            </div>
-          </div>
         </div>
-      </div>
 
-      <div className="container-page section-padding">
-        <div className="flex gap-8 lg:gap-10">
-          {/* Desktop sidebar */}
-          <aside className="hidden w-64 shrink-0 lg:block">
-            <div className="sticky top-24">
-              <div className="flex items-center justify-between pb-4">
-                <h2 className="font-display text-base font-bold text-ink-900">
-                  Filters
-                </h2>
-                {activeFilterCount > 0 && (
-                  <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-brand-50 px-2 text-xs font-bold text-brand-700">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </div>
+        <div className="container-page catalog-browser" id="catalog-results">
+          <aside className="catalog-sidebar hidden lg:block">
+            <div className="catalog-filter-panel">
+              <div className="catalog-filter-panel__heading"><div><SlidersHorizontal size={17} /><h2>Refine your search</h2></div>{activeFilterCount > 0 && <span>{activeFilterCount}</span>}</div>
               {filterContent}
             </div>
+            <Link to="/support" className="catalog-help-card"><BookOpen size={24} strokeWidth={1.5} /><strong>A little guidance?</strong><p>We can help you find the right resource for your next project.</p><span>Talk to our team <ArrowUpRight size={16} /></span></Link>
           </aside>
 
-          {/* Main content */}
-          <div className="min-w-0 flex-1">
-            {/* Result header */}
-            <div className="flex flex-col gap-3 border-b border-ink-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-ink-500">
-                  Showing{' '}
-                  <span className="font-bold text-ink-900">
-                    {filtered.length === 0
-                      ? 0
-                      : `${(currentPage - 1) * PRODUCTS_PER_PAGE + 1}–${Math.min(currentPage * PRODUCTS_PER_PAGE, filtered.length)}`}
-                  </span>{' '}
-                  of <span className="font-bold text-ink-900">{filtered.length}</span>{' '}
-                  {filtered.length === 1 ? 'product' : 'products'}
-                </span>
-                {activeFilterCount > 0 && (
-                  <button
-                    onClick={clearAllFilters}
-                    className="flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium text-brand-600 transition-colors hover:bg-brand-50"
-                  >
-                    <X size={12} />
-                    Clear filters
-                  </button>
-                )}
-              </div>
-
-              <div className="flex items-center gap-3">
-                {/* Mobile filter button */}
-                <button
-                  onClick={() => setMobileFiltersOpen(true)}
-                  className="flex items-center gap-2 rounded-lg border border-ink-200 px-3.5 py-2 text-sm font-medium text-ink-700 transition-colors hover:bg-ink-50 lg:hidden"
-                >
-                  <SlidersHorizontal size={16} />
-                  Filters
-                  {activeFilterCount > 0 && (
-                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-bold text-white">
-                      {activeFilterCount}
-                    </span>
-                  )}
-                </button>
-
-                {/* Sort */}
-                <div className="relative">
-                  <select
-                    value={sort}
-                    onChange={(e) => setSort(e.target.value as SortOption)}
-                    className="appearance-none rounded-lg border border-ink-200 bg-white py-2 pl-3.5 pr-9 text-sm font-medium text-ink-700 transition-colors hover:bg-ink-50 focus:outline-none focus:ring-2 focus:ring-brand-100"
-                    aria-label="Sort products"
-                  >
-                    {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
-                      <option key={key} value={key}>
-                        {SORT_LABELS[key]}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown
-                    size={16}
-                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink-400"
-                  />
-                </div>
+          <div className="catalog-results">
+            <div className="catalog-toolbar">
+              <div><p className="catalog-eyebrow">CURATED FOR YOUR NEXT CHAPTER</p><h2>{isCourseCollection ? 'Explore the courses' : isDealsOnly ? 'Discover a good deal' : 'Find your next favorite'}</h2><p className="catalog-result-count" aria-live="polite">{loading ? 'Finding your next great resource...' : <>{filtered.length} {filtered.length === 1 ? 'resource' : 'resources'} to explore{search && <> for &ldquo;{search}&rdquo;</>}{totalPages > 1 && <> · Page {currentPage} of {totalPages}</>}</>}</p></div>
+              <div className="catalog-toolbar__controls">
+                <button type="button" onClick={() => setMobileFiltersOpen(true)} className="catalog-mobile-filter lg:hidden"><SlidersHorizontal size={16} /> Filters{activeFilterCount > 0 && <span>{activeFilterCount}</span>}</button>
+                <label className="catalog-sort"><span>Sort by</span><select value={sort} onChange={(event) => setSort(event.target.value as SortOption)} aria-label="Sort products">{(Object.keys(SORT_LABELS) as SortOption[]).map((key) => <option key={key} value={key}>{SORT_LABELS[key]}</option>)}</select><ChevronDown size={14} /></label>
               </div>
             </div>
 
-            {/* Active filter chips */}
-            {activeFilterCount > 0 && (
-              <div className="flex flex-wrap items-center gap-2 pt-3">
-                {isDealsOnly && (
-                  <button
-                    onClick={toggleDeals}
-                    className="flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800 transition-colors hover:bg-amber-200"
-                  >
-                    <Tag size={12} className="text-amber-700" />
-                    <span>Special Deals</span>
-                    <X size={12} />
-                  </button>
-                )}
-                {selectedCategories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => toggleCategory(cat)}
-                    className="flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 transition-colors hover:bg-brand-100"
-                  >
-                    {cat}
-                    <X size={12} />
-                  </button>
-                ))}
-                {selectedTypes.map((type) => {
-                  const typeLabel = PRODUCT_TYPES.find((t) => t.value === type)?.label;
-                  return (
-                    <button
-                      key={type}
-                      onClick={() => toggleType(type)}
-                      className="flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 transition-colors hover:bg-brand-100"
-                    >
-                      {typeLabel}
-                      <X size={12} />
-                    </button>
-                  );
-                })}
-                {selectedPriceRanges.map((idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => togglePriceRange(idx)}
-                    className="flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 transition-colors hover:bg-brand-100"
-                  >
-                    {priceRangeLabels[idx]}
-                    <X size={12} />
-                  </button>
-                ))}
-              </div>
-            )}
+            {activeFilterCount > 0 && <div className="catalog-active-filters">
+              {isDealsOnly && <button type="button" onClick={toggleDeals}><Tag size={12} /> Special offers<X size={12} /></button>}
+              {selectedCategories.map((cat) => <button type="button" key={cat} onClick={() => toggleCategory(cat)}>{cat}<X size={12} /></button>)}
+              {selectedTypes.map((type) => <button type="button" key={type} onClick={() => toggleType(type)}>{PRODUCT_TYPES.find((item) => item.value === type)?.label}<X size={12} /></button>)}
+              {selectedPriceRanges.map((idx) => <button type="button" key={idx} onClick={() => togglePriceRange(idx)}>{priceRangeLabels[idx]}<X size={12} /></button>)}
+              <button type="button" className="catalog-clear-all" onClick={clearAllFilters}>Clear all</button>
+            </div>}
 
-            {/* Grid, loading, error, or empty state */}
-            {loading ? (
-              <div className="mt-6">
-                <ProductGridSkeleton count={9} />
-              </div>
-            ) : error ? (
-              <div className="mt-6">
-                <CatalogError onRetry={retry} />
-              </div>
-            ) : filtered.length > 0 ? (
-              <>
-                <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3">
-                  {paginatedProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
-                </div>
-
-                {totalPages > 1 && (
-                  <div className="mt-10 overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-soft">
-                    <Pagination
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={(page) => {
-                        setCurrentPage(page);
-                        window.scrollTo({ top: 140, behavior: 'smooth' });
-                      }}
-                    />
-                  </div>
-                )}
-              </>
-            ) : hasActiveFilters ? (
-              <div className="mt-6">
-                <CatalogEmpty filtered />
-              </div>
-            ) : (
-              <div className="mt-6">
-                <CatalogEmpty />
-              </div>
-            )}
+            {loading ? <div className="catalog-grid-state"><ProductGridSkeleton count={9} /></div>
+              : error ? <div className="catalog-grid-state"><CatalogError onRetry={retry} /></div>
+              : filtered.length > 0 ? <>
+                <div className="catalog-product-grid">{paginatedProducts.map((product) => <ProductCard key={product.id} product={product} />)}</div>
+                {totalPages > 1 && <div className="catalog-pagination"><Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={(page) => { setCurrentPage(page); scrollToResults(); }} /></div>}
+              </> : <div className="catalog-grid-state"><CatalogEmpty filtered={hasActiveFilters} />{hasActiveFilters && <button type="button" className="catalog-reset-empty" onClick={clearAllFilters}>Clear filters and explore again <ArrowRight size={16} /></button>}</div>}
           </div>
         </div>
+
+        <section className="catalog-bottom-note container-page"><span>✳</span><p>Something for every idea.<br /><strong>Find yours. Make it happen.</strong></p><Link to="/categories">Explore all categories <ArrowUpRight size={18} /></Link></section>
       </div>
 
-      {/* Mobile filter drawer */}
-      {mobileFiltersOpen && (
-        <div className="fixed inset-0 z-[80] lg:hidden">
-          <div
-            className="absolute inset-0 bg-ink-950/40 backdrop-blur-sm animate-fade-in"
-            onClick={() => setMobileFiltersOpen(false)}
-          />
-          <div className="absolute right-0 top-0 flex h-full w-[85%] max-w-sm flex-col bg-white shadow-2xl animate-scale-in">
-            <div className="flex items-center justify-between border-b border-ink-100 px-5 py-4">
-              <h2 className="font-display text-base font-bold text-ink-900">
-                Filters
-              </h2>
-              <button
-                onClick={() => setMobileFiltersOpen(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-ink-500 transition-colors hover:bg-ink-50 hover:text-ink-900"
-                aria-label="Close filters"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-5">{filterContent}</div>
-
-            <div className="border-t border-ink-100 p-5">
-              <Button
-                onClick={() => setMobileFiltersOpen(false)}
-                fullWidth
-                size="lg"
-              >
-                Show {filtered.length} {filtered.length === 1 ? 'Result' : 'Results'}
-              </Button>
-            </div>
-          </div>
+      {mobileFiltersOpen && <div className="catalog-filter-drawer fixed inset-0 z-[80] lg:hidden" role="dialog" aria-modal="true" aria-labelledby="catalog-filter-title">
+        <button type="button" className="absolute inset-0 bg-ink-950/40 backdrop-blur-sm" onClick={() => setMobileFiltersOpen(false)} aria-label="Close filters" />
+        <div ref={filterDialogRef} className="catalog-filter-drawer__panel absolute right-0 top-0 flex h-full w-[88%] max-w-sm flex-col bg-white">
+          <div className="flex items-center justify-between border-b border-ink-100 px-5 py-5"><h2 id="catalog-filter-title" className="font-bold">Refine your search</h2><button type="button" onClick={() => setMobileFiltersOpen(false)} aria-label="Close filters"><X size={21} /></button></div>
+          <div className="flex-1 overflow-y-auto p-5">{filterContent}</div>
+          <div className="border-t border-ink-100 p-5"><Button onClick={() => setMobileFiltersOpen(false)} fullWidth size="lg">Show {filtered.length} {filtered.length === 1 ? 'result' : 'results'}<ArrowRight size={17} /></Button></div>
         </div>
-      )}
+      </div>}
     </Layout>
   );
 }

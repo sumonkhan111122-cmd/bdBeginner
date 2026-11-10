@@ -116,8 +116,24 @@ export type DashboardStats = {
 
 export async function fetchDashboardStats(): Promise<DashboardStats> {
   const sb = getSupabase();
-  const [productsRes, categoriesRes, imagesRes, siteRes, seoRes, ordersRes, pendingTxnsRes, pendingReviewsRes] = await Promise.all([
-    sb.from('products').select('id, name, slug, status, updated_at, featured, thumbnail_url, seo_title, seo_description, short_description, delivery_description, category_id, price, product_features(id), product_faqs(id)'),
+
+  // Load all products with pagination chunking
+  const allProducts: any[] = [];
+  let pFrom = 0;
+  const pSize = 1000;
+  while (true) {
+    const { data, error } = await sb
+      .from('products')
+      .select('id, name, slug, status, updated_at, featured, thumbnail_url, seo_title, seo_description, short_description, delivery_description, category_id, price, product_features(id), product_faqs(id)')
+      .range(pFrom, pFrom + pSize - 1);
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+    allProducts.push(...data);
+    if (data.length < pSize) break;
+    pFrom += pSize;
+  }
+
+  const [categoriesRes, imagesRes, siteRes, seoRes, ordersRes, pendingTxnsRes, pendingReviewsRes] = await Promise.all([
     sb.from('categories').select('*'),
     sb.from('product_images').select('id', { count: 'exact', head: true }),
     sb.from('site_settings').select('*').maybeSingle(),
@@ -127,14 +143,12 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
     sb.from('product_reviews').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
   ]);
 
-  if (productsRes.error) throw productsRes.error;
   if (categoriesRes.error) throw categoriesRes.error;
   if (ordersRes.error) throw ordersRes.error;
   if (pendingTxnsRes.error) throw pendingTxnsRes.error;
   if (pendingReviewsRes.error) throw pendingReviewsRes.error;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const products = (productsRes.data || []) as any[];
+  const products = allProducts;
   const categories = (categoriesRes.data || []) as CategoryRow[];
   const siteSettings = siteRes.data || {};
   const seoSettings = seoRes.data || {};
@@ -286,12 +300,26 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
 
 export async function fetchAllProducts(): Promise<AdminProduct[]> {
   const sb = getSupabase();
-  const { data, error } = await sb
-    .from('products')
-    .select('*, categories(*)')
-    .order('updated_at', { ascending: false });
-  if (error) throw error;
-  return (data ?? []) as AdminProduct[];
+  const allProducts: AdminProduct[] = [];
+  let from = 0;
+  const pageSize = 1000;
+
+  while (true) {
+    const { data, error } = await sb
+      .from('products')
+      .select('*, categories(*)')
+      .order('updated_at', { ascending: false })
+      .range(from, from + pageSize - 1);
+
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+
+    allProducts.push(...(data as AdminProduct[]));
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+
+  return allProducts;
 }
 
 export async function fetchAllCategories(): Promise<CategoryRow[]> {

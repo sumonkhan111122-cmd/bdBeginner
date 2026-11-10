@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Check, Clock } from 'lucide-react';
-import * as Icons from 'lucide-react';
+import { ArrowRight, Check, Clock, Wrench } from 'lucide-react';
+import { getIcon } from '@/lib/icons';
 import type { Service } from '@/types';
 
 type ServiceCardProps = {
@@ -8,7 +8,7 @@ type ServiceCardProps = {
 };
 
 export function ServiceCard({ service }: ServiceCardProps) {
-  const Icon = (Icons[service.icon as keyof typeof Icons] ?? Icons.Wrench) as Icons.LucideIcon;
+  const Icon = getIcon(service.icon, Wrench);
 
   return (
     <Link

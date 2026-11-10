@@ -13,7 +13,8 @@ import {
   HelpCircle,
   Share2,
 } from 'lucide-react';
-import * as Icons from 'lucide-react';
+import { Wrench } from 'lucide-react';
+import { getIcon } from '@/lib/icons';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/Button';
 import { services } from '@/data/homepage';
@@ -51,7 +52,7 @@ export function ServiceDetailPage() {
     );
   }
 
-  const IconComponent = (Icons[service.icon as keyof typeof Icons] ?? Icons.Wrench) as Icons.LucideIcon;
+  const IconComponent = getIcon(service.icon, Wrench);
 
   const whatsappMessage = encodeURIComponent(
     `Hello bdBeginner, I am interested in your service: "${service.title}". Please provide more details on pricing and timeline.`

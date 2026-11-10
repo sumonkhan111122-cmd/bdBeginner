@@ -29,6 +29,7 @@ export function ContactPage() {
       <div className="border-b border-ink-100 bg-ink-50/40">
         <div className="container-page py-12 sm:py-16">
           <SectionHeading
+            as="h1"
             eyebrow="Contact"
             title="Get in touch"
             description="Have a question, project inquiry, or feedback? We'd love to hear from you."

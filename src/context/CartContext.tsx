@@ -12,6 +12,7 @@ import type { Product, CartItem } from '@/types';
 import type { CheckoutPricingResult } from '@/types/discounts';
 import { calculateCheckoutPricing, friendlyPricingError } from '@/services/pricing';
 import { trackAddToCart } from '@/lib/tracking';
+import { CART_KEY, COUPON_KEY, normalizeCartQuantity, normalizeCoupon, parseStoredCart, readCartStorage, writeCartStorage } from '@/lib/cartStorage';
 
 type CartContextValue = {
   items: CartItem[];
@@ -38,75 +39,38 @@ type CartContextValue = {
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-const CART_KEY = 'bdBeginner-cart';
-const COUPON_KEY = 'bdBeginner-coupon';
-
-function isValidCartItem(item: unknown): item is CartItem {
-  if (!item || typeof item !== 'object') return false;
-  const candidate = item as Partial<CartItem>;
-  return (
-    typeof candidate.productId === 'string' &&
-    candidate.productId.trim().length > 0 &&
-    typeof candidate.name === 'string' &&
-    candidate.name.trim().length > 0 &&
-    typeof candidate.price === 'number' &&
-    !Number.isNaN(candidate.price) &&
-    typeof candidate.quantity === 'number' &&
-    candidate.quantity > 0
-  );
-}
-
 function createCartItem(product: Product, quantity: number): CartItem {
   return {
     id: product.id,
     productId: product.id,
     slug: product.slug || '',
     name: product.name || 'Digital Product',
-    price: typeof product.price === 'number' ? product.price : 0,
+    price: Number.isFinite(product.price) && product.price >= 0 ? product.price : 0,
     thumbnail: product.thumbnail || '',
     icon: product.icon || 'Package',
     accent: product.accent || 'brand',
     deliveryType: product.deliveryType || 'instant-download',
-    quantity: Math.max(1, quantity),
+    quantity,
   };
 }
 
-const LEGACY_PRODUCT_ID_MIGRATIONS: Record<string, string> = {
-  'a0000001-0000-0000-0000-000000000001': 'a0000001-0000-4000-8000-000000000001',
-  'a0000001-0000-0000-0000-000000000002': 'a0000001-0000-4000-8000-000000000002',
-  'a0000001-0000-0000-0000-000000000003': 'a0000001-0000-4000-8000-000000000003',
-};
+function pricingKey(items: CartItem[], code: string | null): string {
+  return JSON.stringify([items.map((item) => [item.productId, item.quantity]), code]);
+}
+
+function errorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'object' && error && 'message' in error) return String(error.message);
+  return String(error);
+}
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>(() => {
-    const stored = sessionStorage.getItem(CART_KEY);
-    if (!stored) return [];
-    try {
-      const parsed: unknown = JSON.parse(stored);
-      if (!Array.isArray(parsed)) return [];
-      let hasMigration = false;
-      const valid = parsed.filter(isValidCartItem).map((item) => {
-        const replacementId = LEGACY_PRODUCT_ID_MIGRATIONS[item.productId];
-        if (replacementId) {
-          hasMigration = true;
-          return { ...item, id: replacementId, productId: replacementId };
-        }
-        return item;
-      });
-      if (hasMigration || valid.length !== parsed.length) {
-        sessionStorage.setItem(CART_KEY, JSON.stringify(valid));
-      }
-      return valid;
-    } catch {
-      sessionStorage.removeItem(CART_KEY);
-      return [];
-    }
-  });
+  const [items, setItems] = useState<CartItem[]>(() => parseStoredCart(readCartStorage(CART_KEY)));
   const [isOpen, setIsOpen] = useState(false);
 
   // Coupon state
   const [couponCode, setCouponCode] = useState<string | null>(() => {
-    return sessionStorage.getItem(COUPON_KEY) || null;
+    return normalizeCoupon(readCartStorage(COUPON_KEY));
   });
 
   // Pricing state
@@ -115,19 +79,48 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [pricingError, setPricingError] = useState<string | null>(null);
   const pricingAbort = useRef<AbortController | null>(null);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const acceptedPricingKey = useRef<string | null>(null);
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+  const couponRef = useRef(couponCode);
+  couponRef.current = couponCode;
+
+  const invalidatePricing = useCallback(() => {
+    pricingAbort.current?.abort();
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    acceptedPricingKey.current = null;
+    setPricing(null);
+    setPricingError(null);
+    setPricingLoading(false);
+  }, []);
 
   // Persist cart + coupon
   useEffect(() => {
-    sessionStorage.setItem(CART_KEY, JSON.stringify(items));
+    writeCartStorage(CART_KEY, JSON.stringify(items));
   }, [items]);
 
   useEffect(() => {
-    if (couponCode) {
-      sessionStorage.setItem(COUPON_KEY, couponCode);
-    } else {
-      sessionStorage.removeItem(COUPON_KEY);
-    }
+    writeCartStorage(COUPON_KEY, couponCode);
   }, [couponCode]);
+
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== null && event.key !== CART_KEY && event.key !== COUPON_KEY) return;
+      try { if (event.storageArea !== localStorage) return; } catch { return; }
+      const nextItems = event.key === null || event.key === CART_KEY
+        ? parseStoredCart(event.key === null ? null : event.newValue) : itemsRef.current;
+      const nextCoupon = event.key === null || event.key === COUPON_KEY
+        ? normalizeCoupon(event.key === null ? null : event.newValue) : couponRef.current;
+      const itemsChanged = JSON.stringify(itemsRef.current) !== JSON.stringify(nextItems);
+      const couponChanged = couponRef.current !== nextCoupon;
+      if (!itemsChanged && !couponChanged) return;
+      invalidatePricing();
+      if (itemsChanged) setItems(nextItems);
+      if (couponChanged) setCouponCode(nextCoupon);
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [invalidatePricing]);
 
   // ── Pricing RPC ──
   const runPricing = useCallback(
@@ -157,30 +150,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
         });
 
         if (!controller.signal.aborted) {
+          acceptedPricingKey.current = pricingKey(cartItems, code);
           setPricing(result);
           setPricingError(null);
         }
       } catch (err) {
         if (!controller.signal.aborted) {
-          setPricingError(friendlyPricingError(err));
-          // If coupon was the issue, clear it
-          if (code) {
+          const rawMessage = errorMessage(err);
+          setPricingError(code ? friendlyPricingError(new Error(rawMessage)) : 'Could not refresh prices. Please check your connection and try again.');
+          // A temporary network error must not discard a saved coupon.
+          if (code && /coupon|minimum|usage limit|already used|first.order|expired|not applicable|no eligible/i.test(rawMessage)) {
+            // The state change schedules one fresh request without the invalid coupon.
             setCouponCode(null);
-            // Retry without coupon so we still get pricing
-            try {
-              const fallback = await calculateCheckoutPricing({
-                items: cartItems.map((item) => ({
-                  product_id: item.productId,
-                  quantity: item.quantity,
-                })),
-                couponCode: null,
-              });
-              if (!controller.signal.aborted) {
-                setPricing(fallback);
-              }
-            } catch {
-              // Pricing entirely unavailable
-            }
           }
         }
       } finally {
@@ -192,36 +173,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  // Debounced re-pricing on cart changes
-  const schedulePricing = useCallback(
-    (cartItems: CartItem[], code: string | null) => {
+  // Invalidate stale results before the debounce, including when the cart becomes empty.
+  useEffect(() => {
+    if (acceptedPricingKey.current === pricingKey(items, couponCode)) return;
+    invalidatePricing();
+    if (items.length === 0) return;
+    setPricingLoading(true);
+    debounceTimer.current = setTimeout(() => runPricing(items, couponCode), 300);
+  }, [items, couponCode, invalidatePricing, runPricing]);
+
+  useEffect(() => {
+    return () => {
+      pricingAbort.current?.abort();
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
-      debounceTimer.current = setTimeout(() => {
-        runPricing(cartItems, code);
-      }, 300);
-    },
-    [runPricing],
-  );
-
-  // Trigger pricing when items or coupon change
-  const itemsRef = useRef(items);
-  const couponRef = useRef(couponCode);
-  useEffect(() => {
-    const itemsChanged = itemsRef.current !== items;
-    const couponChanged = couponRef.current !== couponCode;
-    itemsRef.current = items;
-    couponRef.current = couponCode;
-    if (itemsChanged || couponChanged) {
-      schedulePricing(items, couponCode);
-    }
-  }, [items, couponCode, schedulePricing]);
-
-  // Initial pricing on mount if cart has items
-  useEffect(() => {
-    if (items.length > 0) {
-      runPricing(items, couponCode);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    };
   }, []);
 
   // ── Cart operations ──
@@ -230,13 +195,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       console.error('Invalid product passed to addItem:', product);
       return;
     }
-    const safeQty = Math.max(1, Math.floor(quantity) || 1);
+    const safeQty = normalizeCartQuantity(quantity);
+    if (safeQty === null) return;
+    invalidatePricing();
     setItems((prev) => {
       const existing = prev.find((item) => item.productId === product.id);
       if (existing) {
         return prev.map((item) =>
           item.productId === product.id
-            ? { ...item, quantity: item.quantity + safeQty }
+            ? { ...item, quantity: Math.min(Number.MAX_SAFE_INTEGER, item.quantity + safeQty) }
             : item,
         );
       }
@@ -246,27 +213,31 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (shouldOpenCart) {
       setIsOpen(true);
     }
-  }, []);
+  }, [invalidatePricing]);
 
   const removeItem = useCallback((productId: string) => {
+    invalidatePricing();
     setItems((prev) => prev.filter((item) => item.productId !== productId));
-  }, []);
+  }, [invalidatePricing]);
 
   const updateQuantity = useCallback((productId: string, quantity: number) => {
-    if (quantity < 1) return;
+    const safeQty = normalizeCartQuantity(quantity);
+    if (safeQty === null) return;
+    invalidatePricing();
     setItems((prev) =>
       prev.map((item) =>
-        item.productId === productId ? { ...item, quantity } : item,
+        item.productId === productId ? { ...item, quantity: safeQty } : item,
       ),
     );
-  }, []);
+  }, [invalidatePricing]);
 
   const clearCart = useCallback(() => {
+    invalidatePricing();
     setItems([]);
     setCouponCode(null);
     setPricing(null);
     setPricingError(null);
-  }, []);
+  }, [invalidatePricing]);
 
   const openCart = useCallback(() => setIsOpen(true), []);
   const closeCart = useCallback(() => setIsOpen(false), []);
@@ -279,10 +250,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // ── Coupon operations ──
   const applyCoupon = useCallback(
     async (code: string): Promise<string | null> => {
-      const normalizedCode = code.trim().toUpperCase();
+      const normalizedCode = normalizeCoupon(code);
       if (!normalizedCode) return 'Please enter a coupon code.';
       if (items.length === 0) return 'Your cart is empty.';
 
+      pricingAbort.current?.abort();
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+      const controller = new AbortController();
+      pricingAbort.current = controller;
       setPricingLoading(true);
       setPricingError(null);
 
@@ -295,7 +270,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
           couponCode: normalizedCode,
         });
 
+        if (controller.signal.aborted || itemsRef.current !== items) return 'Your cart changed. Please apply the coupon again.';
+
         if (result.discountSource === 'coupon') {
+          acceptedPricingKey.current = pricingKey(items, normalizedCode);
           setCouponCode(normalizedCode);
           setPricing(result);
           setPricingLoading(false);
@@ -304,21 +282,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
         // RPC didn't error but also didn't apply the coupon
         setPricingLoading(false);
+        if (!pricing) void runPricing(items, couponCode);
         return 'This coupon does not apply to items in your cart.';
       } catch (err) {
+        if (controller.signal.aborted) return 'Your cart changed. Please apply the coupon again.';
         setPricingLoading(false);
-        const msg = friendlyPricingError(err);
+        const msg = friendlyPricingError(new Error(errorMessage(err)));
         setPricingError(msg);
+        if (!pricing) void runPricing(items, couponCode);
         return msg;
       }
     },
-    [items],
+    [items, pricing, couponCode, runPricing],
   );
 
   const removeCoupon = useCallback(() => {
+    invalidatePricing();
     setCouponCode(null);
     // Pricing will recalculate via the effect (may restore a promotion)
-  }, []);
+  }, [invalidatePricing]);
 
   // ── Derived values ──
   const count = useMemo(

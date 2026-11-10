@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowDown,
   ArrowUp,
   ArrowUpDown,
   AlertCircle,
   CheckCircle2,
+  XCircle,
   Eye,
   Search,
   ShoppingBag,
@@ -19,7 +20,7 @@ import { OrderStatusBadge } from '@/components/orders/OrderStatusBadge';
 import { useSiteSettings } from '@/context/SiteSettingsContext';
 import { formatCurrency } from '@/lib/currency';
 import { formatOrderDate, getOrderItemCount, getOrderStatus } from '@/lib/orders';
-import { getAdminOrders, deleteAdminOrders, approveAndConfirmAdminOrder } from '@/services/orders';
+import { getAdminOrders, deleteAdminOrders, approveAndConfirmAdminOrder, disapproveAdminOrder, canReviewAdminOrder } from '@/services/orders';
 import { isAiMotionCourseOrder, computeCourseMetrics } from '@/services/courseAnalytics';
 import { Pagination } from '@/components/ui/Pagination';
 import type { OrderRow } from '@/types/orders';
@@ -37,6 +38,7 @@ export function AdminOrdersPage() {
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [orderStatus, setOrderStatus] = useState('all');
   const [paymentStatus, setPaymentStatus] = useState('all');
@@ -56,6 +58,9 @@ export function AdminOrdersPage() {
   const [itemsPerPage, setItemsPerPage] = useState(30);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
+  const [decision, setDecision] = useState<{ id: string; action: 'approve' | 'disapprove' } | null>(null);
+  const mutationBusy = useRef(false);
+  const busy = deleting || decision !== null;
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
@@ -158,7 +163,9 @@ export function AdminOrdersPage() {
   };
 
   const handleDeleteSelected = async () => {
+    if (mutationBusy.current) return;
     if (!window.confirm(`Are you sure you want to delete the ${selectedIds.size} selected order(s)? This cannot be undone.`)) return;
+    mutationBusy.current = true;
     setDeleting(true);
     setError(null);
     try {
@@ -170,11 +177,14 @@ export function AdminOrdersPage() {
       setError(err instanceof Error ? err.message : 'Failed to delete orders.');
     } finally {
       setDeleting(false);
+      mutationBusy.current = false;
     }
   };
 
   const handleDeleteSingle = async (orderId: string, orderNumber: string) => {
+    if (mutationBusy.current) return;
     if (!window.confirm(`Are you sure you want to delete order ${orderNumber}? This cannot be undone.`)) return;
+    mutationBusy.current = true;
     setDeleting(true);
     setError(null);
     try {
@@ -190,21 +200,29 @@ export function AdminOrdersPage() {
       setError(err instanceof Error ? err.message : 'Failed to delete order.');
     } finally {
       setDeleting(false);
+      mutationBusy.current = false;
     }
   };
 
-  const [approvingId, setApprovingId] = useState<string | null>(null);
-
-  const handleQuickApproveRow = async (order: OrderRow) => {
-    setApprovingId(order.id);
+  const handleQuickDecision = async (order: OrderRow, action: 'approve' | 'disapprove') => {
+    if (mutationBusy.current) return;
+    mutationBusy.current = true;
+    setDecision({ id: order.id, action });
+    setError(null);
+    setMessage(null);
     try {
-      await approveAndConfirmAdminOrder(order);
+      if (action === 'approve') await approveAndConfirmAdminOrder(order);
+      else await disapproveAdminOrder(order);
       await loadOrders();
+      setMessage(action === 'approve'
+        ? `Order ${order.order_number} approved successfully.`
+        : `Order ${order.order_number} disapproved. The order and fulfillment are cancelled, and payment is marked failed.`);
     } catch (err: unknown) {
-      console.error('Failed to approve order:', err);
-      alert('Failed to approve order. Please try again.');
+      console.error(`Failed to ${action} order:`, err);
+      setError(err instanceof Error ? err.message : `Failed to ${action} order. Please try again.`);
     } finally {
-      setApprovingId(null);
+      setDecision(null);
+      mutationBusy.current = false;
     }
   };
 
@@ -322,18 +340,19 @@ export function AdminOrdersPage() {
       </div>
 
       {error && (
-        <div className="mt-5 flex items-center gap-2 rounded-xl border border-error-200 bg-error-50 p-4 text-sm text-error-700">
+        <div role="alert" className="mt-5 flex items-center gap-2 rounded-xl border border-error-200 bg-error-50 p-4 text-sm text-error-700">
           <AlertCircle size={17} />
           {error}
         </div>
       )}
+      {message && <div role="status" className="mt-5 flex items-center gap-2 rounded-xl border border-success-200 bg-success-50 p-4 text-sm text-success-700"><CheckCircle2 size={17} />{message}</div>}
 
       {selectedIds.size > 0 && (
         <div className="mt-4 flex items-center justify-between rounded-xl border border-ink-200 bg-ink-50 px-4 py-3">
           <span className="text-sm font-medium text-ink-700">{selectedIds.size} order{selectedIds.size !== 1 && 's'} selected</span>
           <button
             onClick={handleDeleteSelected}
-            disabled={deleting}
+            disabled={busy}
             className="flex items-center gap-1.5 rounded-lg bg-error-100 px-3 py-1.5 text-sm font-semibold text-error-700 hover:bg-error-200 disabled:opacity-50 cursor-pointer"
           >
             <Trash2 size={16} />
@@ -490,18 +509,28 @@ export function AdminOrdersPage() {
 
                       <td className="px-5 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="inline-flex items-center justify-end gap-1.5">
-                          {order.payment_status !== 'paid' && (
+                          {canReviewAdminOrder(order) && <>
                             <button
                               type="button"
-                              onClick={() => handleQuickApproveRow(order)}
-                              disabled={approvingId === order.id}
+                              onClick={() => void handleQuickDecision(order, 'approve')}
+                              disabled={busy}
                               className="inline-flex h-8 items-center gap-1 rounded-lg bg-emerald-600 px-2.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
                               title="অর্ডার কনফার্ম ও পেমেন্ট অ্যাপ্রুভ করুন"
                             >
                               <CheckCircle2 size={13} />
-                              {approvingId === order.id ? 'Saving…' : 'Approve'}
+                              {decision?.id === order.id && decision.action === 'approve' ? 'Approving…' : 'Approve'}
                             </button>
-                          )}
+                            <button
+                              type="button"
+                              onClick={() => void handleQuickDecision(order, 'disapprove')}
+                              disabled={busy}
+                              className="inline-flex h-8 items-center gap-1 rounded-lg border border-error-200 bg-error-50 px-2.5 text-xs font-bold text-error-700 hover:bg-error-100 disabled:opacity-50"
+                              title="Disapprove and cancel this order"
+                            >
+                              <XCircle size={13} />
+                              {decision?.id === order.id && decision.action === 'disapprove' ? 'Disapproving…' : 'Disapprove'}
+                            </button>
+                          </>}
                           <Link
                             to={`/admin/orders/${order.id}`}
                             className="inline-flex h-8 items-center gap-1 rounded-lg border border-ink-200 px-2.5 text-xs font-semibold text-ink-700 hover:bg-ink-50"
@@ -511,7 +540,7 @@ export function AdminOrdersPage() {
                           <button
                             type="button"
                             onClick={() => handleDeleteSingle(order.id, order.order_number)}
-                            disabled={deleting}
+                            disabled={busy}
                             className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-ink-200 text-ink-400 hover:border-error-200 hover:bg-error-50 hover:text-error-600 disabled:opacity-50 cursor-pointer"
                             title={`Delete order ${order.order_number}`}
                           >

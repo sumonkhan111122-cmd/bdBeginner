@@ -38,6 +38,7 @@ export function SupportPage() {
       <div className="border-b border-ink-100 bg-ink-50/40">
         <div className="container-page py-12 sm:py-16">
           <SectionHeading
+            as="h1"
             eyebrow="Support"
             title="How can we help?"
             description="Whether you have questions about a product, an order, or a service, our support team is here to assist you."

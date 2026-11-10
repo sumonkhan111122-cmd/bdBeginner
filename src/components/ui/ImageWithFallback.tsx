@@ -5,6 +5,7 @@ type ImageWithFallbackProps = {
   alt: string;
   className?: string;
   fallback: ReactNode;
+  loading?: 'lazy' | 'eager';
 };
 
 export function ImageWithFallback({
@@ -12,6 +13,7 @@ export function ImageWithFallback({
   alt,
   className,
   fallback,
+  loading = 'lazy',
 }: ImageWithFallbackProps) {
   const [failed, setFailed] = useState(false);
 
@@ -24,7 +26,8 @@ export function ImageWithFallback({
       src={src}
       alt={alt}
       className={className}
-      loading="lazy"
+      loading={loading}
+      decoding="async"
       onError={() => setFailed(true)}
     />
   );

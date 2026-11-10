@@ -26,6 +26,7 @@ export function ServicesPage() {
       <div className="border-b border-ink-100 bg-ink-50/40">
         <div className="container-page py-12 sm:py-16">
           <SectionHeading
+            as="h1"
             eyebrow="Professional Web Services"
             title="Expert Web Development & Maintenance"
             description="Beyond digital products, bdBeginner offers professional website setup, theme customization, bug fixing, speed optimization, and e-commerce solutions."
@@ -65,7 +66,7 @@ export function ServicesPage() {
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm">
                 <Sparkles size={13} /> Need a Custom Package?
               </span>
-              <h2 className="mt-4 font-display text-2xl font-bold sm:text-3xl">
+              <h2 className="mt-4 font-display text-2xl font-bold text-white sm:text-3xl">
                 Have a unique project or need consultation?
               </h2>
               <p className="mt-2 text-sm text-brand-100 sm:text-base">

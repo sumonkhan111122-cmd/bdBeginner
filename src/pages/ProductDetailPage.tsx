@@ -21,7 +21,7 @@ import {
   ArrowRight,
   Loader2,
 } from 'lucide-react';
-import * as Icons from 'lucide-react';
+import { getIcon } from '@/lib/icons';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -44,6 +44,8 @@ import { trackViewContent } from '@/lib/tracking';
 import { useCurrencyFormatter } from '@/hooks/useCurrency';
 import { isProductFree, claimFreeDownload } from '@/services/freeDownloads';
 import type { DeliveryType, Product } from '@/types';
+import { ResourceCover } from '@/components/cards/ResourceCover';
+import '@/catalog-redesign.css';
 
 const deliveryIconMap: Record<DeliveryType, typeof Download> = {
   'instant-download': Download,
@@ -83,46 +85,33 @@ const TABS: { key: TabKey; label: string }[] = [
 function ProductMedia({ product }: { product: Product }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const accent = accentMap[product.accent] ?? accentMap.brand;
-  const Icon = (Icons[product.icon as keyof typeof Icons] ??
-    Icons.Package) as Icons.LucideIcon;
+  const Icon = getIcon(product.icon);
   const activeImage = product.images[activeIdx];
 
   useEffect(() => setActiveIdx(0), [product.id]);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="detail-media-column flex flex-col gap-4">
       {/* Main image */}
       <div
-        className={`relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl border border-ink-100 ${accent.bg}`}
+        className={`detail-main-media relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl border border-ink-100 ${accent.bg}`}
       >
         <ImageWithFallback
-          src={activeImage?.url}
+          src={activeImage?.url || product.thumbnail}
           alt={activeImage?.alt || product.name}
           className="absolute inset-0 h-full w-full object-contain"
-          fallback={
-            <>
-              <div className="absolute inset-0 flex flex-col justify-end gap-1.5 p-6 opacity-[0.06]">
-                <div className={`h-2 w-3/4 rounded-full ${accent.bar}`} />
-                <div className={`h-2 w-1/2 rounded-full ${accent.bar}`} />
-                <div className={`h-2 w-2/3 rounded-full ${accent.bar}`} />
-              </div>
-              <div className={`absolute h-28 w-28 rounded-full border-2 ${accent.bar} opacity-[0.08]`} />
-              <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl bg-white/50 backdrop-blur-sm">
-                <Icon size={40} className={`${accent.icon} opacity-80`} strokeWidth={1.5} />
-              </div>
-            </>
-          }
+          loading="eager"
+          fallback={<ResourceCover product={product} />}
         />
         {product.badge && (
           <div className="absolute left-4 top-4">
             <Badge variant={product.badge} />
           </div>
         )}
-        <div className="absolute bottom-4 right-4 flex items-center gap-1.5 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-ink-600 shadow-sm backdrop-blur-sm">
-          {product.images.length > 1 && `${activeIdx + 1} / ${product.images.length}`}
-        </div>
+        <span className="detail-media-label">{product.images.length > 1 ? `${activeIdx + 1} / ${product.images.length}` : product.category}</span>
       </div>
 
+      {product.features.length > 0 && <div className="detail-feature-preview"><p className="catalog-eyebrow">A LITTLE LOOK INSIDE</p><h2>Made for your next project.</h2><ul>{product.features.slice(0, 3).map((feature) => <li key={feature}><span><Check size={14} /></span>{feature}</li>)}</ul></div>}
       {/* Thumbnails */}
       {product.images.length > 1 && (
         <div className="grid grid-cols-4 gap-3">
@@ -276,6 +265,7 @@ function ProductDetailPage() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    setActiveTab('overview');
   }, [slug]);
 
   useEffect(() => {
@@ -395,10 +385,11 @@ function ProductDetailPage() {
 
   return (
     <Layout>
+      <div className="product-detail-experience">
       {/* Breadcrumbs */}
       <nav
         aria-label="Breadcrumb"
-        className="border-b border-ink-100 bg-ink-50/30"
+        className="detail-breadcrumb border-b border-ink-100 bg-ink-50/30"
       >
         <div className="container-page">
           <ol className="flex items-center gap-1.5 py-3 text-sm">
@@ -436,13 +427,13 @@ function ProductDetailPage() {
         </div>
       </nav>
 
-      <div className="container-page py-8 lg:py-10">
-        <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
+      <div className="container-page detail-page-content py-8 lg:py-10">
+        <div className="detail-product-grid grid gap-8 lg:grid-cols-2 lg:gap-12">
           {/* Media */}
           <ProductMedia product={product} />
 
           {/* Purchase panel */}
-          <div className="flex flex-col">
+          <div className="detail-purchase-column flex flex-col">
             <div className="flex items-center gap-3">
               <span className="text-sm font-semibold uppercase tracking-wider text-brand-600">
                 {product.category}
@@ -457,7 +448,7 @@ function ProductDetailPage() {
               ) : null}
             </div>
 
-            <h1 className="mt-3 font-display text-2xl font-bold leading-tight text-ink-900 sm:text-3xl text-balance">
+            <h1 className="detail-product-title mt-3 font-display text-2xl font-bold leading-tight text-ink-900 sm:text-3xl text-balance">
               {product.name}
             </h1>
 
@@ -475,9 +466,9 @@ function ProductDetailPage() {
 
             {isFree ? (
               /* 100% FREE DIRECT DOWNLOAD PANEL */
-              <div className="mt-6 rounded-2xl border-2 border-emerald-500/50 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-emerald-600/10 p-5 sm:p-6 shadow-lg shadow-emerald-500/10">
+              <div className="detail-free-panel mt-6 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5 sm:p-6">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-md">
                     <Download size={24} strokeWidth={2.2} />
                   </span>
                   <div className="min-w-0">
@@ -499,7 +490,7 @@ function ProductDetailPage() {
                   <button
                     onClick={handleFreeDownload}
                     disabled={freeDownloading}
-                    className="w-full flex items-center justify-center gap-3 py-4 px-6 rounded-xl font-bold text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:brightness-105 active:scale-[0.99] shadow-lg shadow-emerald-600/25 transition-all disabled:opacity-70 text-base"
+                    className="w-full flex items-center justify-center gap-3 py-4 px-6 rounded-xl font-bold text-white bg-emerald-600 hover:brightness-105 active:scale-[0.99] shadow-lg shadow-emerald-600/25 transition-all disabled:opacity-70 text-base"
                   >
                     {freeDownloading ? (
                       <>
@@ -547,7 +538,7 @@ function ProductDetailPage() {
                 {/* Cross-Sell & Marketing for Paid Products */}
                 <div className="mt-6 border-t border-emerald-200/60 pt-5">
                   <div className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-600 to-purple-600 text-white shadow-sm">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white shadow-sm">
                       <Sparkles size={20} />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -589,9 +580,9 @@ function ProductDetailPage() {
               <>
                 {/* VIP Member Download Box */}
                 {isVip && !isMembershipProduct && (
-                  <div className="mt-6 rounded-2xl border-2 border-amber-400/60 bg-gradient-to-br from-amber-500/15 via-yellow-500/10 to-amber-600/15 p-5 shadow-lg shadow-amber-500/10">
+                  <div className="mt-6 rounded-2xl border-2 border-amber-400/60 bg-amber-50 p-5 shadow-lg shadow-amber-500/10">
                     <div className="flex items-center gap-3">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 text-ink-950 shadow-sm">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-200 text-ink-950 shadow-sm">
                         <Crown size={20} strokeWidth={2.2} />
                       </span>
                       <div className="min-w-0">
@@ -620,7 +611,7 @@ function ProductDetailPage() {
                       <button
                         onClick={handleVipDownload}
                         disabled={vipDownloading}
-                        className="w-full flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-xl font-bold text-ink-950 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 hover:brightness-105 active:scale-[0.99] shadow-md shadow-amber-500/25 transition-all disabled:opacity-70"
+                        className="w-full flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-xl font-bold text-ink-950 bg-amber-300 hover:brightness-105 active:scale-[0.99] shadow-md shadow-amber-500/25 transition-all disabled:opacity-70"
                       >
                         {vipDownloading ? (
                           <>
@@ -664,7 +655,7 @@ function ProductDetailPage() {
                 )}
 
                 {/* Price + CTAs */}
-                <div className="mt-6 rounded-2xl border border-ink-100 bg-ink-50/50 p-5">
+                <div className="detail-purchase-panel mt-6 rounded-2xl border border-ink-100 bg-white p-5">
                   <PriceDisplay
                     price={product.price}
                     previousPrice={product.compareAtPrice}
@@ -702,9 +693,9 @@ function ProductDetailPage() {
 
                   {/* VIP Membership Upsell Callout */}
                   {!isVip && !isMembershipProduct && (
-                    <div className="mt-4 rounded-xl border border-amber-300/60 bg-gradient-to-br from-amber-500/10 via-amber-400/5 to-yellow-500/10 p-4">
+                    <div className="mt-4 rounded-xl border border-amber-300/60 bg-amber-50/70 p-4">
                       <div className="flex items-start gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 text-ink-950 shadow-sm">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-200 text-ink-950 shadow-sm">
                           <Crown size={18} strokeWidth={2.2} />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -814,13 +805,17 @@ function ProductDetailPage() {
         </div>
 
         {/* Content tabs */}
-        <div className="mt-10 lg:mt-12">
+        <div className="detail-tab-section mt-10 lg:mt-12">
           {/* Tab nav */}
           <div className="border-b border-ink-100">
-            <div className="flex gap-1 overflow-x-auto">
+            <div className="detail-tab-list flex gap-1 overflow-x-auto" role="tablist" aria-label="Product details">
               {TABS.map((tab) => (
                 <button
                   key={tab.key}
+                  id={`detail-tab-${tab.key}`}
+                  role="tab"
+                  aria-selected={activeTab === tab.key}
+                  aria-controls="detail-tab-content"
                   onClick={() => setActiveTab(tab.key)}
                   className={`shrink-0 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
                     activeTab === tab.key
@@ -835,7 +830,7 @@ function ProductDetailPage() {
           </div>
 
           {/* Tab content */}
-          <div className="py-8">
+          <div className="detail-tab-content py-8" id="detail-tab-content" role="tabpanel" aria-labelledby={`detail-tab-${activeTab}`}>
             {activeTab === 'overview' && (
               <div className="max-w-3xl">
                 <h2 className="font-display text-xl font-bold text-ink-900">
@@ -1056,7 +1051,7 @@ function ProductDetailPage() {
             </button>
           </div>
         ) : (
-          <div className="flex items-center gap-3">
+          <div className="detail-mobile-purchase flex items-center gap-3">
             <div className="flex flex-col">
               <span className="font-display text-lg font-bold text-ink-900">
                 {formatPrice(product.price)}
@@ -1076,12 +1071,12 @@ function ProductDetailPage() {
               {added ? (
                 <>
                   <Check size={16} />
-                  Added
+                  Added to cart
                 </>
               ) : (
                 <>
                   <ShoppingCart size={16} />
-                  Add
+                  Add to cart
                 </>
               )}
             </Button>
@@ -1091,6 +1086,7 @@ function ProductDetailPage() {
             </Button>
           </div>
         )}
+      </div>
       </div>
     </Layout>
   );

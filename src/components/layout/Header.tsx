@@ -1,153 +1,105 @@
-import { useEffect, useRef, useState } from "react";
-import { Link, NavLink, useLocation } from "react-router-dom";
-import { Menu, X, ShoppingBag, UserRound, Crown, Play } from "lucide-react";
-import { useCart } from "@/context/CartContext";
-import { useCustomerAuth } from "@/context/CustomerAuthContext";
-import { useSiteSettings } from "@/context/SiteSettingsContext";
-import { CartDrawer } from "@/components/cart/CartDrawer";
-import { ImageWithFallback } from "@/components/ui/ImageWithFallback";
-import { safeHttpUrl } from "@/lib/urls";
+import { useEffect, useRef, useState } from 'react';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { ArrowRight, ArrowUpRight, ChevronDown, Crown, Menu, Play, Search, ShoppingBag, UserRound, X } from 'lucide-react';
+import { useCart } from '@/context/CartContext';
+import { useCustomerAuth } from '@/context/CustomerAuthContext';
+import { useSiteSettings } from '@/context/SiteSettingsContext';
+import { CartDrawer } from '@/components/cart/CartDrawer';
+import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
+import { safeHttpUrl } from '@/lib/urls';
+import { PLAYFLIX_URL } from '@/data/playflix';
 
 const links = [
-  { to: "/products", label: "Discover" },
-  { to: "/wordpress", label: "Free resources" },
-  { to: "/services", label: "Services" },
+  { to: '/', label: 'Home' },
+  { to: '/courses', label: 'Courses' },
+  { to: '/products', label: 'Digital products' },
+  { to: PLAYFLIX_URL, label: 'Playflix' },
+  { to: '/services', label: 'Services' },
 ];
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState('');
   const location = useLocation();
+  const navigate = useNavigate();
   const menuButton = useRef<HTMLButtonElement>(null);
-  const { count, openCart } = useCart();
+  const searchButton = useRef<HTMLButtonElement>(null);
+  const searchInput = useRef<HTMLInputElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  const { count, openCart, isOpen: cartOpen } = useCart();
   const { session } = useCustomerAuth();
   const { siteSettings } = useSiteSettings();
   const logo = safeHttpUrl(siteSettings.logo_url);
+
   useEffect(() => {
     setMobileOpen(false);
+    setSearchOpen(false);
+    setQuery(new URLSearchParams(location.search).get('search') || '');
   }, [location.pathname, location.search]);
+  useEffect(() => { if (searchOpen) searchInput.current?.focus(); }, [searchOpen]);
   useEffect(() => {
-    if (!mobileOpen) return;
-    const close = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+    const shortcut = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.repeat || cartOpen) return;
+      const target = event.target as HTMLElement | null;
+      const editing = target?.closest('input, textarea, select, [contenteditable="true"]');
+      const commandSearch = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k';
+      const slashSearch = event.key === '/' && !editing && !event.ctrlKey && !event.metaKey && !event.altKey;
+      if (!commandSearch && !slashSearch) return;
+      event.preventDefault();
+      setMobileOpen(false);
+      setSearchOpen(true);
+      searchInput.current?.focus();
+    };
+    window.addEventListener('keydown', shortcut);
+    return () => window.removeEventListener('keydown', shortcut);
+  }, [cartOpen]);
+  useEffect(() => {
+    if (!mobileOpen && !searchOpen) return;
+    const outside = (event: PointerEvent) => {
+      if (event.target instanceof Node && !headerRef.current?.contains(event.target)) {
+        setSearchOpen(false);
         setMobileOpen(false);
-        menuButton.current?.focus();
       }
     };
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [mobileOpen]);
-  const brand = (
-    <>
-      <span className="studio-logo-mark" aria-hidden="true">
-        <i />
-        <i />
-        <i />
-        <i />
-      </span>
-      <span className="studio-logo-type">
-        bd<span>Beginner</span>
-        <sup className="ml-0.5 text-[9px]">®</sup>
-      </span>
-    </>
-  );
-  return (
-    <>
-      <header className="studio-header">
-        <div className="studio-header-inner">
-          <Link
-            to="/"
-            aria-label={`${siteSettings.site_name} home`}
-            className="studio-logo"
-          >
-            {logo ? (
-              <ImageWithFallback
-                src={logo}
-                alt={siteSettings.site_name}
-                fallback={brand}
-              />
-            ) : (
-              brand
-            )}
-          </Link>
-          <nav className="studio-desktop-nav" aria-label="Main navigation">
-            {links.map((link) => (
-              <NavLink key={link.to} to={link.to}>
-                {link.label}
-              </NavLink>
-            ))}
-            <a
-              href="https://www.bdbeginner.com/playflix"
-              className="studio-nav-playflix"
-            >
-              <Play size={12} fill="currentColor" aria-hidden="true" /> Playflix{" "}
-              <span aria-hidden="true">↗</span>
-            </a>
-          </nav>
-          <div className="studio-header-actions">
-            <Link to="/membership" className="studio-header-member">
-              <Crown size={14} aria-hidden="true" /> Membership <span aria-hidden="true">↗</span>
-            </Link>
-            <Link
-              to={session ? "/account" : "/login"}
-              aria-label={session ? "My account" : "Sign in"}
-              className="studio-icon-button studio-account-button"
-            >
-              <UserRound size={18} aria-hidden="true" />
-            </Link>
-            <button
-              onClick={openCart}
-              aria-label={`Cart with ${count} items`}
-              className="studio-icon-button"
-            >
-              <ShoppingBag size={18} aria-hidden="true" />
-              {count > 0 && <span className="studio-cart-count">{count}</span>}
-            </button>
-            <button
-              ref={menuButton}
-              onClick={() => setMobileOpen(!mobileOpen)}
-              aria-label={mobileOpen ? "Close menu" : "Open menu"}
-              aria-expanded={mobileOpen}
-              aria-controls="mobile-navigation"
-              className="studio-icon-button studio-menu-toggle"
-            >
-              {mobileOpen ? <X size={21} aria-hidden="true" /> : <Menu size={21} aria-hidden="true" />}
-            </button>
-          </div>
+    const close = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (searchOpen) { setSearchOpen(false); searchButton.current?.focus(); }
+      else { setMobileOpen(false); menuButton.current?.focus(); }
+    };
+    window.addEventListener('keydown', close);
+    window.addEventListener('pointerdown', outside);
+    return () => {
+      window.removeEventListener('keydown', close);
+      window.removeEventListener('pointerdown', outside);
+    };
+  }, [mobileOpen, searchOpen]);
+
+  const brand = <><span className="bb-brand-symbol" aria-hidden="true"><i /><i /><i /></span><span className="bb-brand-name">bd<span>Beginner</span><span className="bb-brand-period">.</span></span></>;
+
+  return <>
+    <a href="#main-content" className="bb-skip-link">Skip to content</a>
+    <div className="bb-announcement"><span>A little curiosity. A world of possibilities.</span><Link to="/products">Find your next digital tool <ArrowUpRight size={13} /></Link></div>
+    <header ref={headerRef} className="bb-header">
+      <div className="bb-container bb-header-inner">
+        <Link to="/" className="bb-brand" aria-label={`${siteSettings.site_name || 'bdBeginner'} home`}>
+          {logo ? <ImageWithFallback src={logo} alt={siteSettings.site_name} loading="eager" fallback={brand} /> : brand}
+        </Link>
+        <nav className="bb-desktop-nav" aria-label="Main navigation">
+          {links.map(link => link.to === PLAYFLIX_URL ? <a key={link.to} href={link.to} className="bb-playflix-link"><Play size={15} aria-hidden="true" />{link.label}</a> : <NavLink key={link.to} to={link.to} end={link.to === '/'}>{link.label}{link.to === '/products' && <ChevronDown size={12} aria-hidden="true" />}</NavLink>)}
+          <NavLink to="/membership" className="bb-membership-link"><Crown size={14} aria-hidden="true" /> Membership</NavLink>
+        </nav>
+        <div className="bb-header-actions">
+          <button ref={searchButton} type="button" onClick={() => { setMobileOpen(false); setSearchOpen(!searchOpen); }} className="bb-icon-btn" title="Search (Ctrl+K or /)" aria-keyshortcuts="Control+k Meta+k /" aria-label={searchOpen ? 'Close search' : 'Open search'} aria-expanded={searchOpen} aria-controls="site-search"><Search size={19} /></button>
+          <button type="button" onClick={openCart} className="bb-icon-btn bb-cart-btn" aria-label={`Cart with ${count} items`}><ShoppingBag size={19} />{count > 0 && <span className="bb-cart-count">{count}</span>}</button>
+          <span className="bb-header-divider" />
+          <Link to={session ? '/account' : '/login'} className="bb-account-link"><UserRound size={16} /><span>{session ? 'My account' : 'Sign in'}</span></Link>
+          <button ref={menuButton} type="button" className="bb-icon-btn bb-menu-toggle" onClick={() => { setSearchOpen(false); setMobileOpen(!mobileOpen); }} aria-label={mobileOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileOpen} aria-controls="mobile-navigation">{mobileOpen ? <X size={23} /> : <Menu size={23} />}</button>
         </div>
-        {mobileOpen && (
-          <nav
-            id="mobile-navigation"
-            aria-label="Mobile navigation"
-            className="studio-mobile-nav"
-          >
-            {[
-              ...links,
-              { to: "/products?category=courses", label: "Courses" },
-              { to: "/membership", label: "Membership" },
-              { to: "/support", label: "Support" },
-              {
-                to: session ? "/account" : "/login",
-                label: session ? "My account" : "Sign in",
-              },
-              {
-                to: session ? "/account/wishlist" : "/wishlist",
-                label: "Wishlist",
-              },
-            ].map((link) => (
-              <NavLink key={link.to} to={link.to}>
-                {link.label}
-              </NavLink>
-            ))}
-            <a
-              href="https://www.bdbeginner.com/playflix"
-              className="studio-nav-playflix"
-            >
-              <Play size={13} aria-hidden="true" /> Explore Playflix ↗
-            </a>
-          </nav>
-        )}
-      </header>
-      <CartDrawer />
-    </>
-  );
+      </div>
+      {searchOpen && <form id="site-search" className="bb-container bb-header-search" role="search" onSubmit={event => { event.preventDefault(); navigate(query.trim() ? `/products?search=${encodeURIComponent(query.trim())}` : '/products'); setSearchOpen(false); }}><Search size={20} /><input ref={searchInput} type="search" name="search" maxLength={200} value={query} onChange={event => setQuery(event.target.value)} aria-label="Search the catalog" placeholder="Search courses, tools, themes, and more…" /><button type="submit">Search <ArrowRight size={16} /></button></form>}
+      {mobileOpen && <nav id="mobile-navigation" className="bb-mobile-nav bb-container" aria-label="Mobile navigation">{[...links, { to: '/membership', label: 'Membership' }, { to: '/categories', label: 'All categories' }, { to: '/support', label: 'Support' }, { to: session ? '/account' : '/login', label: session ? 'My account' : 'Sign in' }, { to: '/wishlist', label: 'Wishlist' }].map(link => link.to === PLAYFLIX_URL ? <a key={link.to} href={link.to} className="bb-playflix-link">{link.label}<ArrowUpRight size={16} /></a> : <NavLink key={link.to} to={link.to} end={link.to === '/'}>{link.label}<ArrowUpRight size={16} /></NavLink>)}</nav>}
+    </header>
+    <CartDrawer />
+  </>;
 }

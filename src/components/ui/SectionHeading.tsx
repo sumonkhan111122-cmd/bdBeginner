@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+﻿import type { ReactNode } from 'react';
+import '@/interior-redesign.css';
 
 type SectionHeadingProps = {
   eyebrow?: string;
@@ -7,40 +8,18 @@ type SectionHeadingProps = {
   align?: 'left' | 'center';
   action?: ReactNode;
   className?: string;
+  as?: 'h1' | 'h2';
 };
 
-export function SectionHeading({
-  eyebrow,
-  title,
-  description,
-  align = 'left',
-  action,
-  className = '',
-}: SectionHeadingProps) {
-  const alignClass = align === 'center' ? 'text-center mx-auto' : 'text-left';
-
+export function SectionHeading({ eyebrow, title, description, align = 'left', action, className = '', as: Heading = 'h2' }: SectionHeadingProps) {
   return (
-    <div
-      className={`flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between ${alignClass} ${className}`}
-    >
-      <div className={align === 'center' ? 'mx-auto max-w-2xl' : 'max-w-2xl'}>
-        {eyebrow && (
-          <span className="mb-3 inline-block text-sm font-semibold uppercase tracking-wider text-brand-600">
-            {eyebrow}
-          </span>
-        )}
-        <h2 className="text-display-sm sm:text-display-md text-ink-900 text-balance">
-          {title}
-        </h2>
-        {description && (
-          <p className="mt-4 text-base leading-relaxed text-ink-500 sm:text-lg text-balance">
-            {description}
-          </p>
-        )}
+    <div className={`interior-section-heading${align === 'center' ? ' is-centered' : ''} ${className}`}>
+      <div className="interior-section-heading-copy">
+        {eyebrow && <span className="interior-eyebrow"><span />{eyebrow}</span>}
+        <Heading>{title}</Heading>
+        {description && <p>{description}</p>}
       </div>
-      {action && (
-        <div className="shrink-0 sm:pb-1">{action}</div>
-      )}
+      {action && <div className="interior-section-heading-action">{action}</div>}
     </div>
   );
 }

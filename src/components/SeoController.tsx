@@ -26,6 +26,7 @@ export function SeoController() {
     const pages: Record<string, { title: string; description: string }> = {
       '/': { title: seoSettings.default_title, description: seoSettings.default_meta_description },
       '/products': { title: 'Digital Products', description: 'Browse bdBeginner digital products, software, resources, courses, and WordPress tools.' },
+      '/courses': { title: 'Courses & Creative Learning', description: 'Find your next skill with practical bdBeginner courses. Explore AI, motion design, creative tools, and project-based learning at your own pace.' },
       '/categories': { title: 'Product Categories', description: 'Explore bdBeginner products by category, including WordPress, software, AI tools, courses, and digital resources.' },
       '/services': { title: 'Professional Web Services', description: 'Explore bdBeginner website development, redesign, landing page, and optimization services.' },
       '/support': { title: 'Customer Support', description: 'Get help with bdBeginner products, payments, orders, downloads, licenses, and services.' },

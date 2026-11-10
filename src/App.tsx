@@ -8,6 +8,7 @@ import { SiteSettingsProvider } from '@/context/SiteSettingsContext';
 import { SeoController } from '@/components/SeoController';
 import { DiscoveryProvider } from '@/context/DiscoveryContext';
 import { MembershipProvider } from '@/context/MembershipContext';
+import { PLAYFLIX_URL } from '@/data/playflix';
 
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
 
@@ -96,7 +97,7 @@ function ScrollToTop() {
 
 function PlayflixRedirect() {
   useEffect(() => {
-    window.location.href = 'https://www.bdbeginner.com/playflix';
+    window.location.href = PLAYFLIX_URL;
   }, []);
   return null;
 }
@@ -120,6 +121,7 @@ export default function App() {
           <Route path="/pricing" element={<MembershipPage />} />
           <Route path="/vip" element={<MembershipPage />} />
           <Route path="/course/ai-motion" element={<AiMotionMasterclassPage />} />
+          <Route path="/courses" element={<ProductsPage initialCategory="courses" />} />
           <Route path="/courses/ai-motion-masterclass" element={<AiMotionMasterclassPage />} />
           <Route path="/ai-motion-masterclass" element={<AiMotionMasterclassPage />} />
           <Route path="/course/ai-motion/learn" element={<CourseLearnPage />} />

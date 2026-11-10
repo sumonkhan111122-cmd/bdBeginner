@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
-import { AlertCircle, CheckCircle2, Search, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { AlertCircle, CheckCircle2, Search, X, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { formatOrderDate } from '@/lib/orders';
 import { getSupabase } from '@/lib/supabase';
+import { approveAndConfirmAdminOrder, disapproveAdminOrder, getAdminOrderById } from '@/services/orders';
 import {
   MANUAL_REJECTION_REASONS,
   reviewManualPayment,
@@ -35,6 +36,8 @@ export function AdminManualPaymentsPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [processingAction, setProcessingAction] = useState<'approve' | 'reject' | 'disapprove' | null>(null);
+  const mutationBusy = useRef(false);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [reasonCode, setReasonCode] = useState<ManualRejectionReasonCode>('invalid_transaction_id');
   const [reasonText, setReasonText] = useState('');
@@ -73,37 +76,35 @@ export function AdminManualPaymentsPage() {
 
   const processReview = async (
     transactionId: string,
-    action: 'approve' | 'reject',
+    action: 'approve' | 'reject' | 'disapprove',
   ) => {
+    if (mutationBusy.current) return;
     if (action === 'reject' && reasonCode === 'other' && !reasonText.trim()) {
       setError('Please add a customer-safe explanation when the reason is Other.');
       return;
     }
+    mutationBusy.current = true;
     setProcessingId(transactionId);
+    setProcessingAction(action);
     setError(null);
     setMessage(null);
     try {
       const paymentObj = payments.find((p) => p.id === transactionId);
-      const result = await reviewManualPayment({
-        action,
-        transactionId,
-        ...(action === 'reject' ? { reasonCode, reasonText: reasonText.trim() || undefined } : {}),
-      });
-
-      if (action === 'approve' && paymentObj?.order_id) {
-        try {
-          await getSupabase().from('orders').update({
-            payment_status: 'paid',
-            order_status: 'completed',
-            fulfillment_status: 'fulfilled',
-            updated_at: new Date().toISOString(),
-          }).eq('id', paymentObj.order_id);
-        } catch (ordErr) {
-          console.warn('Direct order status update notice:', ordErr);
-        }
+      if (action === 'reject') {
+        const result = await reviewManualPayment({
+          action, transactionId, reasonCode, reasonText: reasonText.trim() || undefined,
+        });
+        setMessage(result.message);
+      } else {
+        if (!paymentObj) throw new Error('This payment is no longer in the queue. Please refresh.');
+        const detail = await getAdminOrderById(paymentObj.order_id);
+        if (!detail) throw new Error('The related order no longer exists.');
+        if (action === 'approve') await approveAndConfirmAdminOrder(detail.order);
+        else await disapproveAdminOrder(detail.order);
+        setMessage(action === 'approve'
+          ? `Order ${detail.order.order_number} and payment approved successfully.`
+          : `Order ${detail.order.order_number} disapproved. The order and fulfillment are cancelled, and payment is marked failed.`);
       }
-
-      setMessage(result.message);
       setRejectingId(null);
       setReasonText('');
       await loadPayments();
@@ -111,6 +112,8 @@ export function AdminManualPaymentsPage() {
       setError(reviewError instanceof Error ? reviewError.message : `Failed to ${action} payment.`);
     } finally {
       setProcessingId(null);
+      setProcessingAction(null);
+      mutationBusy.current = false;
     }
   };
 
@@ -118,11 +121,11 @@ export function AdminManualPaymentsPage() {
     <div className="px-5 py-8 lg:px-8 lg:py-10">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div><h1 className="font-display text-2xl font-bold text-ink-900">Manual Payments</h1><p className="mt-1 text-sm text-ink-500">Review pending customer payment submissions.</p></div>
-        <Button variant="outline" onClick={() => void loadPayments()}>Refresh Queue</Button>
+        <Button variant="outline" disabled={!!processingId} onClick={() => void loadPayments()}>Refresh Queue</Button>
       </div>
 
-      {error && <div className="mt-5 flex items-start gap-2 rounded-xl border border-error-200 bg-error-50 p-4 text-sm text-error-700"><AlertCircle className="mt-0.5 shrink-0" size={17} />{error}</div>}
-      {message && <div className="mt-5 flex items-center gap-2 rounded-xl border border-success-200 bg-success-50 p-4 text-sm text-success-700"><CheckCircle2 size={17} />{message}</div>}
+      {error && <div role="alert" className="mt-5 flex items-start gap-2 rounded-xl border border-error-200 bg-error-50 p-4 text-sm text-error-700"><AlertCircle className="mt-0.5 shrink-0" size={17} />{error}</div>}
+      {message && <div role="status" className="mt-5 flex items-center gap-2 rounded-xl border border-success-200 bg-success-50 p-4 text-sm text-success-700"><CheckCircle2 size={17} />{message}</div>}
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-soft">
         <div className="flex items-center gap-4 border-b border-ink-100 p-4 sm:p-5"><div className="relative max-w-sm flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" size={16} /><input type="search" placeholder="Search TrxID, order, customer, or email" value={search} onChange={(event) => setSearch(event.target.value)} className="h-10 w-full rounded-lg border border-ink-200 pl-9 pr-3 text-sm focus:border-brand-500 focus:outline-none" /></div></div>
@@ -130,7 +133,7 @@ export function AdminManualPaymentsPage() {
           <table className="w-full min-w-[980px] whitespace-nowrap text-left text-sm">
             <thead className="bg-ink-50/60 text-xs font-semibold uppercase tracking-wider text-ink-500"><tr><th className="px-5 py-4">Submitted</th><th className="px-5 py-4">Order / Customer</th><th className="px-5 py-4">Provider</th><th className="px-5 py-4">TrxID</th><th className="px-5 py-4">Amount</th><th className="px-5 py-4 text-right">Actions</th></tr></thead>
             <tbody className="divide-y divide-ink-100 text-ink-700">
-              {loading ? <tr><td colSpan={6} className="px-5 py-12 text-center"><span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-ink-200 border-t-brand-600" /></td></tr> : filtered.length === 0 ? <tr><td colSpan={6} className="px-5 py-12 text-center text-ink-400">No pending payments found.</td></tr> : filtered.map((payment) => <tr key={payment.id} className="hover:bg-ink-50/30"><td className="px-5 py-4">{formatOrderDate(payment.metadata?.submitted_at || payment.created_at)}</td><td className="px-5 py-4"><div className="font-semibold text-ink-900">{payment.orders?.order_number}</div><div className="mt-0.5 text-xs text-ink-500">{payment.orders?.customer_name} · {payment.orders?.customer_email}</div></td><td className="px-5 py-4"><span className="rounded-full bg-ink-100 px-2.5 py-1 text-xs font-semibold">{payment.provider.replace('_personal', '').toUpperCase()}</span></td><td className="px-5 py-4"><code className="rounded bg-ink-100 px-2 py-1 text-xs font-bold">{payment.provider_transaction_id}</code></td><td className="px-5 py-4 font-semibold">{payment.currency} {Number(payment.amount).toLocaleString()}</td><td className="space-x-2 px-5 py-4 text-right"><Button size="sm" onClick={() => void processReview(payment.id, 'approve')} disabled={!!processingId}>{processingId === payment.id ? 'Saving…' : 'Approve'}</Button><Button size="sm" variant="outline" onClick={() => { setRejectingId(payment.id); setError(null); }} disabled={!!processingId}>Reject</Button></td></tr>)}
+              {loading ? <tr><td colSpan={6} className="px-5 py-12 text-center"><span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-ink-200 border-t-brand-600" /></td></tr> : filtered.length === 0 ? <tr><td colSpan={6} className="px-5 py-12 text-center text-ink-400">No pending payments found.</td></tr> : filtered.map((payment) => <tr key={payment.id} className="hover:bg-ink-50/30"><td className="px-5 py-4">{formatOrderDate(payment.metadata?.submitted_at || payment.created_at)}</td><td className="px-5 py-4"><div className="font-semibold text-ink-900">{payment.orders?.order_number}</div><div className="mt-0.5 text-xs text-ink-500">{payment.orders?.customer_name} · {payment.orders?.customer_email}</div></td><td className="px-5 py-4"><span className="rounded-full bg-ink-100 px-2.5 py-1 text-xs font-semibold">{payment.provider.replace('_personal', '').toUpperCase()}</span></td><td className="px-5 py-4"><code className="rounded bg-ink-100 px-2 py-1 text-xs font-bold">{payment.provider_transaction_id}</code></td><td className="px-5 py-4 font-semibold">{payment.currency} {Number(payment.amount).toLocaleString()}</td><td className="space-x-2 px-5 py-4 text-right"><Button size="sm" onClick={() => void processReview(payment.id, 'approve')} disabled={!!processingId}>{processingId === payment.id && processingAction === 'approve' ? 'Approving...' : 'Approve'}</Button><Button size="sm" variant="outline" onClick={() => void processReview(payment.id, 'disapprove')} disabled={!!processingId} className="border-error-200 text-error-700 hover:bg-error-50"><XCircle size={14} />{processingId === payment.id && processingAction === 'disapprove' ? 'Disapproving...' : 'Disapprove'}</Button><Button size="sm" variant="outline" onClick={() => { setRejectingId(payment.id); setError(null); }} disabled={!!processingId}>Reject with reason</Button></td></tr>)}
             </tbody>
           </table>
         </div>

@@ -31,7 +31,7 @@ export function CartPage() {
   const [couponLocalError, setCouponLocalError] = useState<string | null>(null);
 
   const handleApplyCoupon = async () => {
-    if (!couponInput.trim()) return;
+    if (couponApplying || !couponInput.trim()) return;
     setCouponApplying(true);
     setCouponLocalError(null);
     const error = await applyCoupon(couponInput);
@@ -91,9 +91,9 @@ export function CartPage() {
                   <p className="mt-1 text-xs text-ink-400">{humanizeOrderValue(item.deliveryType)}</p>
                   <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-3">
                     <div className="flex items-center gap-1 rounded-lg border border-ink-100 bg-ink-50 px-1">
-                      <button onClick={() => updateQuantity(item.productId, item.quantity - 1)} disabled={item.quantity <= 1} className="flex h-8 w-8 items-center justify-center rounded-md text-ink-500 hover:bg-ink-100 disabled:opacity-30" aria-label="Decrease quantity"><Minus size={14} /></button>
+                      <button onClick={() => updateQuantity(item.productId, item.quantity - 1)} disabled={item.quantity <= 1} className="flex h-8 w-8 items-center justify-center rounded-md text-ink-500 hover:bg-ink-100 disabled:opacity-30" aria-label={`Decrease quantity of ${item.name}`}><Minus size={14} /></button>
                       <span className="w-8 text-center text-sm font-semibold text-ink-700">{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.productId, item.quantity + 1)} className="flex h-8 w-8 items-center justify-center rounded-md text-ink-500 hover:bg-ink-100" aria-label="Increase quantity"><Plus size={14} /></button>
+                      <button onClick={() => updateQuantity(item.productId, item.quantity + 1)} className="flex h-8 w-8 items-center justify-center rounded-md text-ink-500 hover:bg-ink-100" aria-label={`Increase quantity of ${item.name}`}><Plus size={14} /></button>
                     </div>
                     <span className="font-display text-base font-bold text-ink-900">{formatPrice(item.price * item.quantity)}</span>
                   </div>
@@ -137,8 +137,12 @@ export function CartPage() {
                         value={couponInput}
                         onChange={(e) => { setCouponInput(e.target.value.toUpperCase()); setCouponLocalError(null); }}
                         placeholder="Coupon code"
+                        aria-label="Coupon code"
+                        aria-invalid={!!couponLocalError}
+                        aria-describedby={couponLocalError ? 'cart-coupon-error' : undefined}
+                        autoComplete="off"
                         className="h-10 flex-1 rounded-lg border border-ink-200 bg-white px-3 text-sm text-ink-800 uppercase placeholder:normal-case placeholder:text-ink-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                        onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void handleApplyCoupon(); } }}
                         disabled={couponApplying}
                         maxLength={40}
                         autoFocus
@@ -161,13 +165,13 @@ export function CartPage() {
                       </button>
                     </div>
                     {couponLocalError && (
-                      <p className="mt-2 text-xs font-medium text-error-600">{couponLocalError}</p>
+                      <p id="cart-coupon-error" role="alert" className="mt-2 text-xs font-medium text-error-600">{couponLocalError}</p>
                     )}
                   </div>
                 )}
               </div>
 
-              <dl className="mt-4 flex flex-col gap-3 text-sm">
+              <dl className="mt-4 flex flex-col gap-3 text-sm" aria-live="polite" aria-busy={pricingLoading}>
                 <div className="flex justify-between"><dt className="text-ink-500">Items ({count})</dt><dd className="font-medium text-ink-800">{formatPrice(displaySubtotal)}</dd></div>
                 {displayDiscount > 0 && (
                   <div className="flex justify-between">

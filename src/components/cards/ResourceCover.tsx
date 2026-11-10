@@ -1,70 +1,25 @@
-import type { Product } from "@/types";
+import { ArrowUpRight, Code2, Command, GraduationCap, Layers, Play, WandSparkles } from 'lucide-react';
+import type { Product } from '@/types';
 
-const covers: Record<string, { title: string; label: string; tone: string }> = {
-  "kam-pro": {
-    title: "Together.\nBetter.",
-    label: "LEARNING & RELATIONSHIPS",
-    tone: "peach",
-  },
-  "trad-pro": {
-    title: "Read the\nmarket.",
-    label: "TRADING & LEARNING",
-    tone: "forest",
-  },
-  "cap-pc-pro": {
-    title: "Cut. Edit.\nCreate.",
-    label: "CREATIVE SOFTWARE",
-    tone: "lavender",
-  },
-  "mouza-pro": {
-    title: "Find your\nground.",
-    label: "MAPS & RESOURCES",
-    tone: "sand",
-  },
-  "win-offi-pro": {
-    title: "Your daily\nworkspace.",
-    label: "SOFTWARE & PRODUCTIVITY",
-    tone: "blue",
-  },
-  "ytpc-pro": {
-    title: "Less noise.\nMore focus.",
-    label: "DIGITAL TOOLS",
-    tone: "rose",
-  },
-  "mov-pro": {
-    title: "Movie night.\nReimagined.",
-    label: "ENTERTAINMENT RESOURCES",
-    tone: "charcoal",
-  },
-};
 export function ResourceCover({ product }: { product: Product }) {
-  const generic = product.category.toLowerCase().includes("course")
-    ? { title: "Learn. Do.\nRepeat.", label: "A NEW CHAPTER", tone: "peach" }
-    : product.category.toLowerCase().includes("software")
-      ? {
-          title: "A better\nworkflow.",
-          label: "SOFTWARE & TOOLS",
-          tone: "blue",
-        }
-      : {
-          title: "Good ideas\ninside.",
-          label: "DIGITAL POSSIBILITIES",
-          tone: "sand",
-        };
-  const cover = covers[product.slug] || generic;
+  const category = product.category.toLowerCase();
+  const isCourse = /course|কোর্স/.test(category);
+  const isCode = /wordpress|script|plugin/.test(category);
+  const tones = ['lavender', 'peach', 'mint', 'blue'];
+  const hash = [...product.slug].reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  const tone = tones[hash % tones.length];
+  const Icon = isCourse ? GraduationCap : isCode ? Code2 : /ai/.test(category) ? WandSparkles : /software/.test(category) ? Command : Layers;
+
   return (
-    <div className={`resource-cover cover-${cover.tone}`} aria-hidden="true">
-      <span className="cover-brand">bd / curated resources</span>
-      <span className="cover-shape" />
-      <strong>
-        {cover.title.split("\n").map((line, i) => (
-          <span key={i}>{line}</span>
-        ))}
-      </strong>
-      <span className="cover-bottom">
-        {cover.label}
-        <span>↗</span>
-      </span>
+    <div className={`market-cover market-cover--${tone} ${isCourse ? 'market-cover--course' : ''}`} aria-hidden="true">
+      <div className="market-cover__brand"><span>bd<span>beginner</span></span><ArrowUpRight size={16} /></div>
+      <div className="market-cover__scene">
+        <span className="market-cover__orbit" />
+        <span className="market-cover__disc"><Icon size={48} strokeWidth={1.4} /></span>
+        <span className="market-cover__satellite">{isCourse ? <Play size={17} fill="currentColor" /> : <span>✳</span>}</span>
+        <span className="market-cover__dot" />
+      </div>
+      <div className="market-cover__label"><span>{product.category}</span><strong>{isCourse ? 'Learn something great.' : 'Make your next move.'}</strong></div>
     </div>
   );
 }

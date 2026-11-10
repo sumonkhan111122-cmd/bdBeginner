@@ -1,4 +1,5 @@
-import * as Icons from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
+import { getIcon } from '@/lib/icons';
 import type { TrustItem } from '@/types';
 
 type TrustItemCardProps = {
@@ -6,7 +7,7 @@ type TrustItemCardProps = {
 };
 
 export function TrustItemCard({ item }: TrustItemCardProps) {
-  const Icon = (Icons[item.icon as keyof typeof Icons] ?? Icons.CheckCircle) as Icons.LucideIcon;
+  const Icon = getIcon(item.icon, CheckCircle);
 
   return (
     <div className="flex flex-col items-start rounded-xl border border-ink-100 bg-white p-5 transition-all duration-200 hover:border-ink-200 hover:shadow-soft sm:p-6">

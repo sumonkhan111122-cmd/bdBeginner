@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
 import {
   X,
   ShoppingCart,
@@ -12,7 +13,7 @@ import {
   Repeat,
   Wrench,
 } from 'lucide-react';
-import * as Icons from 'lucide-react';
+import { getIcon } from '@/lib/icons';
 import { useCart } from '@/context/CartContext';
 import { useCurrencyFormatter } from '@/hooks/useCurrency';
 import { deliveryLabels } from '@/data/homepage';
@@ -39,6 +40,46 @@ export function CartDrawer() {
   const { items, isOpen, closeCart, removeItem, updateQuantity, total, count } =
     useCart();
   const navigate = useNavigate();
+  const drawerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const drawer = drawerRef.current;
+    if (!drawer) return;
+    drawer.inert = !isOpen;
+    if (!isOpen) return;
+
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const focusable = () => Array.from(drawer.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), [tabindex="0"]'))
+      .filter((element) => element.getClientRects().length > 0);
+    focusable()[0]?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeCart();
+      }
+      if (event.key !== 'Tab') return;
+      const controls = focusable();
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (!first || !last) return;
+      if (!drawer.contains(document.activeElement) || (event.shiftKey && document.activeElement === first)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      if (previousFocus?.isConnected) previousFocus.focus();
+    };
+  }, [isOpen, closeCart]);
 
   const handleCheckout = () => {
     closeCart();
@@ -58,12 +99,14 @@ export function CartDrawer() {
 
       {/* Drawer */}
       <div
+        ref={drawerRef}
         className={`fixed right-0 top-0 z-[71] flex h-full w-full max-w-md flex-col bg-white shadow-2xl transition-transform duration-300 ease-smooth ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
         role="dialog"
         aria-label="Shopping cart"
-        aria-modal="true"
+        aria-modal={isOpen || undefined}
+        aria-hidden={!isOpen}
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-ink-100 px-5 py-4">
@@ -108,8 +151,7 @@ export function CartDrawer() {
             <div className="flex-1 overflow-y-auto px-5 py-4">
               <ul className="flex flex-col gap-3">
                 {items.map((item) => {
-                  const Icon = (Icons[item.icon as keyof typeof Icons] ??
-                    Icons.Package) as Icons.LucideIcon;
+                  const Icon = getIcon(item.icon);
                   const accent = accentMap[item.accent] ?? accentMap.brand;
                   const DeliveryIcon = deliveryIconMap[item.deliveryType];
 
@@ -149,8 +191,9 @@ export function CartDrawer() {
                               onClick={() =>
                                 updateQuantity(item.productId, item.quantity - 1)
                               }
+                              disabled={item.quantity <= 1}
                               className="flex h-7 w-7 items-center justify-center rounded-md text-ink-500 transition-colors hover:bg-ink-100 hover:text-ink-900"
-                              aria-label="Decrease quantity"
+                              aria-label={`Decrease quantity of ${item.name}`}
                             >
                               <Minus size={14} />
                             </button>
@@ -162,7 +205,7 @@ export function CartDrawer() {
                                 updateQuantity(item.productId, item.quantity + 1)
                               }
                               className="flex h-7 w-7 items-center justify-center rounded-md text-ink-500 transition-colors hover:bg-ink-100 hover:text-ink-900"
-                              aria-label="Increase quantity"
+                              aria-label={`Increase quantity of ${item.name}`}
                             >
                               <Plus size={14} />
                             </button>

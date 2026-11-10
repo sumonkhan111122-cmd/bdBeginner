@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "test:offline": "node --test scripts/qa-storefront-offline.mjs scripts/qa-cart.mjs scripts/qa-discovery.mjs scripts/qa-catalog-offline.mjs scripts/qa-product-actions-offline.mjs",
     "import:weadown": "node scripts/auto-import-weadown.cjs",
     "extract:recover": "node scripts/extract-downloads.cjs --recover",
     "extract:single": "node scripts/extract-downloads.cjs",

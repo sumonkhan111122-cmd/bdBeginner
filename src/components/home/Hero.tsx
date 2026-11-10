@@ -1,140 +1,40 @@
-import { useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import {
-  ArrowDown,
-  ArrowUpRight,
-  Search,
-  Sparkles,
-  Crown,
-  Play,
-  Plus,
-} from "lucide-react";
+import { useState, type FormEvent } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowDown, ArrowRight, ArrowUpRight, BookOpen, Check, Code2, Layers3, Play, Search, ShieldCheck, Sparkles } from 'lucide-react';
+import { PLAYFLIX_URL } from '@/data/playflix';
 
 export function Hero() {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState('');
   const navigate = useNavigate();
   function search(event: FormEvent) {
     event.preventDefault();
-    navigate(
-      query.trim()
-        ? `/products?search=${encodeURIComponent(query.trim())}`
-        : "/products",
-    );
+    navigate(query.trim() ? `/products?search=${encodeURIComponent(query.trim())}` : '/products');
   }
-  return (
-    <section className="studio-hero">
-      <div className="studio-container">
-        <div className="hero-topline">
-          <span>
-            <span className="status-dot" aria-hidden="true" /> THE DIGITAL POSSIBILITIES STUDIO
-          </span>
-          <span>
-            MADE FOR YOUR NEXT CHAPTER <ArrowDown size={13} aria-hidden="true" />
-          </span>
-        </div>
-        <div className="studio-hero-grid">
-          <div className="studio-hero-copy">
-            <p className="studio-kicker">
-              <Sparkles size={15} aria-hidden="true" /> A GOOD PLACE TO BEGIN.
-            </p>
-            <h1>
-              Small spark.
-              <br />
-              Big ideas.
-              <br />
-              <span>Start here.</span>
-              <span className="hero-period" aria-hidden="true">✳</span>
-            </h1>
-            <p className="hero-description">
-              আপনার পরের বড় কাজের শুরুটা হোক এখানেই। বেছে নিন ডিজিটাল টুলস,
-              শিখুন নতুন কিছু, তৈরি করুন নিজের মতো।
-            </p>
-            <div className="hero-actions">
-              <Link to="/products" className="studio-button studio-button-blue">
-                Explore the collection <ArrowUpRight size={19} aria-hidden="true" />
-              </Link>
-              <a
-                href="https://www.bdbeginner.com/playflix"
-                className="hero-text-link"
-              >
-                <Play size={12} fill="currentColor" aria-hidden="true" /> Meet Playflix{" "}
-                <ArrowUpRight size={17} aria-hidden="true" />
-              </a>
-            </div>
-            <form className="studio-search" onSubmit={search} role="search">
-              <Search size={18} aria-hidden="true" />
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="What are you working on?"
-                aria-label="Search products"
-              />
-              <button type="submit" aria-label="Search products">
-                <ArrowUpRight size={19} aria-hidden="true" />
-              </button>
-            </form>
-          </div>
-          <div className="studio-hero-art">
-            <div className="art-index">
-              <span>THE SHAPE OF POSSIBILITY</span>
-              <span>FIG. 01 / BD</span>
-            </div>
-            <img
-              className="hero-sculpture"
-              src="/images/possibility-sculpture.webp"
-              alt="Sculptural cobalt blue ribbon with polished chrome and a lime glass sphere"
-              fetchPriority="high"
-              decoding="async"
-              width={700}
-              height={525}
-            />
-            <div className="art-grid-mark mark-one" aria-hidden="true">
-              <Plus size={17} />
-            </div>
-            <div className="art-grid-mark mark-two" aria-hidden="true">
-              <Plus size={17} />
-            </div>
-            <a
-              className="art-float art-playflix"
-              href="https://www.bdbeginner.com/playflix"
-            >
-              <span className="float-icon" aria-hidden="true">
-                <Play size={19} fill="currentColor" />
-              </span>
-              <span>
-                <small>BUILD SOMETHING DIFFERENT</small>
-                <strong>
-                  Playflix <ArrowUpRight size={16} aria-hidden="true" />
-                </strong>
-              </span>
-            </a>
-            <Link className="art-float art-member" to="/membership">
-              <span className="member-mini-mark" aria-hidden="true">
-                <Crown size={22} />
-              </span>
-              <span>
-                <small>YOUR CREATIVE ADVANTAGE</small>
-                <strong>
-                  One membership.
-                  <br />
-                  More possibilities.
-                </strong>
-              </span>
-              <ArrowUpRight size={20} aria-hidden="true" />
-            </Link>
-            <div className="art-caption">
-              <span>TOOLS. IDEAS. A LITTLE AMBITION.</span>
-              <span>∞ POSSIBILITIES</span>
-            </div>
-          </div>
-        </div>
-        <div className="hero-footnote">
-          <span>FOR THE BUILDERS. THE LEARNERS. THE WHAT-IF PEOPLE.</span>
-          <a href="#discover" aria-label="Discover the collections">
-            SCROLL TO DISCOVER <ArrowDown size={15} aria-hidden="true" />
-          </a>
-        </div>
+  return <section className="bb-hero">
+    <div className="bb-container bb-hero-grid">
+      <div className="bb-hero-copy">
+        <Link to="/courses" className="bb-eyebrow-pill"><span className="bb-online-dot" /> YOUR NEXT CHAPTER STARTS HERE <ArrowUpRight size={13} /></Link>
+        <h1>Big ideas.<br />New skills.<br /><span>Endless possibilities.</span><svg className="bb-heading-spark" width="43" height="49" viewBox="0 0 43 49" fill="none" aria-hidden="true"><path d="M22 3v13M39 12l-10 9M40 32l-13-3M7 10l8 11M3 31l12-3" stroke="currentColor" strokeWidth="4" strokeLinecap="round" /></svg></h1>
+        <p className="bb-hero-description">Everything you need to learn, create, and build something great. Practical courses. Powerful tools. All in one place.</p>
+        <p className="bb-hero-bengali" lang="bn">শিখুন নতুন কিছু। তৈরি করুন নিজের মতো।</p>
+        <form className="bb-hero-search" onSubmit={search} role="search"><Search size={20} aria-hidden="true" /><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search courses & tools" aria-label="Search courses and digital products" /><button type="submit" aria-label="Find courses and products"><ArrowRight size={21} /></button></form>
+        <div className="bb-popular-searches"><span>Popular:</span>{[{ label: 'Courses', to: '/courses' }, { label: 'WordPress', to: '/wordpress' }, { label: 'Design assets', to: '/resources' }].map(item => <Link key={item.to} to={item.to}>{item.label}</Link>)}</div>
+        <div className="bb-hero-proof"><span><ShieldCheck size={16} /> Secure payments</span><span><BookOpen size={16} /> Learn at your pace</span><span><Check size={16} /> Made for creators</span></div>
       </div>
-    </section>
-  );
+      <div className="bb-hero-visual" aria-label="Explore creative learning and digital tools">
+        <span className="bb-visual-orbit" aria-hidden="true" />
+        <span className="bb-visual-star" aria-hidden="true">✳</span>
+        <a href={PLAYFLIX_URL} className="bb-playflix-card">
+          <div className="bb-playflix-card-top"><span><Play size={14} fill="currentColor" aria-hidden="true" /> FEATURED TOOL</span><ArrowUpRight size={22} aria-hidden="true" /></div>
+          <div className="bb-playflix-card-copy"><h2>Meet <span>Playflix.</span></h2><p>Your movie & TV website script.</p></div>
+          <div className="bb-playflix-preview"><div className="bb-playflix-browserbar" aria-hidden="true"><span><i /><i /><i /></span><span>Playflix / a preview of your next project</span></div><img src="/images/playflix-preview.png" alt="Playflix movie and TV website interface with a featured carousel and movie library" width={1024} height={576} decoding="async" /></div>
+          <div className="bb-playflix-card-bottom"><span>Automatic metadata · Responsive design</span><strong>Explore Playflix <ArrowUpRight size={17} aria-hidden="true" /></strong></div>
+        </a>
+        <Link to="/products" className="bb-mini-product"><span className="bb-mini-product-icon"><Layers3 size={27} strokeWidth={1.5} /></span><span><small>Digital resources</small><strong>Your next great project.</strong><span>Ready to create <ArrowUpRight size={16} /></span></span></Link>
+        <Link to="/wordpress" className="bb-mini-code"><span className="bb-mini-code-icon"><Code2 size={24} /></span><span><small>WordPress & code</small><strong>Build something<br />beautiful.</strong></span><ArrowUpRight size={20} /></Link>
+        <div className="bb-learning-note"><span><Sparkles size={15} /></span> A little head start for your next idea.</div>
+      </div>
+    </div>
+    <div className="bb-container bb-hero-foot"><span>FOR THE CURIOUS. THE CREATORS. THE DOERS.</span><a href="#explore">Find your next thing <ArrowDown size={14} /></a></div>
+  </section>;
 }

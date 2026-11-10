@@ -29,13 +29,45 @@ const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
 });
 
 const CATEGORIES = {
+  'WordPress Themes': 'c7e89885-df81-4d5e-8353-70990cc57041',
   'WordPress': 'c7e89885-df81-4d5e-8353-70990cc57041',
+  'WordPress Plugins': '2fa7f766-59f9-43bc-ba8b-7323b693b405',
+  'Plugins': '2fa7f766-59f9-43bc-ba8b-7323b693b405',
   'Software': '4c9fd83b-2ead-488b-8652-4eff6b87c212',
+  'PHP Scripts & Code': 'fbf0ca5c-78f5-4faf-b550-fad7c8d383a0',
+  'Scripts': 'fbf0ca5c-78f5-4faf-b550-fad7c8d383a0',
   'AI Tools': '46e77cdb-bc84-4658-b6f1-3af0b9833a6d',
   'Courses': '9658a4a6-c141-433a-8e0a-964a081b3455',
   'Digital Resources': 'd7ac2ba6-4368-4adf-b314-d7e6b4c14956',
-  'Web Services': 'dd5fe544-7b50-46d0-8d9b-4ed4588f6c8f'
+  'Web Services': 'dd5fe544-7b50-46d0-8d9b-4ed4588f6c8f',
+  'GPL Research Imports': '9be33c12-a76d-491c-b396-711a19127626'
 };
+
+function detectCategory(parsed) {
+  const text = `${parsed.title} ${parsed.slug} ${parsed.sourceCategory || ''}`.toLowerCase();
+
+  // 1. Explicit Themes or Templates
+  if (/\bthemes?\b|\btemplates?\b|themeforest|resume\s*theme|portfolio\s*theme/i.test(text)) {
+    return CATEGORIES['WordPress Themes'];
+  }
+
+  // 2. PHP Scripts & Code
+  if (/codecanyon|php\s*script|source\s*code|laravel|\bscripts?\b/i.test(text)) {
+    return CATEGORIES['PHP Scripts & Code'];
+  }
+
+  // 3. Standalone Software
+  if (/software|windows|mac\s*os|desktop\s*app|cracked\s*software/i.test(text) && !/wordpress|plugin|theme|woocommerce/i.test(text)) {
+    return CATEGORIES['Software'];
+  }
+
+  // 4. Plugins, Addons, Extensions, WooCommerce tools, Builders, Gateways
+  if (/plugin|addon|add-on|extension|widget|builder|elementor|woocommerce|gateway|form|seo|affiliate|calendar|booking|cache|security|payment|checkout|swatches|filter|slider|popup/i.test(text)) {
+    return CATEGORIES['WordPress Plugins'];
+  }
+
+  return CATEGORIES['WordPress Themes'];
+}
 
 async function getProductUrlsFromSource(sourceUrl, limit = 50) {
   let normalized = (sourceUrl || '').trim();
@@ -108,14 +140,21 @@ async function getProductUrlsFromSource(sourceUrl, limit = 50) {
 }
 
 async function importSingleProduct(sourceUrl, options = {}) {
-  const defaultPrice = options.price ?? 99;
-  const targetCategory = options.categoryName ?? 'WordPress';
-  const categoryId = CATEGORIES[targetCategory] || CATEGORIES['WordPress'];
-  const status = options.status || 'published';
-  const overwritePrice = options.overwritePrice ?? false;
-
   // 1. Scrape product page
   const parsed = await parseProductPage(sourceUrl);
+
+  const defaultPrice = options.price ?? 0;
+  const compareAtPrice = options.compareAtPrice ?? 99;
+  
+  let categoryId;
+  if (options.categoryName && options.categoryName !== 'auto' && options.categoryName !== 'WordPress') {
+    categoryId = CATEGORIES[options.categoryName] || CATEGORIES['WordPress Themes'];
+  } else {
+    categoryId = detectCategory(parsed);
+  }
+
+  const status = options.status || 'published';
+  const overwritePrice = options.overwritePrice ?? false;
 
   // 2. Check if product already exists in product_source_imports
   const { data: existingImport } = await supabase
@@ -184,7 +223,7 @@ async function importSingleProduct(sourceUrl, options = {}) {
           short_description: parsed.shortDescription,
           description: parsed.description,
           price: defaultPrice,
-          compare_at_price: Math.round(defaultPrice * 1.5),
+          compare_at_price: compareAtPrice,
           thumbnail_url: parsed.imageUrl,
           product_type: 'digital_download',
           delivery_type: 'digital_download',
@@ -256,15 +295,71 @@ async function importSingleProduct(sourceUrl, options = {}) {
     updated_at: new Date().toISOString()
   }, { onConflict: 'source_url' });
 
-  // 6. Automatically queue download link extraction for newly imported or updated products
+  // 6. Automatically extract download link and save to product_download_links
   const autoExtract = options.autoExtract !== false;
-  let extractionJob = null;
+  let downloadUrl = null;
   if (autoExtract && productId) {
     try {
-      const { extractionQueue } = require('./extractionQueue.cjs');
-      extractionJob = extractionQueue.enqueue(productId, parsed.sourceUrl, parsed.title);
-    } catch (qErr) {
-      console.warn(`[AUTO-IMPORT] Extraction enqueue warning:`, qErr.message);
+      const { extractDirectDownloadLink } = require('./fastLinkExtractor.cjs');
+      const dlRes = await extractDirectDownloadLink(parsed.sourceUrl, { timeout: 20000 });
+      if (dlRes && dlRes.downloadUrl) {
+        downloadUrl = dlRes.downloadUrl;
+
+        // Upsert into product_download_links
+        const { data: existingLink } = await supabase
+          .from('product_download_links')
+          .select('id')
+          .eq('product_id', productId)
+          .maybeSingle();
+
+        if (existingLink) {
+          await supabase.from('product_download_links').update({
+            title: dlRes.title,
+            download_url: dlRes.downloadUrl,
+            version: parsed.version,
+            is_active: true,
+            updated_at: new Date().toISOString()
+          }).eq('id', existingLink.id);
+        } else {
+          await supabase.from('product_download_links').insert({
+            product_id: productId,
+            title: dlRes.title,
+            download_url: dlRes.downloadUrl,
+            version: parsed.version,
+            is_active: true,
+            sort_order: 0
+          });
+        }
+
+        // Update product_source_imports metadata
+        const { data: impRec } = await supabase
+          .from('product_source_imports')
+          .select('id, metadata')
+          .eq('product_id', productId)
+          .maybeSingle();
+
+        if (impRec) {
+          const meta = impRec.metadata || {};
+          meta.download_flow = {
+            source_post_url: parsed.sourceUrl,
+            download_page_url: dlRes.downloadPageUrl,
+            final_download_url: dlRes.downloadUrl,
+            package_name: dlRes.packageName,
+            status: 'success',
+            extracted_at: new Date().toISOString()
+          };
+          await supabase.from('product_source_imports').update({
+            metadata: meta,
+            updated_at: new Date().toISOString()
+          }).eq('id', impRec.id);
+        }
+      }
+    } catch (dlErr) {
+      console.warn(`[AUTO-IMPORT] Link extraction warning for ${parsed.title}:`, dlErr.message);
+      try {
+        const { extractionQueue } = require('./extractionQueue.cjs');
+        extractionQueue.enqueue(productId, parsed.sourceUrl, parsed.title);
+      } catch (e) {}
     }
   }
 
@@ -273,8 +368,10 @@ async function importSingleProduct(sourceUrl, options = {}) {
     productId,
     title: parsed.title,
     version: parsed.version,
+    categoryName: Object.entries(CATEGORIES).find(([k, v]) => v === categoryId)?.[0] || 'WordPress Themes',
+    downloadUrl,
     isUpdate,
-    extractionQueued: Boolean(extractionJob)
+    hasDownloadLink: Boolean(downloadUrl)
   };
 }
 

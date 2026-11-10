@@ -6,11 +6,14 @@ import { getProductsByIds } from '@/services/catalog';
 import type { Product } from '@/types';
 import { ProductCard } from '@/components/cards/ProductCard';
 import { Button } from '@/components/ui/Button';
+import { CatalogError } from '@/components/ui/CatalogState';
 
 export function AccountWishlistPage() {
   const { wishlistIds, loading: discoveryLoading } = useDiscovery();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -20,12 +23,14 @@ export function AccountWishlistPage() {
       if (wishlistIds.length === 0) {
         if (mounted) {
           setProducts([]);
+          setError(false);
           setLoading(false);
         }
         return;
       }
 
       setLoading(true);
+      setError(false);
       try {
         const fetched = await getProductsByIds(wishlistIds);
         if (mounted) {
@@ -33,6 +38,10 @@ export function AccountWishlistPage() {
         }
       } catch (err) {
         console.error('Failed to load wishlist products', err);
+        if (mounted) {
+          setProducts([]);
+          setError(true);
+        }
       } finally {
         if (mounted) setLoading(false);
       }
@@ -43,7 +52,7 @@ export function AccountWishlistPage() {
     return () => {
       mounted = false;
     };
-  }, [wishlistIds, discoveryLoading]);
+  }, [wishlistIds, discoveryLoading, retryCount]);
 
   return (
     <AccountLayout>
@@ -54,9 +63,11 @@ export function AccountWishlistPage() {
         </div>
 
         {(loading || discoveryLoading) ? (
-          <div className="flex h-32 items-center justify-center">
+          <div className="flex h-32 items-center justify-center" role="status" aria-label="Loading wishlist">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-200 border-t-brand-600" />
           </div>
+        ) : error ? (
+          <CatalogError onRetry={() => setRetryCount(count => count + 1)} />
         ) : products.length === 0 ? (
           <div className="rounded-2xl border border-ink-100 bg-white p-8 text-center shadow-soft">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brand-50 text-brand-300">

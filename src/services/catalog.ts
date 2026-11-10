@@ -1,6 +1,7 @@
 import { getSupabase } from '@/lib/supabase';
 import type { Product, ProductFaqItem, ProductImage, ProductType, DeliveryType, Category } from '@/types';
 import { allCatalogProducts } from '@/data/catalogProducts';
+import { sharePendingRequest } from '@/lib/pendingRequests';
 import type {
   CategoryRow,
   ProductFeatureRow,
@@ -174,7 +175,11 @@ function mapProduct(record: ProductRecord, relations: Partial<ProductRelations> 
 
 const productSelect = `*, categories(*), product_review_stats(average_rating, review_count)`;
 
-export async function getCategories(): Promise<CatalogCategory[]> {
+export function getCategories(): Promise<CatalogCategory[]> {
+  return sharePendingRequest('catalog:categories', loadCategories);
+}
+
+async function loadCategories(): Promise<CatalogCategory[]> {
   const sb = getSupabase();
   const { data, error } = await sb
     .from('categories')
@@ -193,17 +198,34 @@ export async function getCategories(): Promise<CatalogCategory[]> {
   }));
 }
 
-export async function getPublishedProducts(): Promise<Product[]> {
+export function getPublishedProducts(): Promise<Product[]> {
+  return sharePendingRequest('catalog:published', loadPublishedProducts);
+}
+
+async function loadPublishedProducts(): Promise<Product[]> {
   const sb = getSupabase();
-  const { data, error } = await sb
-    .from('products')
-    .select(productSelect)
-    .eq('status', 'published')
-    .order('sort_order')
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  const records = (data ?? []) as unknown as ProductRecord[];
-  const dbProducts = records.map((record) => mapProduct(record));
+  const allRecords: ProductRecord[] = [];
+  const pageSize = 1000;
+  let from = 0;
+
+  while (true) {
+    const { data, error } = await sb
+      .from('products')
+      .select(productSelect)
+      .eq('status', 'published')
+      .order('sort_order')
+      .order('created_at', { ascending: false })
+      .range(from, from + pageSize - 1);
+
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+
+    allRecords.push(...(data as unknown as ProductRecord[]));
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+
+  const dbProducts = allRecords.map((record) => mapProduct(record));
 
   // Merge in allCatalogProducts if not already present in database
   const existingSlugs = new Set(dbProducts.map((p) => p.slug));
@@ -217,7 +239,11 @@ export async function getFeaturedProductsFromCatalog(limit = 8): Promise<Product
   return allProducts.filter((p) => p.featured).slice(0, limit);
 }
 
-export async function getProductBySlugFromCatalog(slug: string): Promise<Product | null> {
+export function getProductBySlugFromCatalog(slug: string): Promise<Product | null> {
+  return sharePendingRequest(`catalog:product:${slug}`, () => loadProductBySlug(slug));
+}
+
+async function loadProductBySlug(slug: string): Promise<Product | null> {
   const sb = getSupabase();
   const { data, error } = await sb
     .from('products')

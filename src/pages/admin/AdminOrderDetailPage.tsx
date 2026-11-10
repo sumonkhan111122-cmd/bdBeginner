@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useState, Fragment } from 'react';
-import { AlertCircle, ArrowLeft, CheckCircle2, Clock3, ExternalLink, Key, Package, Save, CreditCard, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState, Fragment } from 'react';
+import { AlertCircle, ArrowLeft, CheckCircle2, Clock3, ExternalLink, Key, Package, Save, CreditCard, Trash2, XCircle } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { OrderItemsTable } from '@/components/orders/OrderItemsTable';
 import { useOrderAmountFormatter } from '@/hooks/useOrderAmountFormatter';
 import { OrderStatusBadge } from '@/components/orders/OrderStatusBadge';
 import { OrderEmailLogs } from '@/components/admin/OrderEmailLogs';
 import { formatOrderDate, getHistoryOrderStatus, getOrderStatus } from '@/lib/orders';
-import { getAdminOrderById, updateAdminOrderStatus, approveAndConfirmAdminOrder, triggerOrderNotification, deleteAdminOrders } from '@/services/orders';
+import { getAdminOrderById, updateAdminOrderStatus, approveAndConfirmAdminOrder, disapproveAdminOrder, canReviewAdminOrder, triggerOrderNotification, deleteAdminOrders } from '@/services/orders';
 import { fetchOrderEmailLogs, type OrderEmailLogRow } from '@/services/admin';
 import { adminListOrderFulfillments } from '@/services/fulfillment';
 import { reviewManualPayment, MANUAL_REJECTION_REASONS, type ManualRejectionReasonCode } from '@/services/payment';
@@ -26,6 +26,10 @@ function AdminOrderContent({ detail, onReload }: { detail: OrderWithDetails; onR
   const [fulfillmentStatus, setFulfillmentStatus] = useState<FulfillmentStatus>(order.fulfillment_status);
   const [adminNote, setAdminNote] = useState(order.admin_note ?? '');
   const [saving, setSaving] = useState(false);
+  const [decision, setDecision] = useState<'approve' | 'disapprove' | null>(null);
+  const mutationBusy = useRef(false);
+  const [deleting, setDeleting] = useState(false);
+  const busy = saving || deleting;
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [emailLogs, setEmailLogs] = useState<OrderEmailLogRow[]>([]);
@@ -38,6 +42,13 @@ function AdminOrderContent({ detail, onReload }: { detail: OrderWithDetails; onR
   const [reasonCode, setReasonCode] = useState<ManualRejectionReasonCode | 'request_resubmission' | ''>('');
   const [reasonText, setReasonText] = useState('');
   const [reviewError, setReviewError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setOrderStatus(getOrderStatus(order) as OrderStatus);
+    setPaymentStatus(order.payment_status);
+    setFulfillmentStatus(order.fulfillment_status);
+    setAdminNote(order.admin_note ?? '');
+  }, [order]);
 
   const loadLogs = useCallback(async () => {
     try {
@@ -68,6 +79,8 @@ function AdminOrderContent({ detail, onReload }: { detail: OrderWithDetails; onR
   };
 
   const handleSave = async () => {
+    if (mutationBusy.current) return;
+    mutationBusy.current = true;
     setSaving(true); setMessage(null); setError(null);
     try {
       await updateAdminOrderStatus(order, { orderStatus, paymentStatus, fulfillmentStatus, adminNote: adminNote.trim() || null });
@@ -76,30 +89,39 @@ function AdminOrderContent({ detail, onReload }: { detail: OrderWithDetails; onR
     } catch (saveError) {
       console.error('Failed to update order', saveError);
       setError('Order changes could not be saved. Please try again.');
-    } finally { setSaving(false); }
+    } finally { setSaving(false); mutationBusy.current = false; }
   };
 
-  const handleQuickApprove = async () => {
+  const handleQuickDecision = async (action: 'approve' | 'disapprove') => {
+    if (mutationBusy.current) return;
+    mutationBusy.current = true;
+    setDecision(action);
     setSaving(true); setMessage(null); setError(null);
     try {
-      await approveAndConfirmAdminOrder(order);
-      setOrderStatus('completed');
-      setPaymentStatus('paid');
-      setFulfillmentStatus('fulfilled');
+      const updated = action === 'approve' ? await approveAndConfirmAdminOrder(order) : await disapproveAdminOrder(order);
+      setOrderStatus(getOrderStatus(updated) as OrderStatus);
+      setPaymentStatus(updated.payment_status);
+      setFulfillmentStatus(updated.fulfillment_status);
+      setReviewingTxn(null);
+      setReviewAction(null);
       await onReload();
-      setMessage('অর্ডার ও পেমেন্ট সফলভাবে কনফার্ম ও অ্যাপ্রুভ করা হয়েছে! কাস্টমার এখন কোর্স ও ডাউনলোড এক্সেস করতে পারবে।');
+      setMessage(action === 'approve'
+        ? 'অর্ডার ও পেমেন্ট সফলভাবে অ্যাপ্রুভ করা হয়েছে।'
+        : 'অর্ডার ডিসঅ্যাপ্রুভ করা হয়েছে। অর্ডার ও ডেলিভারি বাতিল এবং পেমেন্ট ব্যর্থ হিসেবে সংরক্ষিত হয়েছে।');
     } catch (saveError) {
-      console.error('Failed to quick approve order', saveError);
-      setError('অর্ডার কনফার্ম করতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।');
-    } finally { setSaving(false); }
+      console.error(`Failed to ${action} order`, saveError);
+      setError(saveError instanceof Error ? saveError.message : `Failed to ${action} order. Please try again.`);
+    } finally { setSaving(false); setDecision(null); mutationBusy.current = false; }
   };
 
   const submitReview = async () => {
+    if (mutationBusy.current) return;
     if (!reviewingTxn || !reviewAction) return;
     if (reviewAction === 'reject' && (!reasonCode || (reasonCode === 'other' && !reasonText.trim()))) {
       setReviewError('Please provide a specific rejection reason.');
       return;
     }
+    mutationBusy.current = true;
     setSaving(true);
     setReviewError(null);
     try {
@@ -117,14 +139,16 @@ function AdminOrderContent({ detail, onReload }: { detail: OrderWithDetails; onR
       setReviewError(e instanceof Error ? e.message : 'Failed to review payment.');
     } finally {
       setSaving(false);
+      mutationBusy.current = false;
     }
   };
 
   const navigate = useNavigate();
-  const [deleting, setDeleting] = useState(false);
 
   const handleDelete = async () => {
+    if (mutationBusy.current) return;
     if (!window.confirm(`Are you sure you want to delete order ${order.order_number}? This cannot be undone.`)) return;
+    mutationBusy.current = true;
     setDeleting(true);
     setError(null);
     try {
@@ -133,7 +157,9 @@ function AdminOrderContent({ detail, onReload }: { detail: OrderWithDetails; onR
     } catch (err: unknown) {
       console.error('Failed to delete order:', err);
       setError(err instanceof Error ? err.message : 'Failed to delete order.');
+    } finally {
       setDeleting(false);
+      mutationBusy.current = false;
     }
   };
 
@@ -146,23 +172,25 @@ function AdminOrderContent({ detail, onReload }: { detail: OrderWithDetails; onR
           <p className="mt-1 text-sm text-ink-500">Created {formatOrderDate(order.created_at)}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
-          {order.payment_status !== 'paid' && (
+          {canReviewAdminOrder(order) && <>
             <button
               type="button"
-              onClick={handleQuickApprove}
-              disabled={saving}
+              onClick={() => void handleQuickDecision('approve')}
+              disabled={busy}
               className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50"
+              title="Confirm order and approve payment"
             >
               <CheckCircle2 size={15} />
-              {saving ? 'অনুমোদন হচ্ছে…' : 'অর্ডার কনফার্ম ও পেমেন্ট অ্যাপ্রুভ করুন'}
+              {decision === 'approve' ? 'Approving…' : 'Approve'}
             </button>
-          )}
+            <button type="button" onClick={() => void handleQuickDecision('disapprove')} disabled={busy} className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-error-200 bg-error-50 px-3.5 text-xs font-bold text-error-700 hover:bg-error-100 disabled:opacity-50" title="Disapprove and cancel this order"><XCircle size={15} />{decision === 'disapprove' ? 'Disapproving…' : 'Disapprove'}</button>
+          </>}
           <OrderStatusBadge value={getOrderStatus(order)} />
           <OrderStatusBadge value={order.payment_status} />
           <button
             type="button"
             onClick={handleDelete}
-            disabled={deleting}
+            disabled={busy}
             className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-error-200 bg-error-50 px-3 text-xs font-semibold text-error-700 hover:bg-error-100 disabled:opacity-50"
           >
             <Trash2 size={14} />
@@ -170,6 +198,8 @@ function AdminOrderContent({ detail, onReload }: { detail: OrderWithDetails; onR
           </button>
         </div>
       </div>
+      {message && <div role="status" className="mt-5 flex items-center gap-2 rounded-xl border border-success-200 bg-success-50 p-3 text-sm text-success-700"><CheckCircle2 size={16} />{message}</div>}
+      {error && <div role="alert" className="mt-5 flex items-center gap-2 rounded-xl border border-error-200 bg-error-50 p-3 text-sm text-error-700"><AlertCircle size={16} />{error}</div>}
 
       <div className="mt-6 grid gap-5 xl:grid-cols-3">
         <div className="space-y-5 xl:col-span-2">
@@ -277,7 +307,7 @@ function AdminOrderContent({ detail, onReload }: { detail: OrderWithDetails; onR
                           <td className="py-3 pr-4 font-medium text-ink-900 uppercase">
                             {txn.provider}
                             {txn.status === 'pending' && ['manual', 'bkash_personal', 'nagad_personal', 'rocket_personal'].includes(txn.provider) && (
-                              <button onClick={() => setReviewingTxn(reviewingTxn === txn.id ? null : txn.id)} className="ml-2 rounded border border-brand-200 bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-700 hover:bg-brand-100">
+                              <button disabled={busy} onClick={() => setReviewingTxn(reviewingTxn === txn.id ? null : txn.id)} className="ml-2 rounded border border-brand-200 bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-700 hover:bg-brand-100 disabled:opacity-50">
                                 {reviewingTxn === txn.id ? 'Cancel' : 'Review'}
                               </button>
                             )}
@@ -295,11 +325,11 @@ function AdminOrderContent({ detail, onReload }: { detail: OrderWithDetails; onR
                             <td colSpan={4} className="bg-ink-50/50 p-4 border-t border-ink-100">
                               <div className="flex flex-col gap-3">
                                 <p className="text-sm font-semibold text-ink-900">Review Manual Payment</p>
-                                <div className="flex flex-wrap gap-2">
+                                <fieldset disabled={busy} className="flex flex-wrap gap-2">
                                   <button onClick={() => { setReviewAction('approve'); setReviewError(null); }} className={`px-3 py-1.5 rounded-lg border text-sm font-medium ${reviewAction === 'approve' ? 'bg-success-600 text-white border-success-600' : 'bg-white text-ink-700 border-ink-200 hover:bg-ink-50'}`}>Approve</button>
                                   <button onClick={() => { setReviewAction('request_resubmission'); setReviewError(null); }} className={`px-3 py-1.5 rounded-lg border text-sm font-medium ${reviewAction === 'request_resubmission' ? 'bg-warning-600 text-white border-warning-600' : 'bg-white text-ink-700 border-ink-200 hover:bg-ink-50'}`}>Request Resubmission</button>
                                   <button onClick={() => { setReviewAction('reject'); setReviewError(null); }} className={`px-3 py-1.5 rounded-lg border text-sm font-medium ${reviewAction === 'reject' ? 'bg-error-600 text-white border-error-600' : 'bg-white text-ink-700 border-ink-200 hover:bg-ink-50'}`}>Reject Final</button>
-                                </div>
+                                </fieldset>
                                 {reviewAction === 'reject' && (
                                   <div className="flex flex-col gap-2 max-w-sm">
                                     <select value={reasonCode} onChange={(e) => setReasonCode(e.target.value as ManualRejectionReasonCode | '')} className="rounded-lg border border-ink-200 p-2 text-sm bg-white">
@@ -316,8 +346,8 @@ function AdminOrderContent({ detail, onReload }: { detail: OrderWithDetails; onR
                                 )}
                                 {reviewError && <p className="text-sm font-medium text-error-600">{reviewError}</p>}
                                 <div className="flex gap-2 mt-2">
-                                  <button onClick={submitReview} disabled={saving || !reviewAction} className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-semibold hover:bg-brand-700 disabled:opacity-50">Submit Review</button>
-                                  <button onClick={() => { setReviewingTxn(null); setReviewAction(null); setReviewError(null); }} className="px-4 py-2 border border-ink-200 bg-white text-ink-700 rounded-lg text-sm font-semibold hover:bg-ink-50">Cancel</button>
+                                  <button onClick={submitReview} disabled={busy || !reviewAction} className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-semibold hover:bg-brand-700 disabled:opacity-50">Submit Review</button>
+                                  <button disabled={busy} onClick={() => { setReviewingTxn(null); setReviewAction(null); setReviewError(null); }} className="px-4 py-2 border border-ink-200 bg-white text-ink-700 rounded-lg text-sm font-semibold hover:bg-ink-50">Cancel</button>
                                 </div>
                               </div>
                             </td>
@@ -365,7 +395,7 @@ function AdminOrderContent({ detail, onReload }: { detail: OrderWithDetails; onR
           <section className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft"><h2 className="font-display text-base font-bold text-ink-900">Totals</h2><dl className="mt-4 space-y-3 text-sm"><div className="flex justify-between"><dt className="text-ink-500">Subtotal</dt><dd>{formatAmount(Number(order.subtotal))}</dd></div>{Number(order.discount_total || 0) > 0 ? <><div className="flex justify-between"><dt className="text-success-600">{order.discount_source === 'coupon' ? `Coupon: ${order.discount_code}` : order.discount_name || 'Promotion'}</dt><dd className="font-medium text-success-600">−{formatAmount(Number(order.discount_total))}</dd></div>{order.discount_source === 'coupon' && order.discount_name && <p className="text-xs text-ink-500">{order.discount_name}</p>}</> : <div className="flex justify-between"><dt className="text-ink-500">Discount</dt><dd>{formatAmount(0)}</dd></div>}<div className="flex justify-between border-t border-ink-100 pt-3 text-base font-bold"><dt>Total</dt><dd>{formatAmount(Number(order.total))}</dd></div><div className="flex justify-between"><dt className="text-ink-500">Currency</dt><dd className="font-medium">{order.currency_code}</dd></div></dl></section>
           <section className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft">
             <h2 className="font-display text-base font-bold text-ink-900">Status Management</h2>
-            <div className="mt-4 space-y-4">
+            <fieldset disabled={busy} className="mt-4 space-y-4">
               <label className="block text-sm font-semibold text-ink-700">
                 Order Status
                 <select
@@ -399,29 +429,28 @@ function AdminOrderContent({ detail, onReload }: { detail: OrderWithDetails; onR
                 Admin Note
                 <textarea value={adminNote} onChange={(e) => setAdminNote(e.target.value)} rows={4} maxLength={2000} className="mt-1.5 w-full rounded-xl border border-ink-200 px-3.5 py-2.5 text-sm font-normal text-ink-800 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20" placeholder="Internal note—not visible to customers" />
               </label>
-            </div>
-            {message && <div className="mt-4 flex items-center gap-2 rounded-xl border border-success-200 bg-success-50 p-3 text-sm text-success-700"><CheckCircle2 size={16} />{message}</div>}
-            {error && <div className="mt-4 flex items-center gap-2 rounded-xl border border-error-200 bg-error-50 p-3 text-sm text-error-700"><AlertCircle size={16} />{error}</div>}
+            </fieldset>
             
             <div className="mt-5 flex flex-col gap-2.5">
-              {paymentStatus !== 'paid' && (
+              {canReviewAdminOrder(order) && <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={handleQuickApprove}
-                  disabled={saving}
+                  onClick={() => void handleQuickDecision('approve')}
+                  disabled={busy}
                   className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50"
                 >
                   <CheckCircle2 size={16} />
-                  {saving ? 'অনুমোদন হচ্ছে…' : 'অর্ডার কনফার্ম ও পেমেন্ট অ্যাপ্রুভ করুন'}
+                  {decision === 'approve' ? 'Approving…' : 'Approve'}
                 </button>
-              )}
+                <button type="button" onClick={() => void handleQuickDecision('disapprove')} disabled={busy} className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-error-200 bg-error-50 px-4 text-sm font-bold text-error-700 hover:bg-error-100 disabled:opacity-50"><XCircle size={16} />{decision === 'disapprove' ? 'Disapproving…' : 'Disapprove'}</button>
+              </div>}
               <button
                 type="button"
                 onClick={handleSave}
-                disabled={saving}
+                disabled={busy}
                 className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
               >
-                {saving ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> Saving…</> : <><Save size={16} /> Save Status</>}
+                {saving && !decision ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> Saving…</> : <><Save size={16} /> Save Status</>}
               </button>
             </div>
           </section>
@@ -437,8 +466,9 @@ export function AdminOrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true); setError(null);
+  const load = useCallback(async (showLoading = true) => {
+    if (showLoading) setLoading(true);
+    setError(null);
     try { const data = await getAdminOrderById(id); if (!data) throw new Error('Not found'); setDetail(data); }
     catch (loadError) { console.error('Failed to load admin order', loadError); setError('This order could not be loaded.'); }
     finally { setLoading(false); }
@@ -448,5 +478,5 @@ export function AdminOrderDetailPage() {
 
   if (loading) return <div className="flex min-h-96 items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-2 border-ink-200 border-t-brand-600" /></div>;
   if (error || !detail) return <div className="px-5 py-10 lg:px-8"><div className="flex items-center gap-2 rounded-xl border border-error-200 bg-error-50 p-4 text-sm text-error-700"><AlertCircle size={17} />{error}</div></div>;
-  return <AdminOrderContent detail={detail} onReload={load} />;
+  return <AdminOrderContent detail={detail} onReload={() => load(false)} />;
 }
