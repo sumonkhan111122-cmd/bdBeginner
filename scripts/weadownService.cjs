@@ -38,6 +38,11 @@ async function getProductUrls(sourceUrl, limit = 50, pageNum = 1) {
   let normalized = (sourceUrl || '').trim();
   if (!normalized) normalized = 'https://weadown.com/wordpress-theme/';
 
+  // 0. Keyword query e.g. "elementor", "yoast", "doctor theme"
+  if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
+    normalized = `https://weadown.com/?s=${encodeURIComponent(normalized)}`;
+  }
+
   // 1. Single product URL
   if (/\/res\/[a-z0-9\-]+\/?/i.test(normalized)) {
     const cleaned = normalized.endsWith('/') ? normalized : normalized + '/';
@@ -58,8 +63,42 @@ async function getProductUrls(sourceUrl, limit = 50, pageNum = 1) {
 
   const cleanUrls = new Set();
 
-  // 3. Category or Listing URL: page by page crawling using /pages/{page}/
+  // 3. Search query (?s=...) or Category listing (/pages/{page}/)
   let page = pageNum || 1;
+  const isSearchQuery = normalized.includes('?s=');
+
+  if (isSearchQuery) {
+    const sMatch = normalized.match(/[?&]s=([^&]+)/);
+    const searchTerm = sMatch ? sMatch[1] : '';
+
+    while (cleanUrls.size < limit && page <= 50) {
+      try {
+        const pageUrl = page === 1
+          ? `https://weadown.com/?s=${searchTerm}`
+          : `https://weadown.com/pages/${page}/?s=${searchTerm}`;
+
+        const html = await fetchHtml(pageUrl);
+        const matches = html.match(/https:\/\/weadown\.com\/res\/[a-z0-9\-]+\/?/gi) || [];
+        if (!matches || matches.length === 0) break;
+
+        const beforeCount = cleanUrls.size;
+        for (const u of matches) {
+          const cleaned = (u.endsWith('/') ? u : u + '/').toLowerCase();
+          cleanUrls.add(cleaned);
+          if (cleanUrls.size >= limit) break;
+        }
+
+        if (cleanUrls.size === beforeCount) break;
+        page++;
+      } catch (e) {
+        break;
+      }
+    }
+
+    return Array.from(cleanUrls).slice(0, limit);
+  }
+
+  // 4. Category or Listing URL: page by page crawling using /pages/{page}/
   const pageMatch = normalized.match(/\/pages\/(\d+)\/?$/i);
   if (pageMatch) {
     if (pageNum === 1) page = parseInt(pageMatch[1], 10);

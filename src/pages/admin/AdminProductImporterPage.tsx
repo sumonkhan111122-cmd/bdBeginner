@@ -524,18 +524,18 @@ export function AdminProductImporterPage() {
       <div className="mt-6 rounded-2xl border border-ink-100 bg-white p-4 shadow-soft sm:p-6">
 
         <label className="block text-xs font-semibold uppercase tracking-wider text-ink-600">
-          Source Website / Category / Product URL
+          Source Website / Category / Product URL অথবা কি-ওয়ার্ড লাইভ সার্চ
         </label>
         <div className="mt-2 flex flex-col gap-2 sm:flex-row">
           <div className="relative min-w-0 flex-1">
             <input
-              type="url"
+              type="text"
               value={sourceUrl}
               onChange={(e) => setSourceUrl(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') void handleFetchPreview();
               }}
-              placeholder="https://weadown.com/wordpress-theme/ অথবা https://weadown.com/res/product-slug/"
+              placeholder="যেকোনো থিম বা প্লাগিনের নাম লিখুন (যেমন: elementor, astra, yoast) অথবা URL পেস্ট করুন"
               className="h-11 w-full rounded-xl border border-ink-200 px-4 text-sm text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
             />
           </div>
@@ -546,14 +546,20 @@ export function AdminProductImporterPage() {
             className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-ink-900 px-5 text-sm font-semibold text-white transition-colors hover:bg-ink-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {previewing ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
-            <span>প্রিভিউ দেখুন</span>
+            <span>{sourceUrl.startsWith('http') ? 'প্রিভিউ দেখুন' : 'সার্চ ও ফেচ করুন'}</span>
           </button>
         </div>
 
-        {/* Quick presets */}
+        {/* Quick presets & popular search pills */}
         <div className="mt-3 flex flex-wrap items-center gap-2 pt-2 text-xs">
-          <span className="font-medium text-ink-400">কুইক লিংকস:</span>
-          {PRESETS.map((preset) => (
+          <span className="font-medium text-ink-400">কুইক লিংকস ও ট্রেন্ডিং সার্চ:</span>
+          {[
+            { label: '⚡ Elementor', url: 'elementor' },
+            { label: '⚡ WooCommerce', url: 'woocommerce' },
+            { label: '⚡ Astra Pro', url: 'astra' },
+            { label: '⚡ SEO Plugins', url: 'yoast seo' },
+            ...PRESETS
+          ].map((preset) => (
             <button
               key={preset.url}
               type="button"
