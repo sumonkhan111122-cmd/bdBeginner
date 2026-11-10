@@ -45,3 +45,72 @@ export function updateCatalogQuery(
 export function catalogSearchTerms(search: string): string[] {
   return search.normalize('NFKC').trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
 }
+
+export const BILINGUAL_SYNONYMS: Record<string, string[]> = {
+  // English to Bengali
+  video: ['ভিডিও', 'ভিডিও এডিটিং'],
+  editing: ['এডিটিং', 'ভিডিও'],
+  motion: ['মোশন', 'অ্যানিমেশন', 'মোশন গ্রাফিক্স'],
+  graphics: ['গ্রাফিক্স', 'ডিজাইন', 'গ্রাফিক'],
+  graphic: ['গ্রাফিক্স', 'ডিজাইন', 'গ্রাফিক'],
+  design: ['ডিজাইন', 'গ্রাফিক্স', 'ইউআই'],
+  course: ['কোর্স', 'মাস্টারক্লাস', 'শিখুন'],
+  courses: ['কোর্স', 'মাস্টারক্লাস'],
+  theme: ['থিম', 'ওয়ার্ডপ্রেস'],
+  themes: ['থিম', 'ওয়ার্ডপ্রেস'],
+  plugin: ['প্লাগিন', 'প্লাগইন', 'টুলস'],
+  plugins: ['প্লাগিন', 'প্লাগইন'],
+  marketing: ['মার্কেটিং', 'ফেসবুক', 'বিজ্ঞাপন'],
+  seo: ['এসইও', 'সার্চ ইঞ্জিন'],
+  freelance: ['ফ্রিল্যান্সিং', 'আউটসোর্সিং'],
+  freelancing: ['ফ্রিল্যান্সিং', 'আউটসোর্সিং'],
+  hacking: ['হ্যাকিং', 'সাইবার সিকিউরিটি', 'এথিক্যাল'],
+  cyber: ['সাইবার', 'সিকিউরিটি', 'নিরাপত্তা'],
+  english: ['ইংরেজি', 'স্পোকেন', 'আইইএলটিএস'],
+  spoken: ['স্পোকেন', 'ইংরেজি'],
+  dropshipping: ['ড্রপশিপিং', 'ই-কমার্স', 'শপিফাই'],
+  ecommerce: ['ই-কমার্স', 'শপ', 'কমার্স', 'দোকান'],
+  ai: ['এআই', 'কৃত্রিম বুদ্ধিমত্তা'],
+  youtube: ['ইউটিউব', 'চ্যানেল'],
+  facebook: ['ফেসবুক', 'পেজ'],
+  shopify: ['শপিফাই', 'ড্রপশিপিং'],
+  canva: ['ক্যানভা', 'টেমপ্লেট'],
+  photoshop: ['ফটোশপ', 'অ্যাডোবি'],
+  illustrator: ['ইলাস্ট্রেটর', 'ভেক্টর'],
+  capcut: ['ক্যাপকাট', 'রিলস'],
+  free: ['ফ্রি', 'বিনামূল্যে'],
+
+  // Bengali to English
+  'ভিডিও': ['video', 'editing', 'capcut', 'premiere'],
+  'এডিটিং': ['editing', 'video', 'capcut'],
+  'মোশন': ['motion', 'animation', 'after effects'],
+  'গ্রাফিক্স': ['graphics', 'design', 'photoshop', 'illustrator'],
+  'ডিজাইন': ['design', 'graphics', 'ui', 'ux'],
+  'কোর্স': ['course', 'masterclass', 'tutorial'],
+  'থিম': ['theme', 'wordpress', 'template'],
+  'প্লাগিন': ['plugin', 'addon', 'extension'],
+  'প্লাগইন': ['plugin', 'addon'],
+  'মার্কেটিং': ['marketing', 'facebook', 'ads'],
+  'এসইও': ['seo', 'search engine'],
+  'ফ্রিল্যান্সিং': ['freelance', 'freelancing', 'fiverr', 'upwork'],
+  'হ্যাকিং': ['hacking', 'ethical', 'cyber', 'security'],
+  'ইংরেজি': ['english', 'spoken', 'ielts'],
+  'ড্রপশিপিং': ['dropshipping', 'shopify', 'ecommerce'],
+  'ইউটিউব': ['youtube', 'video'],
+  'ফেসবুক': ['facebook', 'meta', 'ads'],
+  'এআই': ['ai', 'chatgpt', 'artificial intelligence'],
+  'ফ্রি': ['free', 'gpl', 'download']
+};
+
+export function matchSearchTerm(searchableText: string, term: string): boolean {
+  if (searchableText.includes(term)) return true;
+  const syns = BILINGUAL_SYNONYMS[term];
+  if (syns && syns.some((s) => searchableText.includes(s.toLowerCase()))) return true;
+  return false;
+}
+
+export function matchAllSearchTerms(searchableText: string, terms: string[]): boolean {
+  if (!terms.length) return true;
+  const normText = searchableText.normalize('NFKC').toLowerCase();
+  return terms.every((term) => matchSearchTerm(normText, term.normalize('NFKC').toLowerCase()));
+}

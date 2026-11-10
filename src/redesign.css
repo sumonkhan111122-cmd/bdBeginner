@@ -588,6 +588,21 @@ body { background: #f8f9fc; }
   .bb-hero-proof > span { font-size: 13px; }
   .bb-member-card > div:first-child > span { font-size: 18px; }
 }
+@media (max-width: 640px) {
+  .bb-live-search-dropdown {
+    max-height: 60vh;
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  }
+  .bb-live-search-thumb {
+    width: 38px;
+    height: 38px;
+  }
+  .bb-live-search-title {
+    font-size: 13px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .bb-home *, .bb-header *, .bb-footer * { animation: none !important; transition: none !important; }

@@ -241,7 +241,7 @@ export function CartDrawer() {
                 onClick={handleCheckout}
                 className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
               >
-                Proceed to Checkout
+                {total === 0 ? 'ফ্রি ডাউনলোড করুন' : 'Proceed to Checkout'}
                 <ArrowRight size={18} />
               </button>
               <button

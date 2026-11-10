@@ -7,6 +7,7 @@ import { useSiteSettings } from '@/context/SiteSettingsContext';
 import { CartDrawer } from '@/components/cart/CartDrawer';
 import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
 import { usePublishedProducts } from '@/hooks/useCatalog';
+import { matchAllSearchTerms } from '@/lib/catalogFilters';
 import { safeHttpUrl } from '@/lib/urls';
 import { PLAYFLIX_URL } from '@/data/playflix';
 
@@ -43,7 +44,7 @@ export function Header() {
     return allProducts
       .filter((p) => {
         const text = `${p.name} ${p.category} ${p.subcategory || ''} ${(p.tags || []).join(' ')}`.toLowerCase();
-        return terms.every((t) => text.includes(t));
+        return matchAllSearchTerms(text, terms);
       })
       .slice(0, 6);
   }, [query, allProducts]);
@@ -54,7 +55,7 @@ export function Header() {
     const terms = q.split(/\s+/).filter(Boolean);
     return allProducts.filter((p) => {
       const text = `${p.name} ${p.category} ${p.subcategory || ''} ${(p.tags || []).join(' ')}`.toLowerCase();
-      return terms.every((t) => text.includes(t));
+      return matchAllSearchTerms(text, terms);
     }).length;
   }, [query, allProducts]);
 

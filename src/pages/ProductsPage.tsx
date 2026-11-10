@@ -11,7 +11,7 @@ import { useCurrencyFormatter } from '@/hooks/useCurrency';
 import { useSiteSettings } from '@/context/SiteSettingsContext';
 import { applySeo } from '@/lib/seo';
 import { trackSearch } from '@/lib/tracking';
-import { catalogSearchTerms, readCatalogQuery, updateCatalogQuery, type CatalogSortOption } from '@/lib/catalogFilters';
+import { catalogSearchTerms, matchAllSearchTerms, readCatalogQuery, updateCatalogQuery, type CatalogSortOption } from '@/lib/catalogFilters';
 import {
   Search,
   ArrowUpRight,
@@ -144,6 +144,20 @@ export function ProductsPage({ initialCategory, dealsOnly = false }: ProductsPag
     setSearchParams((current) => updateCatalogQuery(current, changes, resetPage), { replace, preventScrollReset: true });
   }, [setSearchParams]);
   const setSearch = useCallback((value: string) => updateFilters({ search: value || null }, true), [updateFilters]);
+  const [localSearch, setLocalSearch] = useState(search);
+
+  useEffect(() => {
+    setLocalSearch(search);
+  }, [search]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (localSearch !== search) {
+        setSearch(localSearch);
+      }
+    }, 180);
+    return () => clearTimeout(handler);
+  }, [localSearch, search, setSearch]);
   const setSort = useCallback((value: SortOption) => updateFilters({ sort: value === 'featured' ? null : value }), [updateFilters]);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const filterDialogRef = useRef<HTMLDivElement>(null);
@@ -268,7 +282,7 @@ export function ProductsPage({ initialCategory, dealsOnly = false }: ProductsPag
     let result = products.filter((p) => {
       if (searchTerms.length) {
         const searchable = [p.name, p.shortDescription, p.category, p.subcategory, ...(p.tags || [])].filter(Boolean).join(' ').normalize('NFKC').toLocaleLowerCase();
-        if (!searchTerms.every((term) => searchable.includes(term))) return false;
+        if (!matchAllSearchTerms(searchable, searchTerms)) return false;
       }
 
       if (isDealsOnly) {
@@ -540,11 +554,43 @@ export function ProductsPage({ initialCategory, dealsOnly = false }: ProductsPag
                 <span className="catalog-art-asterisk">✳</span>
               </div>
             </div>
-            <form className="catalog-search" role="search" onSubmit={(event) => { event.preventDefault(); scrollToResults(); }}>
+            <form
+              className="catalog-search"
+              role="search"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (localSearch !== search) setSearch(localSearch);
+                scrollToResults();
+              }}
+            >
               <Search size={21} />
-              <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} maxLength={200} enterKeyHint="search" placeholder={isCourseCollection ? 'What would you like to learn?' : 'Find a course, creative tool, theme or resource...'} aria-label="Search products" aria-controls="catalog-results" />
-              {search && <button type="button" className="catalog-search__clear" onClick={() => setSearch('')} aria-label="Clear search"><X size={18} /></button>}
-              <button type="submit" className="catalog-search__action" aria-label="View matching resources"><span>Explore</span><ArrowRight size={18} /></button>
+              <input
+                type="search"
+                value={localSearch}
+                onChange={(event) => setLocalSearch(event.target.value)}
+                maxLength={200}
+                enterKeyHint="search"
+                placeholder={isCourseCollection ? 'কী শিখতে চান? সার্চ করুন...' : 'কোর্স, থিম, প্লাগিন বা টুলস সার্চ করুন...'}
+                aria-label="Search products"
+                aria-controls="catalog-results"
+              />
+              {localSearch && (
+                <button
+                  type="button"
+                  className="catalog-search__clear"
+                  onClick={() => {
+                    setLocalSearch('');
+                    setSearch('');
+                  }}
+                  aria-label="Clear search"
+                >
+                  <X size={18} />
+                </button>
+              )}
+              <button type="submit" className="catalog-search__action" aria-label="View matching resources">
+                <span>Explore</span>
+                <ArrowRight size={18} />
+              </button>
             </form>
           </div>
         </section>

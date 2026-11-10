@@ -201,7 +201,9 @@ export function CartPage() {
                 <p className="mt-3 text-xs font-medium text-warning-600">{pricingError}</p>
               )}
 
-              <Button onClick={() => navigate('/checkout')} size="lg" fullWidth className="mt-5">Proceed to Checkout <ArrowRight size={18} /></Button>
+              <Button onClick={() => navigate('/checkout')} size="lg" fullWidth className="mt-5">
+                {displayTotal === 0 ? 'ফ্রি ডাউনলোড নিশ্চিত করুন' : 'Proceed to Checkout'} <ArrowRight size={18} />
+              </Button>
               <div className="mt-4 flex items-center justify-center gap-1.5 text-xs text-ink-400"><Lock size={12} /> Secure order creation</div>
             </div>
           </aside>
